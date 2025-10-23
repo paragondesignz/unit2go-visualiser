@@ -20,6 +20,8 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
   const [showingOriginal, setShowingOriginal] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(12)
   const [tipIndex, setTipIndex] = useState(0)
+  const [increasedAccuracy, setIncreasedAccuracy] = useState(false)
+  const [personHeight, setPersonHeight] = useState<number>(170) // cm
 
   const tips = [
     "The AI intelligently scales your tiny home based on surrounding objects",
@@ -27,7 +29,9 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     "Each generation creates a unique placement - experiment to find your favorite",
     "Use the position controls for fine-tuning the placement",
     "Download your image to share with family, friends, or planning consultants",
-    "The visualization helps you make confident decisions about your tiny home placement"
+    "The visualization helps you make confident decisions about your tiny home placement",
+    "Enable Increased Accuracy mode and include a person in your photo for precise scaling",
+    "Stand where you want the tiny home positioned for the most accurate placement"
   ]
 
   const getTimeDescription = (hour: number): string => {
@@ -66,6 +70,22 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     return 'NEW ZEALAND DAYLIGHT: Apply natural New Zealand daylight with realistic intensity and natural color temperature. Keep lighting effects subtle and natural'
   }
 
+  const getAccuracyPrompt = (): string => {
+    if (!increasedAccuracy) return ''
+
+    const heightInMeters = personHeight / 100
+    return `
+
+INCREASED ACCURACY MODE ENABLED:
+- There is a person visible in this image
+- The person's height is ${heightInMeters}m (${personHeight}cm)
+- Use the person as the PRIMARY scale reference for sizing the tiny home
+- The tiny home must be sized to ${selectedTinyHome.dimensions.length}m x ${selectedTinyHome.dimensions.width}m x ${selectedTinyHome.dimensions.height}m
+- Scale the tiny home PRECISELY relative to the person's height
+- If the person is standing where the tiny home should go, place the tiny home exactly where the person is standing
+- CRITICAL: The person provides the most accurate scale reference - use them for precise sizing`
+  }
+
   useEffect(() => {
     processInitialPlacement()
   }, [])
@@ -91,13 +111,14 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     setError(null)
 
     try {
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
         'initial',
         undefined,
         undefined,
-        getLightingPrompt(timeOfDay)
+        combinedPrompt
       )
       setPosition(result.position)
       setResultImage(result.imageUrl)
@@ -115,13 +136,14 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     setError(null)
 
     try {
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
         'adjust',
         'change lighting only - maintain current position',
         position,
-        getLightingPrompt(timeOfDay),
+        combinedPrompt,
         resultImage || undefined
       )
       setResultImage(result.imageUrl)
@@ -139,13 +161,14 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     setError(null)
 
     try {
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
         'adjust',
         command,
         position,
-        getLightingPrompt(timeOfDay)
+        combinedPrompt
       )
       setPosition(result.position)
       setResultImage(result.imageUrl)
@@ -163,13 +186,14 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     setError(null)
 
     try {
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
         'initial',
         undefined,
         undefined,
-        getLightingPrompt(timeOfDay)
+        combinedPrompt
       )
       setPosition(result.position)
       setResultImage(result.imageUrl)
@@ -304,6 +328,60 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
             >
               Move Forward
             </button>
+          </div>
+        </div>
+
+        <div className="control-panel">
+          <h3>Increased Accuracy</h3>
+          <div className="accuracy-control">
+            <div className="accuracy-toggle">
+              <label className="toggle-label">
+                <input
+                  type="checkbox"
+                  checked={increasedAccuracy}
+                  onChange={(e) => setIncreasedAccuracy(e.target.checked)}
+                  className="accuracy-checkbox"
+                />
+                <span className="toggle-text">Enable Increased Accuracy Mode</span>
+              </label>
+            </div>
+            {increasedAccuracy && (
+              <div className="accuracy-settings">
+                <p className="accuracy-info">
+                  For maximum accuracy, include a person in your photo standing where you want the tiny home placed.
+                </p>
+                <div className="height-input-group">
+                  <label htmlFor="personHeight" className="input-label">
+                    Person's Height
+                  </label>
+                  <div className="height-inputs">
+                    <div className="input-with-unit">
+                      <input
+                        id="personHeight"
+                        type="number"
+                        min="140"
+                        max="220"
+                        value={personHeight}
+                        onChange={(e) => setPersonHeight(parseInt(e.target.value) || 170)}
+                        className="height-input"
+                      />
+                      <span className="input-unit">cm</span>
+                    </div>
+                    <span className="height-conversion">
+                      ({(personHeight / 100).toFixed(2)}m / {Math.floor(personHeight / 30.48)}'{Math.round((personHeight % 30.48) / 2.54)}")
+                    </span>
+                  </div>
+                </div>
+                <div className="accuracy-tips">
+                  <strong>Tips:</strong>
+                  <ul>
+                    <li>Have the person stand where you want the tiny home</li>
+                    <li>Ensure the person is clearly visible in the photo</li>
+                    <li>Take the photo from the same angle you want to view the tiny home</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
