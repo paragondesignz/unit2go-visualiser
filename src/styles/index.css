@@ -381,12 +381,16 @@ body {
   overflow: hidden;
   border-radius: 12px;
   box-shadow: var(--shadow-md);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tiny-home-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .tiny-home-details {
