@@ -7,9 +7,9 @@
 }
 
 :root {
-  /* Unit2Go Brand Color Palette */
+  /* Unit2Go Blue Color Palette */
   --primary-color: #28A9E1;
-  --primary-dark: #28504A;
+  --primary-dark: #1a8bc4;
   --primary-light: #5bc0eb;
   --accent-color: #28A9E1;
   --accent-light: #5bc0eb;
@@ -65,7 +65,7 @@ body {
 .hero {
   padding: 80px 20px;
   text-align: center;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -247,7 +247,7 @@ body {
 }
 
 .page-header {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   color: white;
   padding: 20px;
   box-shadow: var(--shadow-md);
