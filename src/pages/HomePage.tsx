@@ -9,7 +9,7 @@ function HomePage() {
         <div className="hero-logo-container">
           <img src="/unit2go-logo.png" alt="Unit2Go" className="hero-logo" />
         </div>
-        <h1 className="hero-title">Vision</h1>
+        <h1 className="hero-title">AI Visualiser</h1>
         <p className="hero-subtitle">Visualize your dream tiny home in your own space using AI</p>
         <button
           className="cta-button"

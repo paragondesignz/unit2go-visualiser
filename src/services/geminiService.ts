@@ -80,23 +80,26 @@ async function generateConversationalLightingEdit(
 
   const conversationalPrompt = `CRITICAL LIGHTING-ONLY EDIT:
 
-This image shows a user's uploaded photo with a tiny home already placed in it.
+This image shows the user's photo with a tiny home already composited into it.
 
-ABSOLUTE REQUIREMENTS:
-1. The user's original photo MUST remain EXACTLY as is
+OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
+1. Output dimensions MUST match the input image EXACTLY
+   - DO NOT change image size, aspect ratio, or resolution
+   - This is the SAME image with lighting adjusted
+
+2. PRESERVE the user's original photo COMPLETELY:
    - DO NOT change proportions, perspective, or composition
-   - DO NOT recreate or redraw the scene
-   - PRESERVE all original details and framing
+   - DO NOT recreate or redraw anything
+   - PRESERVE all original details, framing, and the existing tiny home
 
-2. Keep EXACTLY ONE tiny home in its current position and appearance
-   - NEVER add additional tiny homes
-   - NEVER duplicate the existing tiny home
-   - Keep the tiny home in its exact position
+3. Keep EXACTLY ONE tiny home in its current position:
+   - NEVER add, duplicate, or remove the tiny home
+   - Keep it in EXACT same position and appearance
 
-3. ONLY adjust lighting, shadows, and sky colors as specified:
+4. ONLY adjust lighting, shadows, and sky colors:
    ${lightingPrompt}
 
-CRITICAL: This is a lighting adjustment ONLY. Preserve everything else exactly. EXACTLY ONE tiny home, original photo composition unchanged.`
+CRITICAL: This is lighting adjustment ONLY on the EXISTING composite image. Same dimensions, same scene, same tiny home position - ONLY lighting changes.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -240,35 +243,38 @@ async function generateImageWithTinyHome(
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
 
-  const prompt = customPrompt || `ABSOLUTE CRITICAL REQUIREMENTS - READ CAREFULLY:
+  const prompt = customPrompt || `ABSOLUTE CRITICAL COMPOSITING TASK:
 
-The FIRST image is the user's uploaded photo - this MUST remain EXACTLY as photographed.
-The SECOND image shows the tiny home model to place into the scene.
+IMAGE 1 (User's Photo): This is the BASE image. The output MUST be the SAME SIZE and preserve this EXACTLY.
+IMAGE 2 (Tiny Home Reference): This shows what tiny home to add INTO Image 1.
 
-YOUR TASK: Place/composite the tiny home FROM the second image INTO the first image.
+OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
+1. Output image dimensions MUST match Image 1 (user's photo) EXACTLY
+   - DO NOT use Image 2 (tiny home) dimensions for output
+   - DO NOT change the aspect ratio, resolution, or size of the user's photo
+   - The output is Image 1 WITH tiny home added, NOT a new image
 
-CRITICAL RULES - DO NOT VIOLATE:
-1. The first image (user's photo) MUST remain EXACTLY as uploaded
-   - DO NOT change proportions, perspective, angle, or composition of the uploaded photo
-   - DO NOT recreate or redraw the scene
-   - DO NOT alter any existing elements in the uploaded photo
-   - PRESERVE the exact framing, camera angle, and all original details
+2. PRESERVE Image 1 (user's photo) COMPLETELY:
+   - DO NOT regenerate, redraw, or recreate the scene
+   - DO NOT change composition, framing, perspective, or camera angle
+   - DO NOT alter background, landscape, buildings, or any existing elements
+   - Keep the EXACT scene from the user's photo - ONLY add tiny home to it
 
-2. ONLY add the tiny home INTO this preserved scene:
-   - Copy the tiny home's exact appearance from the second image
-   - Place it naturally on the ground surface visible in the first image
-   - The tiny home is ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m x ${tinyHomeModel.dimensions.height}m
-   - Scale it accurately using objects in the scene (doors ~2m, people ~1.7m, cars ~4.5m)
-   - Add realistic shadows beneath the tiny home to ground it in the scene
-   - Ensure lighting matches the original photo's lighting conditions
+3. ADD tiny home FROM Image 2 INTO Image 1:
+   - Take the tiny home appearance from Image 2
+   - Place it INTO the scene from Image 1
+   - Size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
+   - Use existing objects in Image 1 for scale (doors ~2m, people ~1.7m, cars ~4.5m)
+   - Add natural shadows to integrate it into the scene
+   - Match lighting from Image 1
 
-3. Placement rules:
-   - Place ONLY ONE tiny home
-   - Position it on the ground (grass, gravel, concrete, dirt, etc.)
-   - Make it look naturally integrated into the existing scene
-   - Do not obstruct important elements unless naturally positioned there
+4. This is COMPOSITING (like Photoshop):
+   - Start with Image 1 as the base layer
+   - Add tiny home as a new layer on top
+   - Blend it naturally into the scene
+   - Final output = Image 1 + tiny home overlay
 
-CRITICAL: This is a COMPOSITING task - preserve the user's original image and add the tiny home into it. Do NOT regenerate or recreate the scene.${lightingPrompt ? ` Lighting adjustment: ${lightingPrompt}` : ''}`
+CRITICAL: Output dimensions and scene MUST match Image 1. You are ADDING a tiny home TO the user's photo, NOT creating a new image.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -379,25 +385,28 @@ function commandToPrompt(command: string, tinyHomeModel: TinyHomeModel, lighting
   const lowerCommand = command.toLowerCase()
 
   if (lowerCommand.includes('change lighting only') || lowerCommand.includes('maintain current position')) {
-    return `CRITICAL: Change ONLY lighting. EXACTLY ONE tiny home must remain - NEVER add or duplicate tiny homes. Keep the user's original uploaded photo EXACTLY as is - only adjust lighting. Apply: ${lightingPrompt}`
+    return `CRITICAL LIGHTING-ONLY: Output dimensions MUST match input. Keep EXACTLY ONE tiny home, same position. Keep user's photo scene EXACTLY as is. ONLY adjust lighting: ${lightingPrompt}`
   }
 
-  let prompt = `CRITICAL COMPOSITING TASK:
-- The user's uploaded photo MUST remain EXACTLY as photographed - preserve all proportions, perspective, and framing
-- ONLY adjust the tiny home's position as requested below
-- This is a GROUND-LEVEL tiny home (${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m x ${tinyHomeModel.dimensions.height}m)
-- Maintain proper scale using doors (~2m high), windows (~1-1.5m wide) as references
+  let prompt = `CRITICAL POSITION ADJUSTMENT:
 
-Position adjustment: `
+OUTPUT REQUIREMENTS:
+1. Output dimensions MUST match the input image (user's photo with tiny home) EXACTLY
+2. PRESERVE user's photo scene COMPLETELY - same composition, framing, perspective
+3. Keep EXACTLY ONE tiny home - ONLY change its position as requested
+4. Tiny home size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
+5. Use objects in scene for scale (doors ~2m, people ~1.7m, cars ~4.5m)
 
-  if (lowerCommand.includes('left')) prompt += 'Move tiny home left. '
-  if (lowerCommand.includes('right')) prompt += 'Move tiny home right. '
-  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'Move tiny home back. '
-  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'Move tiny home forward. '
+Position adjustment requested: `
 
-  prompt += '\n\nCRITICAL: DO NOT recreate the scene. Preserve the user\'s original photo exactly and only move the tiny home.'
+  if (lowerCommand.includes('left')) prompt += 'Move the tiny home left in the scene. '
+  if (lowerCommand.includes('right')) prompt += 'Move the tiny home right in the scene. '
+  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'Move the tiny home back (further away). '
+  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'Move the tiny home forward (closer). '
 
-  if (lightingPrompt) prompt += ` Lighting: ${lightingPrompt}`
+  prompt += '\n\nCRITICAL: Same image dimensions. Same scene. ONLY the tiny home position changes. DO NOT recreate anything.'
+
+  if (lightingPrompt) prompt += ` ${lightingPrompt}`
 
   return prompt
 }

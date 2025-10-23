@@ -27,7 +27,7 @@ function VisualizerPage() {
         <div className="header-content">
           <div className="header-logo-container">
             <img src="/unit2go-logo.png" alt="Unit2Go" className="header-logo" />
-            <h1 className="header-title">Vision</h1>
+            <h1 className="header-title">AI Visualiser</h1>
           </div>
           <div className="steps-indicator">
             <div className={`step ${currentStep === 'upload' ? 'active' : ''}`}>

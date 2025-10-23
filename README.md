@@ -1,4 +1,4 @@
-# Unit2Go Vision
+# Unit2Go AI Visualiser
 
 AI-powered tiny home placement visualization tool using Google Gemini 2.5 Flash Image API.
 
