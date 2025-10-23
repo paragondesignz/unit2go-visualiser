@@ -7,12 +7,12 @@
 }
 
 :root {
-  /* Premium Color Palette - Light Mode */
-  --primary-color: #2c5282;
-  --primary-dark: #1a365d;
-  --primary-light: #4299e1;
-  --accent-color: #ed8936;
-  --accent-light: #f6ad55;
+  /* Unit2Go Brand Color Palette */
+  --primary-color: #28A9E1;
+  --primary-dark: #28504A;
+  --primary-light: #5bc0eb;
+  --accent-color: #28A9E1;
+  --accent-light: #5bc0eb;
 
   --bg-primary: #ffffff;
   --bg-secondary: #f7fafc;
@@ -21,21 +21,21 @@
 
   --text-primary: #1a202c;
   --text-secondary: #4a5568;
-  --text-tertiary: #718096;
+  --text-tertiary: #AAA;
 
   --border-color: #e2e8f0;
   --border-hover: #cbd5e0;
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
 
   --success-color: #48bb78;
   --error-color: #f56565;
   --warning-color: #ed8936;
 
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: all 0.3s ease;
 }
 
 body {
@@ -44,6 +44,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-smoothing: antialiased;
   background: var(--bg-secondary);
   color: var(--text-primary);
   line-height: 1.6;
@@ -64,7 +65,7 @@ body {
 .hero {
   padding: 80px 20px;
   text-align: center;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -77,7 +78,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(237, 137, 54, 0.1) 0%, transparent 50%);
+  background: radial-gradient(circle at 20% 50%, rgba(40, 169, 225, 0.15) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -161,7 +162,7 @@ body {
 .feature-number {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  background: var(--primary-color);
   color: white;
   border-radius: 50%;
   display: flex;
@@ -170,6 +171,8 @@ body {
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0 auto 20px;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
 }
 
 .feature-card h3 {
@@ -244,7 +247,7 @@ body {
 }
 
 .page-header {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
   color: white;
   padding: 20px;
   box-shadow: var(--shadow-md);
@@ -929,7 +932,7 @@ body {
   padding: 15px;
   background: var(--bg-tertiary);
   border-radius: 8px;
-  border: 2px solid var(--primary-light);
+  border: 2px solid var(--primary-color);
 }
 
 .accuracy-info {
