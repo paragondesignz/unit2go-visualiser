@@ -21,14 +21,14 @@ interface WireframeBoxProps {
 }
 
 function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: WireframeBoxProps) {
-  // Calculate base dimensions
+  // Calculate base dimensions - much smaller to start for realistic tiny home size
   const estimatedRealWorldWidth = 20 // meters
   const pixelsPerMeter = imageWidth / estimatedRealWorldWidth
 
-  // Base box dimensions (maintaining exact proportions: 13m x 5m x 4m)
-  const baseBoxWidth = dimensions.length * pixelsPerMeter * 0.01
-  const baseBoxDepth = dimensions.width * pixelsPerMeter * 0.01
-  const baseBoxHeight = dimensions.height * pixelsPerMeter * 0.01
+  // Base box dimensions (maintaining exact proportions) - scaled down significantly
+  const baseBoxWidth = dimensions.length * pixelsPerMeter * 0.0005
+  const baseBoxDepth = dimensions.width * pixelsPerMeter * 0.0005
+  const baseBoxHeight = dimensions.height * pixelsPerMeter * 0.0005
 
   // Memoize edges geometry to prevent recreation on every render
   const edges = useMemo(() => {
@@ -60,7 +60,6 @@ function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: Wir
 }
 
 function Scene({
-  uploadedImage,
   tinyHomeModel,
   imageWidth,
   imageHeight,
@@ -69,7 +68,6 @@ function Scene({
   rotation,
   scale
 }: {
-  uploadedImage: UploadedImage
   tinyHomeModel: TinyHomeModel
   imageWidth: number
   imageHeight: number
@@ -78,23 +76,8 @@ function Scene({
   rotation: number
   scale: number
 }) {
-  // Load the user's image as a texture
-  const texture = new THREE.TextureLoader().load(uploadedImage.url)
-
-  const aspect = imageWidth / imageHeight
-
-  // Create background plane with image - sized to fill the orthographic view
-  const planeWidth = 12
-  const planeHeight = planeWidth / aspect
-
   return (
     <>
-      {/* Background image plane - fixed in place */}
-      <mesh position={[0, 0, -0.1]}>
-        <planeGeometry args={[planeWidth, planeHeight]} />
-        <meshBasicMaterial map={texture} side={THREE.DoubleSide} />
-      </mesh>
-
       {/* Wireframe box */}
       <WireframeBox
         dimensions={tinyHomeModel.dimensions}
@@ -123,12 +106,13 @@ function Scene({
 function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }: ManualPositionerProps) {
   const [imageDimensions, setImageDimensions] = useState({ width: 1920, height: 1080 })
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasContainerRef = useRef<HTMLDivElement>(null)
   const orbitControlsRef = useRef<any>(null)
 
   // Wireframe transform state - centered in middle of image, small size
   const [position, setPosition] = useState({ x: 0, y: 0, z: 0.5 })
   const [rotation, setRotation] = useState(0)
-  const [scale, setScale] = useState(0.05) // Start with realistic tiny home size (5%)
+  const [scale, setScale] = useState(1.0) // Start with realistic tiny home size (100% with reduced base)
 
   // Load image dimensions
   useEffect(() => {
@@ -138,6 +122,20 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
     }
     img.src = uploadedImage.url
   }, [uploadedImage.url])
+
+  // Prevent wheel/zoom events on canvas to keep background truly static
+  useEffect(() => {
+    const container = canvasContainerRef.current
+    if (!container) return
+
+    const preventZoom = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    container.addEventListener('wheel', preventZoom, { passive: false })
+    return () => container.removeEventListener('wheel', preventZoom)
+  }, [])
 
   const handleCapture = () => {
     if (!canvasRef.current) return
@@ -155,15 +153,27 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
       </div>
 
       <div className="positioner-workspace">
-        <div className="canvas-container">
+        <div
+          ref={canvasContainerRef}
+          className="canvas-container"
+          style={{
+            backgroundImage: `url(${uploadedImage.url})`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
           <Canvas
             ref={canvasRef}
-            gl={{ preserveDrawingBuffer: true }}
+            gl={{
+              preserveDrawingBuffer: true,
+              alpha: true
+            }}
             orthographic
             camera={{ position: [0, 0, 10], zoom: 80, near: 0.1, far: 1000 }}
           >
+            <color attach="background" args={['transparent']} />
             <Scene
-              uploadedImage={uploadedImage}
               tinyHomeModel={tinyHomeModel}
               imageWidth={imageDimensions.width}
               imageHeight={imageDimensions.height}
@@ -258,7 +268,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
             <button className="reset-button" onClick={() => {
               setPosition({ x: 0, y: 0, z: 0.5 })
               setRotation(0)
-              setScale(0.05)
+              setScale(1.0)
             }}>
               Reset to Default
             </button>
