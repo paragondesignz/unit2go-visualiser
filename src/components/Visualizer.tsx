@@ -148,17 +148,25 @@ MANDATORY PERSON REMOVAL:
     try {
       const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
 
-      let result
+      let imageUrl: string
       if (wireframeGuideImage) {
         // Use wireframe guide processing
-        result = await processWithWireframeGuide(
-          wireframeGuideImage,
+        imageUrl = await processWithWireframeGuide(
+          uploadedImage,
           selectedTinyHome,
+          wireframeGuideImage,
           combinedPrompt
         )
+        // Wireframe guide maintains user's exact positioning
+        setPosition({
+          x: 50,
+          y: 50,
+          scale: 1,
+          rotation: 0
+        })
       } else {
         // Use automatic processing
-        result = await processWithGemini(
+        const result = await processWithGemini(
           uploadedImage,
           selectedTinyHome,
           'initial',
@@ -166,10 +174,11 @@ MANDATORY PERSON REMOVAL:
           undefined,
           combinedPrompt
         )
+        imageUrl = result.imageUrl
+        setPosition(result.position)
       }
 
-      setPosition(result.position)
-      addToHistory(result.imageUrl)
+      addToHistory(imageUrl)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to process image. Please try again.')
