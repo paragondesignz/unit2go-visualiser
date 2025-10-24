@@ -128,7 +128,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
   // Wireframe transform state - centered in middle of image, small size
   const [position, setPosition] = useState({ x: 0, y: 0, z: 0.5 })
   const [rotation, setRotation] = useState(0)
-  const [scale, setScale] = useState(0.2) // Start with realistic tiny home size
+  const [scale, setScale] = useState(0.05) // Start with realistic tiny home size (5%)
 
   // Load image dimensions
   useEffect(() => {
@@ -212,7 +212,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
               Depth (Forward ← → Back)
               <input
                 type="range"
-                min="-2"
+                min="0"
                 max="3"
                 step="0.1"
                 value={position.z}
@@ -244,9 +244,9 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
               Size
               <input
                 type="range"
-                min="0.5"
+                min="0.01"
                 max="2"
-                step="0.1"
+                step="0.01"
                 value={scale}
                 onChange={(e) => setScale(parseFloat(e.target.value))}
               />
@@ -258,7 +258,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
             <button className="reset-button" onClick={() => {
               setPosition({ x: 0, y: 0, z: 0.5 })
               setRotation(0)
-              setScale(0.2)
+              setScale(0.05)
             }}>
               Reset to Default
             </button>
