@@ -1,0 +1,42 @@
+{
+  "name": "unit2go-visualiser",
+  "version": "1.0.0",
+  "description": "AI-powered tiny home placement visualization using Google Gemini",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "tiny-homes",
+    "unit2go",
+    "ai",
+    "visualization"
+  ],
+  "author": "Paragon Design",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  },
+  "dependencies": {
+    "@google/genai": "^1.19.0",
+    "@google/generative-ai": "^0.24.1",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.4.0",
+    "@vercel/analytics": "^1.5.0",
+    "heic2any": "^0.0.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2",
+    "three": "^0.180.0"
+  }
+}
