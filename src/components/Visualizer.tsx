@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { UploadedImage, TinyHomeModel, Position } from '../types'
-import { processWithGemini, addWatermarkToImage } from '../services/geminiService'
+import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
   selectedTinyHome: TinyHomeModel
+  wireframeGuideImage?: string | null
 }
 
-function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -20,8 +21,9 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
   const [showingOriginal, setShowingOriginal] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(12)
   const [tipIndex, setTipIndex] = useState(0)
-  const [increasedAccuracy, setIncreasedAccuracy] = useState(false)
-  const [personHeight, setPersonHeight] = useState<number>(170) // cm
+  const [editPrompt, setEditPrompt] = useState<string>('')
+  const [history, setHistory] = useState<string[]>([])
+  const [historyIndex, setHistoryIndex] = useState(-1)
 
   const tips = [
     "The AI intelligently scales your tiny home based on surrounding objects",
@@ -30,8 +32,8 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
     "Use the position controls for fine-tuning the placement",
     "Download your image to share with family, friends, or planning consultants",
     "The visualization helps you make confident decisions about your tiny home placement",
-    "Enable Increased Accuracy mode and include a person in your photo for precise scaling",
-    "Stand where you want the tiny home positioned for the most accurate placement"
+    "Use conversational editing to customize the scene with natural language",
+    "The AI aligns with fence lines and boundaries for realistic placement"
   ]
 
   const getTimeDescription = (hour: number): string => {
@@ -71,23 +73,56 @@ function Visualizer({ uploadedImage, selectedTinyHome }: VisualizerProps) {
   }
 
   const getAccuracyPrompt = (): string => {
-    if (!increasedAccuracy) return ''
+    if (!uploadedImage.increasedAccuracy || !uploadedImage.personHeight) return ''
 
-    const heightInMeters = personHeight / 100
+    const heightInMeters = uploadedImage.personHeight / 100
+    const tinyHomeToPersonRatio = (selectedTinyHome.dimensions.length / heightInMeters).toFixed(1)
     return `
 
-INCREASED ACCURACY MODE ENABLED:
-- There is a person visible in this image
-- The person's height is ${heightInMeters}m (${personHeight}cm)
-- Use the person as the PRIMARY scale reference for sizing the tiny home
-- The tiny home must be sized to ${selectedTinyHome.dimensions.length}m x ${selectedTinyHome.dimensions.width}m x ${selectedTinyHome.dimensions.height}m
-- Scale the tiny home PRECISELY relative to the person's height
-- If the person is standing where the tiny home should go, place the tiny home exactly where the person is standing
-- CRITICAL: The person provides the most accurate scale reference - use them for precise sizing`
+INCREASED ACCURACY MODE - CRITICAL SCALE REFERENCE:
+- There is a person in the input image who is ${heightInMeters}m (${uploadedImage.personHeight}cm) tall
+- Use this person as the ABSOLUTE PRIMARY scale reference
+- The tiny home is ${selectedTinyHome.dimensions.length}m long - that is ${tinyHomeToPersonRatio} TIMES the height of the person
+- If the person appears to be ${heightInMeters}m tall in the image, the tiny home MUST be ${tinyHomeToPersonRatio} times that tall when measured lengthwise
+- This is CRITICAL - scale the tiny home PRECISELY relative to the person's height
+
+MANDATORY PERSON REMOVAL:
+- REMOVE THE PERSON COMPLETELY from the final output image
+- The output must show ONLY the landscape with the tiny home - NO PEOPLE
+- The person is a measurement tool ONLY and must NOT appear in the visualization
+- If any person appears in the output, you have FAILED this task completely`
+  }
+
+  const addToHistory = (imageUrl: string) => {
+    // Remove any future history if we're not at the end
+    const newHistory = history.slice(0, historyIndex + 1)
+    newHistory.push(imageUrl)
+    setHistory(newHistory)
+    setHistoryIndex(newHistory.length - 1)
+    setResultImage(imageUrl)
+  }
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1
+      setHistoryIndex(newIndex)
+      setResultImage(history[newIndex])
+      setShowingOriginal(false)
+    }
+  }
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1
+      setHistoryIndex(newIndex)
+      setResultImage(history[newIndex])
+      setShowingOriginal(false)
+    }
   }
 
   useEffect(() => {
     processInitialPlacement()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -112,16 +147,29 @@ INCREASED ACCURACY MODE ENABLED:
 
     try {
       const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
-      const result = await processWithGemini(
-        uploadedImage,
-        selectedTinyHome,
-        'initial',
-        undefined,
-        undefined,
-        combinedPrompt
-      )
+
+      let result
+      if (wireframeGuideImage) {
+        // Use wireframe guide processing
+        result = await processWithWireframeGuide(
+          wireframeGuideImage,
+          selectedTinyHome,
+          combinedPrompt
+        )
+      } else {
+        // Use automatic processing
+        result = await processWithGemini(
+          uploadedImage,
+          selectedTinyHome,
+          'initial',
+          undefined,
+          undefined,
+          combinedPrompt
+        )
+      }
+
       setPosition(result.position)
-      setResultImage(result.imageUrl)
+      addToHistory(result.imageUrl)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to process image. Please try again.')
@@ -146,7 +194,7 @@ INCREASED ACCURACY MODE ENABLED:
         combinedPrompt,
         resultImage || undefined
       )
-      setResultImage(result.imageUrl)
+      addToHistory(result.imageUrl)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to update lighting. Please try again.')
@@ -171,7 +219,7 @@ INCREASED ACCURACY MODE ENABLED:
         combinedPrompt
       )
       setPosition(result.position)
-      setResultImage(result.imageUrl)
+      addToHistory(result.imageUrl)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to adjust position. Please try again.')
@@ -196,7 +244,7 @@ INCREASED ACCURACY MODE ENABLED:
         combinedPrompt
       )
       setPosition(result.position)
-      setResultImage(result.imageUrl)
+      addToHistory(result.imageUrl)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to regenerate image. Please try again.')
@@ -208,6 +256,53 @@ INCREASED ACCURACY MODE ENABLED:
 
   const handleToggleView = () => {
     setShowingOriginal(!showingOriginal)
+  }
+
+  const handleConversationalEdit = async () => {
+    if (!editPrompt.trim() || !resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const editedImage = await conversationalEdit(resultImage, editPrompt.trim())
+      addToHistory(editedImage)
+      setEditPrompt('')
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to apply edit. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleEditKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !processing && editPrompt.trim()) {
+      handleConversationalEdit()
+    }
+  }
+
+  const handleScaleAdjustment = async (scaleChange: 'bigger' | 'smaller') => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const scalePrompt = scaleChange === 'bigger'
+        ? 'Increase the size of the tiny home by approximately 10%. Keep everything else exactly the same - same position, same orientation, same surroundings.'
+        : 'Decrease the size of the tiny home by approximately 10%. Keep everything else exactly the same - same position, same orientation, same surroundings.'
+
+      const scaledImage = await conversationalEdit(resultImage, scalePrompt)
+      addToHistory(scaledImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to adjust scale. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
   }
 
   const handleDownload = async () => {
@@ -289,6 +384,26 @@ INCREASED ACCURACY MODE ENABLED:
             </button>
             <p className="control-info">Try a different AI placement for your tiny home</p>
 
+            <div className="history-controls">
+              <button
+                className="history-button"
+                onClick={handleUndo}
+                disabled={processing || historyIndex <= 0}
+                title="Undo"
+              >
+                ↶ Undo
+              </button>
+              <button
+                className="history-button"
+                onClick={handleRedo}
+                disabled={processing || historyIndex >= history.length - 1}
+                title="Redo"
+              >
+                Redo ↷
+              </button>
+            </div>
+            <p className="control-info">Step backward or forward through your edits</p>
+
             <button
               className="toggle-button"
               onClick={handleToggleView}
@@ -328,62 +443,62 @@ INCREASED ACCURACY MODE ENABLED:
             >
               Move Forward
             </button>
+            <button
+              onClick={() => handleScaleAdjustment('bigger')}
+              disabled={processing || !resultImage}
+              className="position-btn"
+            >
+              Make Bigger
+            </button>
+            <button
+              onClick={() => handleScaleAdjustment('smaller')}
+              disabled={processing || !resultImage}
+              className="position-btn"
+            >
+              Make Smaller
+            </button>
           </div>
         </div>
 
-        <div className="control-panel">
-          <h3>Increased Accuracy</h3>
-          <div className="accuracy-control">
-            <div className="accuracy-toggle">
-              <label className="toggle-label">
+        {/* Conversational Editing */}
+        {resultImage && (
+          <div className="control-panel">
+            <h3>Conversational Editing</h3>
+            <div className="conversational-edit-control">
+              <p className="control-info">
+                Make natural language edits to your image. Try: "make the sky more cloudy", "add some trees", "change the grass to gravel", etc.
+              </p>
+              <div className="edit-input-group">
                 <input
-                  type="checkbox"
-                  checked={increasedAccuracy}
-                  onChange={(e) => setIncreasedAccuracy(e.target.checked)}
-                  className="accuracy-checkbox"
+                  type="text"
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  onKeyPress={handleEditKeyPress}
+                  placeholder="Describe the changes you'd like to make..."
+                  className="edit-input"
+                  disabled={processing}
                 />
-                <span className="toggle-text">Enable Increased Accuracy Mode</span>
-              </label>
-            </div>
-            {increasedAccuracy && (
-              <div className="accuracy-settings">
-                <p className="accuracy-info">
-                  For maximum accuracy, include a person in your photo standing where you want the tiny home placed.
-                </p>
-                <div className="height-input-group">
-                  <label htmlFor="personHeight" className="input-label">
-                    Person's Height
-                  </label>
-                  <div className="height-inputs">
-                    <div className="input-with-unit">
-                      <input
-                        id="personHeight"
-                        type="number"
-                        min="140"
-                        max="220"
-                        value={personHeight}
-                        onChange={(e) => setPersonHeight(parseInt(e.target.value) || 170)}
-                        className="height-input"
-                      />
-                      <span className="input-unit">cm</span>
-                    </div>
-                    <span className="height-conversion">
-                      ({(personHeight / 100).toFixed(2)}m / {Math.floor(personHeight / 30.48)}'{Math.round((personHeight % 30.48) / 2.54)}")
-                    </span>
-                  </div>
-                </div>
-                <div className="accuracy-tips">
-                  <strong>Tips:</strong>
-                  <ul>
-                    <li>Have the person stand where you want the tiny home</li>
-                    <li>Ensure the person is clearly visible in the photo</li>
-                    <li>Take the photo from the same angle you want to view the tiny home</li>
-                  </ul>
-                </div>
+                <button
+                  className="apply-button"
+                  onClick={handleConversationalEdit}
+                  disabled={processing || !editPrompt.trim()}
+                >
+                  Apply Edit
+                </button>
               </div>
-            )}
+              <div className="edit-examples">
+                <strong>Example edits:</strong>
+                <ul>
+                  <li>"make the sky more cloudy"</li>
+                  <li>"add some trees in the background"</li>
+                  <li>"change the grass to gravel or paving"</li>
+                  <li>"make the lighting warmer"</li>
+                  <li>"add a garden bed near the tiny home"</li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="control-panel">
           <h3>Lighting & Time of Day</h3>
