@@ -21,14 +21,18 @@ interface WireframeBoxProps {
 }
 
 function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: WireframeBoxProps) {
-  // Calculate base dimensions - much smaller to start for realistic tiny home size
+  // Calculate base dimensions - realistic tiny home size
   const estimatedRealWorldWidth = 20 // meters
   const pixelsPerMeter = imageWidth / estimatedRealWorldWidth
 
-  // Base box dimensions (maintaining exact proportions) - scaled down significantly
-  const baseBoxWidth = dimensions.length * pixelsPerMeter * 0.0005
-  const baseBoxDepth = dimensions.width * pixelsPerMeter * 0.0005
-  const baseBoxHeight = dimensions.height * pixelsPerMeter * 0.0005
+  // Base box dimensions (maintaining exact proportions)
+  const baseBoxWidth = dimensions.length * pixelsPerMeter * 0.015
+  const baseBoxDepth = dimensions.width * pixelsPerMeter * 0.015
+  const baseBoxHeight = dimensions.height * pixelsPerMeter * 0.015
+
+  // Use Z position to simulate depth by affecting scale
+  const depthScale = 1 - (position.z * 0.15) // Z from 0-3, scale reduction 0-45%
+  const finalScale = scale * depthScale
 
   // Memoize edges geometry to prevent recreation on every render
   const edges = useMemo(() => {
@@ -38,9 +42,9 @@ function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: Wir
 
   return (
     <group
-      position={[position.x, position.y, position.z]}
+      position={[position.x, position.y, 0]}
       rotation={[0, rotation, 0]}
-      scale={[scale, scale, scale]}
+      scale={[finalScale, finalScale, finalScale]}
     >
       <mesh>
         <boxGeometry args={[baseBoxWidth, baseBoxHeight, baseBoxDepth]} />
@@ -109,10 +113,10 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const orbitControlsRef = useRef<any>(null)
 
-  // Wireframe transform state - centered in middle of image, small size
-  const [position, setPosition] = useState({ x: 0, y: 0, z: 0.5 })
+  // Wireframe transform state - centered in middle of image, realistic size
+  const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
   const [rotation, setRotation] = useState(0)
-  const [scale, setScale] = useState(1.0) // Start with realistic tiny home size (100% with reduced base)
+  const [scale, setScale] = useState(0.5) // Start with realistic tiny home size (50%)
 
   // Load image dimensions
   useEffect(() => {
@@ -218,7 +222,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
 
           <div className="control-group">
             <label>
-              Depth (Forward ← → Back)
+              Depth (Back ← → Forward)
               <input
                 type="range"
                 min="0"
@@ -227,7 +231,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
                 value={position.z}
                 onChange={(e) => setPosition(prev => ({ ...prev, z: parseFloat(e.target.value) }))}
               />
-              <span className="control-value">{position.z.toFixed(1)}</span>
+              <span className="control-value">{position.z === 0 ? 'Front' : position.z === 3 ? 'Back' : position.z.toFixed(1)}</span>
             </label>
           </div>
 
@@ -265,9 +269,9 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
 
           <div className="control-actions">
             <button className="reset-button" onClick={() => {
-              setPosition({ x: 0, y: 0, z: 0.5 })
+              setPosition({ x: 0, y: 0, z: 0 })
               setRotation(0)
-              setScale(1.0)
+              setScale(0.5)
             }}>
               Reset to Default
             </button>
