@@ -16,7 +16,7 @@ interface WireframeBoxProps {
   imageWidth: number
   imageHeight: number
   position: { x: number; y: number; z: number }
-  rotation: number
+  rotation: { x: number; y: number; z: number }
   scale: number
 }
 
@@ -40,7 +40,7 @@ function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: Wir
   return (
     <group
       position={[position.x, position.y, position.z]}
-      rotation={[0, rotation, 0]}
+      rotation={[rotation.x, rotation.y, rotation.z]}
       scale={[finalScale, finalScale, finalScale]}
     >
       {/* Semi-transparent box */}
@@ -125,7 +125,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
 
   // Wireframe transform state - centered in middle of image, realistic size
   const [position, setPosition] = useState({ x: 0, y: 0, z: -2 })
-  const [rotation, setRotation] = useState(0)
+  const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 })
   const [scale, setScale] = useState(0.4) // Start with realistic tiny home size (40%)
 
   // Load image dimensions
@@ -252,16 +252,46 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
           <h3>Rotation</h3>
           <div className="control-group">
             <label>
-              Angle
+              Spin (Horizontal)
               <input
                 type="range"
                 min="0"
                 max={Math.PI * 2}
-                step="0.1"
-                value={rotation}
-                onChange={(e) => setRotation(parseFloat(e.target.value))}
+                step="0.05"
+                value={rotation.y}
+                onChange={(e) => setRotation(prev => ({ ...prev, y: parseFloat(e.target.value) }))}
               />
-              <span className="control-value">{Math.round((rotation * 180) / Math.PI)}°</span>
+              <span className="control-value">{Math.round((rotation.y * 180) / Math.PI)}°</span>
+            </label>
+          </div>
+
+          <div className="control-group">
+            <label>
+              Tilt (Forward/Back)
+              <input
+                type="range"
+                min={-Math.PI / 4}
+                max={Math.PI / 4}
+                step="0.05"
+                value={rotation.x}
+                onChange={(e) => setRotation(prev => ({ ...prev, x: parseFloat(e.target.value) }))}
+              />
+              <span className="control-value">{Math.round((rotation.x * 180) / Math.PI)}°</span>
+            </label>
+          </div>
+
+          <div className="control-group">
+            <label>
+              Roll (Side to Side)
+              <input
+                type="range"
+                min={-Math.PI / 6}
+                max={Math.PI / 6}
+                step="0.05"
+                value={rotation.z}
+                onChange={(e) => setRotation(prev => ({ ...prev, z: parseFloat(e.target.value) }))}
+              />
+              <span className="control-value">{Math.round((rotation.z * 180) / Math.PI)}°</span>
             </label>
           </div>
 
@@ -284,7 +314,7 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
           <div className="control-actions">
             <button className="reset-button" onClick={() => {
               setPosition({ x: 0, y: 0, z: -2 })
-              setRotation(0)
+              setRotation({ x: 0, y: 0, z: 0 })
               setScale(0.4)
               // Reset camera view
               if (orbitControlsRef.current) {
