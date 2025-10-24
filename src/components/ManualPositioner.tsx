@@ -172,7 +172,6 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
             orthographic
             camera={{ position: [0, 0, 10], zoom: 80, near: 0.1, far: 1000 }}
           >
-            <color attach="background" args={['transparent']} />
             <Scene
               tinyHomeModel={tinyHomeModel}
               imageWidth={imageDimensions.width}
