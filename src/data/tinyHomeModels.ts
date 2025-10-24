@@ -5,9 +5,9 @@ export const tinyHomeModels: TinyHomeModel[] = [
     id: 'deluxe-tiny-home',
     name: 'Deluxe Tiny Home',
     dimensions: {
-      length: 7.2,
-      width: 2.4,
-      height: 4.0
+      length: 13.0,
+      width: 5.0,
+      height: 3.5
     },
     price: 89900,
     imageUrl: '/tiny-home-models/deluxe-tiny-home.png',

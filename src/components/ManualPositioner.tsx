@@ -21,14 +21,11 @@ interface WireframeBoxProps {
 }
 
 function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: WireframeBoxProps) {
-  // Calculate base dimensions - realistic tiny home size
-  const estimatedRealWorldWidth = 20 // meters
-  const pixelsPerMeter = imageWidth / estimatedRealWorldWidth
-
-  // Base box dimensions (maintaining exact proportions)
-  const baseBoxWidth = dimensions.length * pixelsPerMeter * 0.015
-  const baseBoxDepth = dimensions.width * pixelsPerMeter * 0.015
-  const baseBoxHeight = dimensions.height * pixelsPerMeter * 0.015
+  // Actual dimensions in 3D space units (proportional to real meters)
+  // 13m x 5m x 3.5m tiny home
+  const boxWidth = dimensions.length * 0.2   // 13m length
+  const boxDepth = dimensions.width * 0.2    // 5m depth
+  const boxHeight = dimensions.height * 0.2  // 3.5m height
 
   // Use Z position to simulate depth by affecting scale
   const depthScale = 1 - (position.z * 0.15) // Z from 0-3, scale reduction 0-45%
@@ -36,29 +33,38 @@ function WireframeBox({ dimensions, imageWidth, position, rotation, scale }: Wir
 
   // Memoize edges geometry to prevent recreation on every render
   const edges = useMemo(() => {
-    const geometry = new THREE.BoxGeometry(baseBoxWidth, baseBoxHeight, baseBoxDepth)
+    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)
     return new THREE.EdgesGeometry(geometry)
-  }, [baseBoxWidth, baseBoxHeight, baseBoxDepth])
+  }, [boxWidth, boxHeight, boxDepth])
 
   return (
     <group
-      position={[position.x, position.y, 0]}
+      position={[position.x, position.y, position.z]}
       rotation={[0, rotation, 0]}
       scale={[finalScale, finalScale, finalScale]}
     >
+      {/* Semi-transparent box */}
       <mesh>
-        <boxGeometry args={[baseBoxWidth, baseBoxHeight, baseBoxDepth]} />
-        <meshBasicMaterial
+        <boxGeometry args={[boxWidth, boxHeight, boxDepth]} />
+        <meshStandardMaterial
           color={0x00ff00}
           transparent
-          opacity={0.3}
+          opacity={0.15}
           side={THREE.DoubleSide}
         />
       </mesh>
+
+      {/* Wireframe edges for clarity */}
       <lineSegments>
         <primitive object={edges} attach="geometry" />
         <lineBasicMaterial color={0x00ff00} linewidth={2} />
       </lineSegments>
+
+      {/* Ground shadow plane for depth perception */}
+      <mesh position={[0, -boxHeight / 2 - 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[boxWidth * 1.2, boxDepth * 1.2]} />
+        <meshBasicMaterial color={0x000000} transparent opacity={0.2} />
+      </mesh>
     </group>
   )
 }
@@ -92,16 +98,20 @@ function Scene({
         scale={scale}
       />
 
-      {/* Lighting */}
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[10, 10, 5]} intensity={0.5} />
+      {/* Lighting for 3D depth perception */}
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
+      <directionalLight position={[-10, 5, -5]} intensity={0.3} />
 
-      {/* OrbitControls disabled - camera stays fixed, wireframe moves via sliders */}
+      {/* OrbitControls - enable rotation to see 3D perspective */}
       <OrbitControls
         ref={orbitControlsRef}
-        enableRotate={false}
-        enablePan={false}
-        enableZoom={false}
+        enableRotate={true}
+        enablePan={true}
+        enableZoom={true}
+        target={[0, 0, 0]}
+        minDistance={3}
+        maxDistance={15}
       />
     </>
   )
@@ -114,9 +124,9 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
   const orbitControlsRef = useRef<any>(null)
 
   // Wireframe transform state - centered in middle of image, realistic size
-  const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
+  const [position, setPosition] = useState({ x: 0, y: 0, z: -2 })
   const [rotation, setRotation] = useState(0)
-  const [scale, setScale] = useState(0.5) // Start with realistic tiny home size (50%)
+  const [scale, setScale] = useState(0.4) // Start with realistic tiny home size (40%)
 
   // Load image dimensions
   useEffect(() => {
@@ -173,8 +183,12 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
               preserveDrawingBuffer: true,
               alpha: true
             }}
-            orthographic
-            camera={{ position: [0, 0, 10], zoom: 80, near: 0.1, far: 1000 }}
+            camera={{
+              position: [3, 2, 5],
+              fov: 50,
+              near: 0.1,
+              far: 1000
+            }}
           >
             <Scene
               tinyHomeModel={tinyHomeModel}
@@ -222,16 +236,16 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
 
           <div className="control-group">
             <label>
-              Depth (Back ← → Forward)
+              Depth (Forward ← → Back)
               <input
                 type="range"
-                min="0"
-                max="3"
+                min="-5"
+                max="2"
                 step="0.1"
                 value={position.z}
                 onChange={(e) => setPosition(prev => ({ ...prev, z: parseFloat(e.target.value) }))}
               />
-              <span className="control-value">{position.z === 0 ? 'Front' : position.z === 3 ? 'Back' : position.z.toFixed(1)}</span>
+              <span className="control-value">{position.z.toFixed(1)}</span>
             </label>
           </div>
 
@@ -269,9 +283,13 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
 
           <div className="control-actions">
             <button className="reset-button" onClick={() => {
-              setPosition({ x: 0, y: 0, z: 0 })
+              setPosition({ x: 0, y: 0, z: -2 })
               setRotation(0)
-              setScale(0.5)
+              setScale(0.4)
+              // Reset camera view
+              if (orbitControlsRef.current) {
+                orbitControlsRef.current.reset()
+              }
             }}>
               Reset to Default
             </button>
@@ -289,7 +307,8 @@ function ManualPositioner({ uploadedImage, tinyHomeModel, onGenerate, onCancel }
       </div>
 
       <div className="positioner-help">
-        <p><strong>Instructions:</strong> Use the side panel sliders to adjust the position, rotation, and scale of the tiny home placement guide. The background image remains fixed while you position the wireframe.</p>
+        <p><strong>Instructions:</strong> Use the side panel sliders to adjust the position, rotation, and scale of the tiny home placement guide.</p>
+        <p><strong>3D View Controls:</strong> Left-click + drag to rotate view, right-click + drag to pan, scroll to zoom. This helps you see the 3D perspective and match it to your property.</p>
       </div>
     </div>
   )
