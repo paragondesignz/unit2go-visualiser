@@ -463,3 +463,209 @@ function adjustPositionByCommand(command: string, currentPosition: Position): Po
 
   return newPosition
 }
+
+export async function processWithWireframeGuide(
+  uploadedImage: UploadedImage,
+  tinyHomeModel: TinyHomeModel,
+  wireframeGuideDataUrl: string,
+  lightingPrompt?: string
+): Promise<string> {
+  const imageBase64 = await fileToBase64(uploadedImage.file)
+  const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
+  const wireframeBase64 = wireframeGuideDataUrl.includes('base64,')
+    ? wireframeGuideDataUrl.split('base64,')[1]
+    : wireframeGuideDataUrl
+
+  const prompt = `CRITICAL WIREFRAME-GUIDED COMPOSITING TASK:
+
+IMAGE 1 (User's Photo): This is the BASE image. The output MUST be the SAME SIZE and preserve this EXACTLY.
+IMAGE 2 (Tiny Home Reference): This shows what tiny home to add INTO Image 1.
+IMAGE 3 (Wireframe Guide): This shows the EXACT position, rotation, and scale for placement.
+
+OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
+1. Output image dimensions MUST match Image 1 (user's photo) EXACTLY
+   - DO NOT change the aspect ratio, resolution, or size of the user's photo
+
+2. PRESERVE Image 1 (user's photo) COMPLETELY:
+   - DO NOT regenerate, redraw, or recreate the scene
+   - Keep the EXACT scene from the user's photo - ONLY add tiny home to it
+
+3. ADD tiny home FROM Image 2 INTO Image 1:
+   - Take the tiny home appearance from Image 2
+   - Place it EXACTLY matching the wireframe position, rotation, and scale in Image 3
+   - The wireframe shows EXACTLY where and how to place it
+   - Size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
+   - Match the EXACT position and orientation shown in the wireframe
+   - Add natural shadows to integrate it into the scene
+   - Match lighting from Image 1
+
+4. This is PRECISE WIREFRAME-GUIDED COMPOSITING:
+   - The wireframe guide (Image 3) shows the EXACT placement
+   - Match the position, rotation, and scale shown in the wireframe
+   - Final output = Image 1 + tiny home placed exactly as shown in wireframe
+
+CRITICAL: Output dimensions and scene MUST match Image 1. Place tiny home EXACTLY as shown in wireframe guide.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+
+  const config = {
+    responseModalities: ['IMAGE', 'TEXT'] as string[],
+  }
+
+  const model = 'gemini-2.5-flash-image-preview'
+
+  const contents = [
+    {
+      role: 'user' as const,
+      parts: [
+        {
+          text: prompt,
+        },
+        {
+          inlineData: {
+            mimeType: uploadedImage.file.type || 'image/jpeg',
+            data: imageBase64,
+          },
+        },
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: tinyHomeImageBase64,
+          },
+        },
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: wireframeBase64,
+          },
+        },
+      ],
+    },
+  ]
+
+  console.log('Sending wireframe-guided request to Gemini API with model:', model)
+
+  const response = await ai.models.generateContentStream({
+    model,
+    config,
+    contents,
+  })
+
+  let generatedImageData: string | null = null
+  let textResponse = ''
+
+  for await (const chunk of response) {
+    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
+      continue
+    }
+
+    for (const part of chunk.candidates[0].content.parts) {
+      if (part.inlineData) {
+        console.log('Found image in wireframe-guided response!')
+        const { mimeType, data } = part.inlineData
+        generatedImageData = `data:${mimeType};base64,${data}`
+        break
+      } else if (part.text) {
+        textResponse += part.text
+        console.log('Text response:', part.text)
+      }
+    }
+
+    if (generatedImageData) break
+  }
+
+  if (generatedImageData) {
+    return generatedImageData
+  }
+
+  throw new Error(`No image generated with wireframe guide. API Response: ${textResponse || 'No response text'}`)
+}
+
+export async function conversationalEdit(
+  currentImageDataUrl: string,
+  editPrompt: string
+): Promise<string> {
+  const imageBase64 = currentImageDataUrl.includes('base64,')
+    ? currentImageDataUrl.split('base64,')[1]
+    : currentImageDataUrl
+
+  const prompt = `CONVERSATIONAL IMAGE EDIT:
+
+This image shows the user's photo with a tiny home already placed in it.
+
+USER REQUEST: ${editPrompt}
+
+OUTPUT REQUIREMENTS:
+1. Output dimensions MUST match the input image EXACTLY
+   - DO NOT change image size, aspect ratio, or resolution
+
+2. Apply the user's requested edit naturally:
+   - If they ask to change lighting/time/weather, adjust those elements
+   - If they ask to move/adjust the tiny home, do that
+   - If they ask to add/remove elements, do that naturally
+   - Keep changes realistic and natural-looking
+
+3. PRESERVE what the user didn't ask to change:
+   - Keep the base scene and composition
+   - Keep elements not mentioned in the request
+
+Apply the user's request naturally while maintaining image quality and realism.`
+
+  const config = {
+    responseModalities: ['IMAGE', 'TEXT'] as string[],
+  }
+
+  const model = 'gemini-2.5-flash-image-preview'
+
+  const contents = [
+    {
+      role: 'user' as const,
+      parts: [
+        {
+          text: prompt,
+        },
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: imageBase64,
+          },
+        },
+      ],
+    },
+  ]
+
+  console.log('Sending conversational edit request to Gemini API')
+
+  const response = await ai.models.generateContentStream({
+    model,
+    config,
+    contents,
+  })
+
+  let generatedImageData: string | null = null
+  let textResponse = ''
+
+  for await (const chunk of response) {
+    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
+      continue
+    }
+
+    for (const part of chunk.candidates[0].content.parts) {
+      if (part.inlineData) {
+        console.log('Found image in conversational edit response!')
+        const { mimeType, data } = part.inlineData
+        generatedImageData = `data:${mimeType};base64,${data}`
+        break
+      } else if (part.text) {
+        textResponse += part.text
+        console.log('Text response:', part.text)
+      }
+    }
+
+    if (generatedImageData) break
+  }
+
+  if (generatedImageData) {
+    return generatedImageData
+  }
+
+  throw new Error(`No image generated for conversational edit. API Response: ${textResponse || 'No response text'}`)
+}

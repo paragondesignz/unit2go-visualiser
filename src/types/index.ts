@@ -17,6 +17,8 @@ export interface UploadedImage {
   file: File
   url: string
   preview: string
+  increasedAccuracy?: boolean
+  personHeight?: number
 }
 
 export interface Position {
