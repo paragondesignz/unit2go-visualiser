@@ -255,37 +255,13 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
     }
   }
 
-  const handleQuickCommand = async (command: string) => {
+  const handleDifferentPOV = async () => {
     setProcessing(true)
     setError(null)
 
     try {
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
-      const result = await processWithGemini(
-        uploadedImage,
-        selectedTinyHome,
-        'adjust',
-        command,
-        position,
-        combinedPrompt
-      )
-      setPosition(result.position)
-      addToHistory(result.imageUrl)
-      setShowingOriginal(false)
-    } catch (err) {
-      setError('Failed to adjust position. Please try again.')
-      console.error(err)
-    } finally {
-      setProcessing(false)
-    }
-  }
-
-  const handleRegenerate = async () => {
-    setProcessing(true)
-    setError(null)
-
-    try {
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
+      const povPrompt = 'Generate from a different camera angle and perspective while maintaining natural placement. Try a different viewpoint that showcases the property and tiny home in a new way.'
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt() + ` ${povPrompt}`
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
@@ -298,7 +274,7 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
       addToHistory(result.imageUrl)
       setShowingOriginal(false)
     } catch (err) {
-      setError('Failed to regenerate image. Please try again.')
+      setError('Failed to generate different POV. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
@@ -331,28 +307,6 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
   const handleEditKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !processing && editPrompt.trim()) {
       handleConversationalEdit()
-    }
-  }
-
-  const handleScaleAdjustment = async (scaleChange: 'bigger' | 'smaller') => {
-    if (!resultImage) return
-
-    setProcessing(true)
-    setError(null)
-
-    try {
-      const scalePrompt = scaleChange === 'bigger'
-        ? 'Increase the size of the tiny home by approximately 10%. Keep everything else exactly the same - same position, same orientation, same surroundings.'
-        : 'Decrease the size of the tiny home by approximately 10%. Keep everything else exactly the same - same position, same orientation, same surroundings.'
-
-      const scaledImage = await conversationalEdit(resultImage, scalePrompt)
-      addToHistory(scaledImage)
-      setShowingOriginal(false)
-    } catch (err) {
-      setError('Failed to adjust scale. Please try again.')
-      console.error(err)
-    } finally {
-      setProcessing(false)
     }
   }
 
@@ -419,22 +373,51 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
             Generated images are artistic representations and may not be to exact scale
           </p>
         )}
+
+        {/* Conversational Editing - moved under preview */}
+        {resultImage && (
+          <div className="conversational-edit-section">
+            <h3>Edit Your Visualization</h3>
+            <p className="control-info">
+              Make natural language edits to your image. Try: "make the sky more cloudy", "add some trees", "change the grass to gravel", etc.
+            </p>
+            <div className="edit-input-group">
+              <input
+                type="text"
+                value={editPrompt}
+                onChange={(e) => setEditPrompt(e.target.value)}
+                onKeyPress={handleEditKeyPress}
+                placeholder="Describe the changes you'd like to make..."
+                className="edit-input"
+                disabled={processing}
+              />
+              <button
+                className="apply-button"
+                onClick={handleConversationalEdit}
+                disabled={processing || !editPrompt.trim()}
+              >
+                Apply Edit
+              </button>
+            </div>
+            <div className="edit-examples">
+              <strong>Example edits:</strong>
+              <ul>
+                <li>"make the sky more cloudy"</li>
+                <li>"add some trees in the background"</li>
+                <li>"change the grass to gravel or paving"</li>
+                <li>"make the lighting warmer"</li>
+                <li>"add a garden bed near the tiny home"</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="controls">
         <div className="control-panel">
-          <h3>Placement Controls</h3>
+          <h3>View Controls</h3>
 
           <div className="regenerate-section">
-            <button
-              className="regenerate-button"
-              onClick={handleRegenerate}
-              disabled={processing}
-            >
-              Generate New Placement
-            </button>
-            <p className="control-info">Try a different AI placement for your tiny home</p>
-
             <div className="history-controls">
               <button
                 className="history-button"
@@ -456,6 +439,15 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
             <p className="control-info">Step backward or forward through your edits</p>
 
             <button
+              className="pov-button"
+              onClick={handleDifferentPOV}
+              disabled={processing || !resultImage}
+            >
+              Generate Different POV
+            </button>
+            <p className="control-info">Try a different camera angle and perspective</p>
+
+            <button
               className="toggle-button"
               onClick={handleToggleView}
               disabled={processing || !resultImage}
@@ -464,92 +456,7 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
             </button>
             <p className="control-info">Toggle between original and visualization</p>
           </div>
-
-          <div className="position-controls">
-            <button
-              onClick={() => handleQuickCommand('move left')}
-              disabled={processing}
-              className="position-btn"
-            >
-              Move Left
-            </button>
-            <button
-              onClick={() => handleQuickCommand('move right')}
-              disabled={processing}
-              className="position-btn"
-            >
-              Move Right
-            </button>
-            <button
-              onClick={() => handleQuickCommand('move up')}
-              disabled={processing}
-              className="position-btn"
-            >
-              Move Back
-            </button>
-            <button
-              onClick={() => handleQuickCommand('move down')}
-              disabled={processing}
-              className="position-btn"
-            >
-              Move Forward
-            </button>
-            <button
-              onClick={() => handleScaleAdjustment('bigger')}
-              disabled={processing || !resultImage}
-              className="position-btn"
-            >
-              Make Bigger
-            </button>
-            <button
-              onClick={() => handleScaleAdjustment('smaller')}
-              disabled={processing || !resultImage}
-              className="position-btn"
-            >
-              Make Smaller
-            </button>
-          </div>
         </div>
-
-        {/* Conversational Editing */}
-        {resultImage && (
-          <div className="control-panel">
-            <h3>Conversational Editing</h3>
-            <div className="conversational-edit-control">
-              <p className="control-info">
-                Make natural language edits to your image. Try: "make the sky more cloudy", "add some trees", "change the grass to gravel", etc.
-              </p>
-              <div className="edit-input-group">
-                <input
-                  type="text"
-                  value={editPrompt}
-                  onChange={(e) => setEditPrompt(e.target.value)}
-                  onKeyPress={handleEditKeyPress}
-                  placeholder="Describe the changes you'd like to make..."
-                  className="edit-input"
-                  disabled={processing}
-                />
-                <button
-                  className="apply-button"
-                  onClick={handleConversationalEdit}
-                  disabled={processing || !editPrompt.trim()}
-                >
-                  Apply Edit
-                </button>
-              </div>
-              <div className="edit-examples">
-                <strong>Example edits:</strong>
-                <ul>
-                  <li>"make the sky more cloudy"</li>
-                  <li>"add some trees in the background"</li>
-                  <li>"change the grass to gravel or paving"</li>
-                  <li>"make the lighting warmer"</li>
-                  <li>"add a garden bed near the tiny home"</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="control-panel">
           <h3>Lighting & Time of Day</h3>

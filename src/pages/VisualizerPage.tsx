@@ -133,34 +133,6 @@ function VisualizerPage() {
                   </div>
                 </div>
 
-                <div className="depth-selection">
-                  <h3>Depth</h3>
-                  <p className="depth-subtitle">How far away should the tiny home appear?</p>
-                  <div className="depth-options">
-                    <button
-                      className={`depth-btn ${placementPreferences.depth === 'foreground' ? 'selected' : ''}`}
-                      onClick={() => setPlacementPreferences({...placementPreferences, depth: 'foreground'})}
-                    >
-                      <span className="depth-label">Foreground</span>
-                      <span className="depth-description">Close, larger</span>
-                    </button>
-                    <button
-                      className={`depth-btn ${placementPreferences.depth === 'midground' ? 'selected' : ''}`}
-                      onClick={() => setPlacementPreferences({...placementPreferences, depth: 'midground'})}
-                    >
-                      <span className="depth-label">Midground</span>
-                      <span className="depth-description">Balanced</span>
-                    </button>
-                    <button
-                      className={`depth-btn ${placementPreferences.depth === 'background' ? 'selected' : ''}`}
-                      onClick={() => setPlacementPreferences({...placementPreferences, depth: 'background'})}
-                    >
-                      <span className="depth-label">Background</span>
-                      <span className="depth-description">Far, smaller</span>
-                    </button>
-                  </div>
-                </div>
-
                 <button
                   className="generate-button-large"
                   onClick={handleGenerate}

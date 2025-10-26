@@ -1060,6 +1060,65 @@ body {
   font-style: italic;
 }
 
+/* Conversational Editing Section - Under Preview */
+.conversational-edit-section {
+  background: var(--bg-card);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  margin-top: 20px;
+}
+
+.conversational-edit-section h3 {
+  font-size: 1.3rem;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.conversational-edit-section .control-info {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.conversational-edit-section .edit-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.conversational-edit-section .edit-input {
+  flex: 1;
+  padding: 14px 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: var(--transition);
+  background: white;
+}
+
+.conversational-edit-section .edit-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(40, 169, 225, 0.1);
+}
+
+.conversational-edit-section .edit-input:disabled {
+  background: var(--bg-tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.conversational-edit-section .apply-button {
+  padding: 14px 28px;
+  white-space: nowrap;
+  min-width: 120px;
+}
+
 /* Controls */
 .controls {
   display: flex;
@@ -1092,7 +1151,8 @@ body {
 .regenerate-button,
 .toggle-button,
 .apply-button,
-.download-button {
+.download-button,
+.pov-button {
   width: 100%;
   padding: 14px 20px;
   font-size: 1rem;
@@ -1124,6 +1184,56 @@ body {
 .toggle-button:hover:not(:disabled) {
   background: var(--bg-tertiary);
   border-color: var(--border-hover);
+}
+
+.pov-button {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.pov-button:hover:not(:disabled) {
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* History Controls (Undo/Redo) */
+.history-controls {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.history-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.history-button:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.history-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-tertiary);
 }
 
 .control-info {
