@@ -234,11 +234,15 @@ async function generateImageWithTinyHome(
 
 The first image shows the customer's property as photographed - this is your base canvas that preserves the exact scene, lighting, and atmosphere. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m long × ${tinyHomeModel.dimensions.width}m wide × ${tinyHomeModel.dimensions.height}m tall) to integrate into the property scene.
 
-Create a seamless composite photograph where the tiny home appears naturally placed on the property, as if it was present when the original photo was taken. The tiny home should sit on the ground with realistic proportions - use visible objects for scale reference (standard doors are approximately 2 meters tall, people average 1.7 meters, cars measure roughly 4.5 meters in length).
+Create a seamless composite photograph where the tiny home appears naturally placed on the property, as if it was present when the original photo was taken. Photograph this from a standard architectural photography perspective using a 50mm equivalent lens at eye level (approximately 1.6 meters above ground), maintaining the same camera position and angle as the original property photograph.
 
-Capture this scene with natural photographic realism: match the original photograph's perspective, depth of field, and camera angle precisely. The tiny home casts authentic shadows that correspond to the existing lighting conditions and sun angle visible in the property photo. Integrate ground contact naturally where the structure meets the existing terrain, grass, or paving.
+Position the tiny home at an appropriate mid-ground distance where it appears clearly visible and properly scaled within the scene. The structure measures ${tinyHomeModel.dimensions.length} meters in length - ensure this appears proportionally accurate by comparing to visible reference objects: standard residential doors are 2 meters tall, average human height is 1.7 meters, cars are approximately 4.5 meters long, and fence posts typically stand 1.8-2 meters high. The tiny home should appear neither oversized nor undersized relative to these environmental elements.
 
-The lighting, color temperature, and atmospheric conditions of the tiny home should harmonize perfectly with the base photograph's existing ambiance. Render realistic reflections in windows and maintain consistent focus depth matching the original image's depth of field.
+The tiny home sits firmly on the ground plane with realistic contact points where the foundation meets the existing terrain, grass, paving, or dirt. Cast natural contact shadows directly beneath and around the structure's base, with shadow direction, length, and softness matching the sun angle and lighting conditions visible in the original photograph. Integrate the structure naturally into the depth of the scene, maintaining proper atmospheric perspective - the tiny home should have the same visual clarity and color saturation as other objects at similar distances in the original photo.
+
+The lighting, color temperature, and atmospheric conditions of the tiny home should harmonize perfectly with the base photograph's existing ambiance. Render realistic reflections in windows that mirror the surrounding environment and sky. Maintain consistent depth of field matching the original image - if the background is slightly soft, apply equivalent focus to the tiny home based on its position in the scene.
+
+Capture fine architectural details: crisp edges on the roof line and walls, realistic material textures on the exterior cladding, natural weathering appropriate to outdoor structures, and proper linear perspective with parallel lines converging toward the same vanishing points as the existing environment.
 
 Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
@@ -437,11 +441,15 @@ export async function processWithWireframeGuide(
 
 The first image shows the customer's property photograph - your base canvas preserving the exact scene. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) to integrate. The third image shows a wireframe overlay indicating the precise position, rotation, scale, and perspective for placement.
 
-Create a photorealistic composite where the tiny home matches the exact position, angle, and scale indicated by the wireframe guide. The wireframe demonstrates the specific placement on the property - replicate this positioning precisely while rendering the actual tiny home appearance from the reference image.
+Create a photorealistic composite photographed from a standard architectural perspective using a 50mm equivalent lens at eye level (approximately 1.6 meters above ground). The tiny home must match the exact position, angle, and scale indicated by the wireframe guide. The wireframe demonstrates the specific placement, orientation, and proportions - replicate this positioning precisely while rendering the actual tiny home appearance from the reference image.
 
-Apply natural photographic realism: the tiny home casts authentic shadows matching the existing lighting conditions visible in the property photo. Integrate ground contact naturally where the structure meets the terrain. The lighting, color temperature, and atmospheric conditions harmonize perfectly with the base photograph's existing ambiance.
+Ensure the ${tinyHomeModel.dimensions.length}-meter structure appears proportionally accurate relative to environmental reference objects visible in the scene: doors (2m tall), people (1.7m average), cars (4.5m long), fence posts (1.8-2m). The wireframe provides the spatial template - apply realistic architectural details and materials to match the reference tiny home image.
 
-Maintain the original photograph's perspective, depth of field, and camera angle. Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
+The tiny home sits firmly on the ground plane with realistic contact points where the foundation meets the terrain. Cast natural contact shadows directly beneath and around the base, with shadow direction, length, and softness matching the sun angle visible in the property photograph. Integrate the structure into the scene's depth with proper atmospheric perspective - maintaining the same visual clarity and color saturation as other objects at similar distances.
+
+Render realistic reflections in windows mirroring the surrounding environment. Apply consistent depth of field matching the original photograph - if background elements show soft focus, apply equivalent focus to the tiny home based on its position. Ensure crisp architectural edges, realistic material textures, and proper linear perspective with parallel lines converging toward the same vanishing points as the existing environment.
+
+Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
