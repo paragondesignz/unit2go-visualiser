@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { UploadedImage, TinyHomeModel, Position, PlacementPreferences } from '../types'
 import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
+import { generateVisualization, getModelProvider } from '../services/imageGenerationService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
@@ -166,11 +167,14 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
     setError(null)
 
     try {
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt() + getPlacementPrompt()
+      const lightingPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
+      const modelProvider = getModelProvider()
 
       let imageUrl: string
+
       if (wireframeGuideImage) {
-        // Use wireframe guide processing
+        // Use wireframe guide processing (Gemini only for now)
+        const combinedPrompt = lightingPrompt + getPlacementPrompt()
         imageUrl = await processWithWireframeGuide(
           uploadedImage,
           selectedTinyHome,
@@ -184,18 +188,36 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
           scale: 1,
           rotation: 0
         })
-      } else {
-        // Use automatic processing
-        const result = await processWithGemini(
+      } else if (modelProvider === 'flux') {
+        // Use FLUX with unified service
+        console.log('Using FLUX for initial placement...')
+        imageUrl = await generateVisualization(
           uploadedImage,
           selectedTinyHome,
-          'initial',
-          undefined,
-          undefined,
-          combinedPrompt
+          placementPreferences,
+          lightingPrompt
         )
-        imageUrl = result.imageUrl
-        setPosition(result.position)
+        setPosition({
+          x: 50,
+          y: 50,
+          scale: 1,
+          rotation: 0
+        })
+      } else {
+        // Use Gemini with unified service (includes placement prompt)
+        console.log('Using Gemini for initial placement...')
+        imageUrl = await generateVisualization(
+          uploadedImage,
+          selectedTinyHome,
+          placementPreferences,
+          lightingPrompt
+        )
+        setPosition({
+          x: 50,
+          y: 50,
+          scale: 1,
+          rotation: 0
+        })
       }
 
       addToHistory(imageUrl)

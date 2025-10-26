@@ -40,3 +40,21 @@ export interface PlacementPreferences {
   horizontal: HorizontalPosition
   depth: DepthPosition
 }
+
+export type ImageModelProvider = 'gemini' | 'flux'
+
+export interface DepthMapData {
+  imageUrl: string
+  width: number
+  height: number
+}
+
+export interface FLUXGenerationOptions {
+  propertyImage: File
+  tinyHomeImageUrl: string
+  depthMap?: DepthMapData
+  clickPosition?: { x: number; y: number }
+  placementPreferences: PlacementPreferences
+  lightingPrompt?: string
+  controlnetStrength?: number
+}

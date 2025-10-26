@@ -11,7 +11,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "keywords": ["tiny-homes", "unit2go", "ai", "visualization"],
+  "keywords": [
+    "tiny-homes",
+    "unit2go",
+    "ai",
+    "visualization"
+  ],
   "author": "Paragon Design",
   "license": "ISC",
   "type": "module",
@@ -23,6 +28,7 @@
     "vite": "^7.1.5"
   },
   "dependencies": {
+    "@fal-ai/serverless-client": "^0.15.0",
     "@google/genai": "^1.19.0",
     "@google/generative-ai": "^0.24.1",
     "@react-three/drei": "^9.114.3",
