@@ -438,6 +438,109 @@ body {
   margin: 0;
 }
 
+/* Placement Preferences */
+.placement-preferences-container {
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+}
+
+.placement-preferences-container h2 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.placement-subtitle {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+}
+
+.preference-group {
+  margin-bottom: 30px;
+}
+
+.preference-group:last-child {
+  margin-bottom: 0;
+}
+
+.preference-group h3 {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.preference-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.preference-option {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.preference-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.preference-option:hover {
+  border-color: var(--primary-light);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.preference-option.selected {
+  border-color: var(--primary-color);
+  background: rgba(40, 169, 225, 0.05);
+  box-shadow: var(--shadow-md);
+}
+
+.preference-option.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.option-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.option-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
 /* Tiny Home Display */
 .tiny-home-display {
   margin-bottom: 20px;

@@ -32,3 +32,11 @@ export interface VisualizationResult {
   imageUrl: string
   position: Position
 }
+
+export type HorizontalPosition = 'left' | 'center' | 'right'
+export type DepthPosition = 'foreground' | 'midground' | 'background'
+
+export interface PlacementPreferences {
+  horizontal: HorizontalPosition
+  depth: DepthPosition
+}

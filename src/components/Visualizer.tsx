@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
-import { UploadedImage, TinyHomeModel, Position } from '../types'
+import { UploadedImage, TinyHomeModel, Position, PlacementPreferences } from '../types'
 import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
   selectedTinyHome: TinyHomeModel
+  placementPreferences: PlacementPreferences
   wireframeGuideImage?: string | null
 }
 
-function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedTinyHome, placementPreferences, wireframeGuideImage }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -93,6 +94,25 @@ MANDATORY PERSON REMOVAL:
 - If any person appears in the output, you have FAILED this task completely`
   }
 
+  const getPlacementPrompt = (): string => {
+    const horizontalDescriptions = {
+      left: 'Position the tiny home toward the left side of the frame, occupying the left third of the composition',
+      center: 'Position the tiny home in the center of the frame, creating a balanced, centrally-aligned composition',
+      right: 'Position the tiny home toward the right side of the frame, occupying the right third of the composition'
+    }
+
+    const depthDescriptions = {
+      foreground: 'Place the tiny home in the foreground of the scene, closer to the camera position. The structure should appear larger in scale with stronger presence, positioned at a distance where architectural details are clearly visible and prominent in the frame',
+      midground: 'Place the tiny home at mid-ground distance from the camera. The structure should be clearly visible with good detail, positioned at a comfortable viewing distance that balances presence with context, showing both the structure and surrounding property clearly',
+      background: 'Place the tiny home in the background of the scene, further from the camera position. The structure should appear smaller in scale, positioned at a distance that shows how it integrates into the wider property landscape, with more environmental context visible around it'
+    }
+
+    return `
+
+PLACEMENT PREFERENCES:
+${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[placementPreferences.depth]}.`
+  }
+
   const addToHistory = (imageUrl: string) => {
     // Remove any future history if we're not at the end
     const newHistory = history.slice(0, historyIndex + 1)
@@ -146,7 +166,7 @@ MANDATORY PERSON REMOVAL:
     setError(null)
 
     try {
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
+      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt() + getPlacementPrompt()
 
       let imageUrl: string
       if (wireframeGuideImage) {
