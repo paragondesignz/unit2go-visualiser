@@ -78,28 +78,15 @@ async function generateConversationalLightingEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const conversationalPrompt = `CRITICAL LIGHTING-ONLY EDIT:
+  const conversationalPrompt = `This photograph shows a property with a tiny home already placed on it. Apply a lighting and atmospheric adjustment to this existing scene.
 
-This image shows the user's photo with a tiny home already composited into it.
+${lightingPrompt}
 
-OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
-1. Output dimensions MUST match the input image EXACTLY
-   - DO NOT change image size, aspect ratio, or resolution
-   - This is the SAME image with lighting adjusted
+Adjust the lighting, shadows, sky colors, and atmospheric conditions throughout the entire scene to match the requested conditions. The tiny home and all elements remain in their current positions with the same composition and framing.
 
-2. PRESERVE the user's original photo COMPLETELY:
-   - DO NOT change proportions, perspective, or composition
-   - DO NOT recreate or redraw anything
-   - PRESERVE all original details, framing, and the existing tiny home
+Update the sun angle, shadow direction and intensity, sky appearance, color temperature, and ambient lighting to create the requested atmosphere. Maintain realistic photographic quality with natural light behavior, accurate shadow casting, and appropriate color grading for the time of day or weather conditions.
 
-3. Keep EXACTLY ONE tiny home in its current position:
-   - NEVER add, duplicate, or remove the tiny home
-   - Keep it in EXACT same position and appearance
-
-4. ONLY adjust lighting, shadows, and sky colors:
-   ${lightingPrompt}
-
-CRITICAL: This is lighting adjustment ONLY on the EXISTING composite image. Same dimensions, same scene, same tiny home position - ONLY lighting changes.`
+The output should preserve the exact dimensions, composition, and positioning of all elements from the input photograph, with only the lighting and atmospheric qualities transformed.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -112,13 +99,13 @@ CRITICAL: This is lighting adjustment ONLY on the EXISTING composite image. Same
       role: 'user' as const,
       parts: [
         {
-          text: conversationalPrompt,
-        },
-        {
           inlineData: {
             mimeType: 'image/jpeg',
             data: imageBase64,
           },
+        },
+        {
+          text: conversationalPrompt,
         },
       ],
     },
@@ -243,38 +230,17 @@ async function generateImageWithTinyHome(
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
 
-  const prompt = customPrompt || `ABSOLUTE CRITICAL COMPOSITING TASK:
+  const prompt = customPrompt || `You are creating a photorealistic architectural visualization by compositing a tiny home into an existing property photograph.
 
-IMAGE 1 (User's Photo): This is the BASE image. The output MUST be the SAME SIZE and preserve this EXACTLY.
-IMAGE 2 (Tiny Home Reference): This shows what tiny home to add INTO Image 1.
+The first image shows the customer's property as photographed - this is your base canvas that preserves the exact scene, lighting, and atmosphere. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m long × ${tinyHomeModel.dimensions.width}m wide × ${tinyHomeModel.dimensions.height}m tall) to integrate into the property scene.
 
-OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
-1. Output image dimensions MUST match Image 1 (user's photo) EXACTLY
-   - DO NOT use Image 2 (tiny home) dimensions for output
-   - DO NOT change the aspect ratio, resolution, or size of the user's photo
-   - The output is Image 1 WITH tiny home added, NOT a new image
+Create a seamless composite photograph where the tiny home appears naturally placed on the property, as if it was present when the original photo was taken. The tiny home should sit on the ground with realistic proportions - use visible objects for scale reference (standard doors are approximately 2 meters tall, people average 1.7 meters, cars measure roughly 4.5 meters in length).
 
-2. PRESERVE Image 1 (user's photo) COMPLETELY:
-   - DO NOT regenerate, redraw, or recreate the scene
-   - DO NOT change composition, framing, perspective, or camera angle
-   - DO NOT alter background, landscape, buildings, or any existing elements
-   - Keep the EXACT scene from the user's photo - ONLY add tiny home to it
+Capture this scene with natural photographic realism: match the original photograph's perspective, depth of field, and camera angle precisely. The tiny home casts authentic shadows that correspond to the existing lighting conditions and sun angle visible in the property photo. Integrate ground contact naturally where the structure meets the existing terrain, grass, or paving.
 
-3. ADD tiny home FROM Image 2 INTO Image 1:
-   - Take the tiny home appearance from Image 2
-   - Place it INTO the scene from Image 1
-   - Size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
-   - Use existing objects in Image 1 for scale (doors ~2m, people ~1.7m, cars ~4.5m)
-   - Add natural shadows to integrate it into the scene
-   - Match lighting from Image 1
+The lighting, color temperature, and atmospheric conditions of the tiny home should harmonize perfectly with the base photograph's existing ambiance. Render realistic reflections in windows and maintain consistent focus depth matching the original image's depth of field.
 
-4. This is COMPOSITING (like Photoshop):
-   - Start with Image 1 as the base layer
-   - Add tiny home as a new layer on top
-   - Blend it naturally into the scene
-   - Final output = Image 1 + tiny home overlay
-
-CRITICAL: Output dimensions and scene MUST match Image 1. You are ADDING a tiny home TO the user's photo, NOT creating a new image.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -287,9 +253,6 @@ CRITICAL: Output dimensions and scene MUST match Image 1. You are ADDING a tiny 
       role: 'user' as const,
       parts: [
         {
-          text: prompt,
-        },
-        {
           inlineData: {
             mimeType: uploadedImage.file.type || 'image/jpeg',
             data: imageBase64,
@@ -300,6 +263,9 @@ CRITICAL: Output dimensions and scene MUST match Image 1. You are ADDING a tiny 
             mimeType: 'image/png',
             data: tinyHomeImageBase64,
           },
+        },
+        {
+          text: prompt,
         },
       ],
     },
@@ -385,28 +351,19 @@ function commandToPrompt(command: string, tinyHomeModel: TinyHomeModel, lighting
   const lowerCommand = command.toLowerCase()
 
   if (lowerCommand.includes('change lighting only') || lowerCommand.includes('maintain current position')) {
-    return `CRITICAL LIGHTING-ONLY: Output dimensions MUST match input. Keep EXACTLY ONE tiny home, same position. Keep user's photo scene EXACTLY as is. ONLY adjust lighting: ${lightingPrompt}`
+    return `This photograph shows a property with a tiny home. Adjust only the lighting and atmospheric conditions: ${lightingPrompt}. The tiny home and all other elements remain in their current positions with the same composition.`
   }
 
-  let prompt = `CRITICAL POSITION ADJUSTMENT:
+  let prompt = `This photograph shows a property with a ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) placed on it. Reposition the tiny home in the scene as follows: `
 
-OUTPUT REQUIREMENTS:
-1. Output dimensions MUST match the input image (user's photo with tiny home) EXACTLY
-2. PRESERVE user's photo scene COMPLETELY - same composition, framing, perspective
-3. Keep EXACTLY ONE tiny home - ONLY change its position as requested
-4. Tiny home size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
-5. Use objects in scene for scale (doors ~2m, people ~1.7m, cars ~4.5m)
+  if (lowerCommand.includes('left')) prompt += 'move the tiny home to the left within the property scene, '
+  if (lowerCommand.includes('right')) prompt += 'move the tiny home to the right within the property scene, '
+  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'move the tiny home further back (away from the camera), '
+  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'move the tiny home closer (toward the camera), '
 
-Position adjustment requested: `
+  prompt += 'maintaining realistic proportions using visible objects for scale reference (doors ~2m, people ~1.7m, cars ~4.5m). The property scene, composition, and framing remain unchanged with only the tiny home repositioned. Apply natural shadows and lighting integration for the new position.'
 
-  if (lowerCommand.includes('left')) prompt += 'Move the tiny home left in the scene. '
-  if (lowerCommand.includes('right')) prompt += 'Move the tiny home right in the scene. '
-  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'Move the tiny home back (further away). '
-  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'Move the tiny home forward (closer). '
-
-  prompt += '\n\nCRITICAL: Same image dimensions. Same scene. ONLY the tiny home position changes. DO NOT recreate anything.'
-
-  if (lightingPrompt) prompt += ` ${lightingPrompt}`
+  if (lightingPrompt) prompt += ` Lighting conditions: ${lightingPrompt}`
 
   return prompt
 }
@@ -476,35 +433,15 @@ export async function processWithWireframeGuide(
     ? wireframeGuideDataUrl.split('base64,')[1]
     : wireframeGuideDataUrl
 
-  const prompt = `CRITICAL WIREFRAME-GUIDED COMPOSITING TASK:
+  const prompt = `You are creating a precision architectural visualization by compositing a tiny home into a property photograph using exact positioning guidance.
 
-IMAGE 1 (User's Photo): This is the BASE image. The output MUST be the SAME SIZE and preserve this EXACTLY.
-IMAGE 2 (Tiny Home Reference): This shows what tiny home to add INTO Image 1.
-IMAGE 3 (Wireframe Guide): This shows the EXACT position, rotation, and scale for placement.
+The first image shows the customer's property photograph - your base canvas preserving the exact scene. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) to integrate. The third image shows a wireframe overlay indicating the precise position, rotation, scale, and perspective for placement.
 
-OUTPUT REQUIREMENTS - VIOLATION WILL FAIL:
-1. Output image dimensions MUST match Image 1 (user's photo) EXACTLY
-   - DO NOT change the aspect ratio, resolution, or size of the user's photo
+Create a photorealistic composite where the tiny home matches the exact position, angle, and scale indicated by the wireframe guide. The wireframe demonstrates the specific placement on the property - replicate this positioning precisely while rendering the actual tiny home appearance from the reference image.
 
-2. PRESERVE Image 1 (user's photo) COMPLETELY:
-   - DO NOT regenerate, redraw, or recreate the scene
-   - Keep the EXACT scene from the user's photo - ONLY add tiny home to it
+Apply natural photographic realism: the tiny home casts authentic shadows matching the existing lighting conditions visible in the property photo. Integrate ground contact naturally where the structure meets the terrain. The lighting, color temperature, and atmospheric conditions harmonize perfectly with the base photograph's existing ambiance.
 
-3. ADD tiny home FROM Image 2 INTO Image 1:
-   - Take the tiny home appearance from Image 2
-   - Place it EXACTLY matching the wireframe position, rotation, and scale in Image 3
-   - The wireframe shows EXACTLY where and how to place it
-   - Size: ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m
-   - Match the EXACT position and orientation shown in the wireframe
-   - Add natural shadows to integrate it into the scene
-   - Match lighting from Image 1
-
-4. This is PRECISE WIREFRAME-GUIDED COMPOSITING:
-   - The wireframe guide (Image 3) shows the EXACT placement
-   - Match the position, rotation, and scale shown in the wireframe
-   - Final output = Image 1 + tiny home placed exactly as shown in wireframe
-
-CRITICAL: Output dimensions and scene MUST match Image 1. Place tiny home EXACTLY as shown in wireframe guide.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+Maintain the original photograph's perspective, depth of field, and camera angle. Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -516,9 +453,6 @@ CRITICAL: Output dimensions and scene MUST match Image 1. Place tiny home EXACTL
     {
       role: 'user' as const,
       parts: [
-        {
-          text: prompt,
-        },
         {
           inlineData: {
             mimeType: uploadedImage.file.type || 'image/jpeg',
@@ -536,6 +470,9 @@ CRITICAL: Output dimensions and scene MUST match Image 1. Place tiny home EXACTL
             mimeType: 'image/png',
             data: wireframeBase64,
           },
+        },
+        {
+          text: prompt,
         },
       ],
     },
@@ -587,27 +524,15 @@ export async function conversationalEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const prompt = `CONVERSATIONAL IMAGE EDIT:
+  const prompt = `This photograph shows a property with a tiny home placed on it. Apply the following modification to the scene:
 
-This image shows the user's photo with a tiny home already placed in it.
+${editPrompt}
 
-USER REQUEST: ${editPrompt}
+Interpret this request naturally and apply the changes with photographic realism. If the request involves lighting, weather, or atmospheric changes, adjust the sun angle, shadows, sky appearance, and color temperature throughout the scene. If the request involves repositioning or modifying the tiny home, make those spatial adjustments while maintaining realistic proportions and natural integration with the property.
 
-OUTPUT REQUIREMENTS:
-1. Output dimensions MUST match the input image EXACTLY
-   - DO NOT change image size, aspect ratio, or resolution
+Elements not mentioned in the request should remain consistent with the input photograph. Maintain realistic photographic quality with natural lighting behavior, accurate shadows, proper depth of field, and cohesive composition.
 
-2. Apply the user's requested edit naturally:
-   - If they ask to change lighting/time/weather, adjust those elements
-   - If they ask to move/adjust the tiny home, do that
-   - If they ask to add/remove elements, do that naturally
-   - Keep changes realistic and natural-looking
-
-3. PRESERVE what the user didn't ask to change:
-   - Keep the base scene and composition
-   - Keep elements not mentioned in the request
-
-Apply the user's request naturally while maintaining image quality and realism.`
+Output the modified photograph preserving the exact dimensions and aspect ratio of the input image.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -620,13 +545,13 @@ Apply the user's request naturally while maintaining image quality and realism.`
       role: 'user' as const,
       parts: [
         {
-          text: prompt,
-        },
-        {
           inlineData: {
             mimeType: 'image/png',
             data: imageBase64,
           },
+        },
+        {
+          text: prompt,
         },
       ],
     },
