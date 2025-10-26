@@ -70,13 +70,15 @@ function buildFLUXPrompt(
     background: 'in the background, integrated into the wider landscape with environmental context',
   }
 
-  return `A photorealistic photograph of a ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) seamlessly integrated into an outdoor property. The tiny home is ${horizontalDescriptions[placementPreferences.horizontal]}, ${depthDescriptions[placementPreferences.depth]}.
+  return `A photorealistic photograph showing the exact ${tinyHomeModel.name} tiny home from the reference image (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) seamlessly integrated into an outdoor property. The tiny home is ${horizontalDescriptions[placementPreferences.horizontal]}, ${depthDescriptions[placementPreferences.depth]}.
 
-CRITICAL PHOTOREALISM: Transform into a realistic outdoor structure with natural weathering - subtle dirt accumulation, minor color variations in materials, realistic surface imperfections, outdoor patina. Add very subtle water staining under roof edges from rain exposure. Materials show authentic texture variations with slight scratches and realistic wear.
+CRITICAL DESIGN PRESERVATION: The tiny home MUST maintain its EXACT architectural design from the reference image - same exterior material colors, same window placements, same door positions, same roof style, same proportions. DO NOT change the design, layout, or exterior appearance. The reference image shows the EXACT tiny home to place in the scene.
 
-Cast natural contact shadows with soft falloff - darker at ground contact, gradually softening at edges with realistic penumbra. Match exact lighting from the property photo - same shadow softness, reflection intensity, color temperature. Windows reflect the actual sky and environment. Soften edges slightly to match photographic lens characteristics.
+SUBTLE REALISM ONLY: Add only minimal natural weathering to make it look real - very subtle dirt hints on lower sections, slight natural patina appropriate for outdoor structures. Keep weathering extremely subtle - the design and colors should remain virtually identical to the reference image. Windows should reflect the actual sky and environment from the property photo.
 
-Ground contact shows realistic terrain interaction - grass or dirt slightly displaced at foundation, natural settling. Match the color palette and atmospheric characteristics of the property photograph exactly. The result must be indistinguishable from a photograph where the tiny home was actually present.
+NATURAL INTEGRATION: Cast natural contact shadows with soft falloff - darker at ground contact, gradually softening at edges with realistic penumbra. Match exact lighting from the property photo - same shadow softness, reflection intensity, color temperature. Soften edges very slightly to match photographic lens characteristics, not CG-sharp edges.
+
+Ground contact shows realistic terrain interaction - grass or dirt slightly displaced at foundation, natural settling. Match the atmospheric characteristics of the property photograph. The result must look like the exact tiny home from the reference was photographed on this property.
 
 Captured with 50mm lens at eye level (1.6m), natural depth of field, photographic grain matching the base image.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 }
@@ -107,17 +109,21 @@ export async function generateWithFLUX(
       options.lightingPrompt
     )
 
-    console.log('Calling FLUX.1 ControlNet Inpainting API...')
+    console.log('Calling FLUX.1 ControlNet Inpainting API with reference image...')
 
-    // Use FLUX dev with LoRA and ControlNet for inpainting
-    const result = await fal.subscribe('fal-ai/flux-dev/lora/controlnet-inpaint', {
+    // Use FLUX general inpainting with ControlNet and reference image for design preservation
+    const result = await fal.subscribe('fal-ai/flux-general/inpainting', {
       input: {
         image_url: propertyImageDataUrl,
         prompt: prompt,
+        // CRITICAL: Pass tiny home reference image to preserve exact design
+        reference_image_url: options.tinyHomeImageUrl,
+        reference_strength: 0.85, // High strength to preserve reference design (0.65 default, 0.85 for strong preservation)
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
+        strength: 0.75, // Balance between preservation and integration (0.0 = preserve original, 1.0 = complete remake)
         num_inference_steps: 28,
-        guidance_scale: 3.5,
+        guidance_scale: 4.0, // Slightly higher to follow prompt more closely
         seed: Math.floor(Math.random() * 1000000),
         enable_safety_checker: true,
       },
