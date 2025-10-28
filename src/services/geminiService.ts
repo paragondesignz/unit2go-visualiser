@@ -78,21 +78,15 @@ async function generateConversationalLightingEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const conversationalPrompt = `This photograph shows a property with a tiny home already placed on it. Apply a lighting and atmospheric adjustment to this existing scene.
+  const conversationalPrompt = `This photograph shows a property with a tiny home on it. Adjust the lighting and atmosphere: ${lightingPrompt}
 
-${lightingPrompt}
-
-Adjust the lighting, shadows, sky colors, and atmospheric conditions throughout the entire scene to match the requested conditions. The tiny home and all elements remain in their current positions with the same composition and framing.
-
-Update the sun angle, shadow direction and intensity, sky appearance, color temperature, and ambient lighting to create the requested atmosphere. Maintain realistic photographic quality with natural light behavior, accurate shadow casting, and appropriate color grading for the time of day or weather conditions.
-
-The output should preserve the exact dimensions, composition, and positioning of all elements from the input photograph, with only the lighting and atmospheric qualities transformed.`
+Keep all elements in their current positions. Only change the lighting, shadows, sky colors, and atmospheric conditions to match the request.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
   }
 
-  const model = 'gemini-2.5-flash-image-preview'
+  const model = 'gemini-2.5-flash-image'
 
   const contents = [
     {
@@ -113,38 +107,28 @@ The output should preserve the exact dimensions, composition, and positioning of
 
   console.log('Sending conversational lighting edit to Gemini API')
 
-  const response = await ai.models.generateContentStream({
+  const response = await ai.models.generateContent({
     model,
     config,
     contents,
   })
 
-  let generatedImageData: string | null = null
-  let textResponse = ''
-
-  for await (const chunk of response) {
-    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
-      continue
-    }
-
-    for (const part of chunk.candidates[0].content.parts) {
-      if (part.inlineData) {
-        console.log('Found lighting-edited image in response!')
-        const { mimeType, data } = part.inlineData
-        generatedImageData = `data:${mimeType};base64,${data}`
-        break
-      } else if (part.text) {
-        textResponse += part.text
-        console.log('Text response:', part.text)
-      }
-    }
-
-    if (generatedImageData) break
+  if (!response.candidates || !response.candidates[0].content) {
+    throw new Error('No response from Gemini API')
   }
 
-  if (generatedImageData) {
-    return generatedImageData
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Found lighting-edited image in response!')
+    const { mimeType, data } = imagePart.inlineData
+    return `data:${mimeType};base64,${data}`
   }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
 
   throw new Error(`No image generated during lighting edit. API Response: ${textResponse || 'No response text'}`)
 }
@@ -230,43 +214,17 @@ async function generateImageWithTinyHome(
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
 
-  const prompt = customPrompt || `You are creating a photorealistic architectural visualization by compositing a tiny home into an existing property photograph. This must look like an authentic photograph taken on location, not a digital composite.
+  const prompt = customPrompt || `Take the property photo from the first image and the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image.
 
-The first image shows the customer's property as photographed - this is your base canvas that preserves the exact scene, lighting, and atmosphere. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m long × ${tinyHomeModel.dimensions.width}m wide × ${tinyHomeModel.dimensions.height}m tall) as a design reference - transform this pristine render into a realistic, naturally weathered outdoor structure that belongs in the property photograph.
+Composite the tiny home onto the property so it looks like it was there when the photo was taken. Make it appear as a realistic outdoor structure with natural weathering, realistic shadows beneath it, and windows that reflect the sky from the property photo. Match the lighting direction and color temperature from the property photo exactly.
 
-Create a seamless composite photograph where the tiny home appears naturally placed on the property, as if it was present when the original photo was taken. Photograph this from a standard architectural photography perspective using a 50mm equivalent lens at eye level (approximately 1.6 meters above ground), maintaining the same camera position and angle as the original property photograph.
-
-Position the tiny home at an appropriate mid-ground distance where it appears clearly visible and properly scaled within the scene. The structure measures ${tinyHomeModel.dimensions.length} meters in length - ensure this appears proportionally accurate by comparing to visible reference objects: standard residential doors are 2 meters tall, average human height is 1.7 meters, cars are approximately 4.5 meters long, and fence posts typically stand 1.8-2 meters high. The tiny home should appear neither oversized nor undersized relative to these environmental elements.
-
-CRITICAL PHOTOREALISM - Transform the reference render into a real outdoor structure:
-
-WEATHERING & REALISM: The tiny home should look like a real structure that has been sitting outdoors, not a pristine 3D render. Add subtle natural weathering: slight dirt accumulation on lower sections, very subtle dust on surfaces, minor color variations in materials showing age, realistic surface imperfections, and natural outdoor patina. The exterior cladding should show realistic material texture with subtle variations - not perfect CG smoothness. Add very subtle water staining under roof edges and around windows from rain exposure.
-
-LIGHTING INTEGRATION: Match the exact lighting quality, direction, and color temperature from the property photograph. If the photo shows overcast conditions, the tiny home should have soft, diffused lighting with no harsh shadows. If sunny, create crisp directional shadows matching the sun angle precisely. The tiny home's materials should respond to light exactly like the surrounding structures in the photo - same reflection intensity, same shadow softness, same highlight characteristics.
-
-SHADOW REALISM: Cast natural contact shadows with realistic falloff - not hard CG edges. Shadows should be softest at the edges, darker where surfaces are closest to the ground, with subtle ambient light bleeding in from surrounding surfaces. Shadow color should match the ambient environment (slightly blue in shade on sunny days, neutral in overcast). Add subtle occlusion shadows in corners and under eaves.
-
-EDGE INTEGRATION: Soften edges very slightly where the structure meets the sky or background to match the natural edge characteristics of other buildings in the photograph. Avoid razor-sharp CG edges - real photographs have subtle edge softness from lens characteristics and atmospheric scattering.
-
-MATERIAL REALISM: Render materials with photographic authenticity. Metal roofing should show subtle surface variations, minor scratches, realistic specular highlights. Windows should reflect the actual sky and environment from the property photo - not generic reflections. Cladding materials should show realistic texture variation, subtle color differences between panels, natural outdoor exposure. Add very subtle dust, pollen, or dirt that naturally accumulates on outdoor structures.
-
-COLOR & TONE MATCHING: Match the color palette and tonal range of the property photograph exactly. If the photo has warm tones, the tiny home should match. If cool/blue tones, match those. Apply the same color grading that appears in the base photograph. Add subtle color casts from surrounding surfaces - grass reflects green light upward, sky adds blue from above.
-
-ATMOSPHERIC INTEGRATION: Match the image grain, noise, and compression artifacts visible in the property photograph. If the photo shows slight haze or atmospheric perspective, apply equivalent effects to the tiny home. The structure should have the same sharpness characteristics as other objects at similar distances in the photograph.
-
-GROUND CONTACT: The foundation sits firmly on the ground with realistic interaction - grass or dirt slightly displaced where it meets the base, subtle settling, natural ground texture variations around the perimeter. Shadows beneath the structure are strongest and darkest directly under the building, gradually softening and lightening toward the edges with realistic penumbra.
-
-DEPTH & FOCUS: Integrate into the scene's depth with proper atmospheric perspective. The tiny home should have identical focus characteristics to other objects at the same distance in the photograph. If background elements show depth of field softness, apply proportional softness to the tiny home's background-side elements.
-
-The final result must be indistinguishable from a photograph where the tiny home was actually present when the original image was captured. No viewer should be able to identify this as a digital composite.
-
-Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
+Keep the property photo unchanged except where the tiny home is placed. The tiny home should be properly scaled - use visible objects for reference (doors are 2m tall, cars are 4.5m long).${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
   }
 
-  const model = 'gemini-2.5-flash-image-preview'
+  const model = 'gemini-2.5-flash-image'
 
   const contents = [
     {
@@ -293,38 +251,28 @@ Output the final composite as a single cohesive photograph matching the exact di
 
   console.log('Sending request to Gemini API with model:', model)
 
-  const response = await ai.models.generateContentStream({
+  const response = await ai.models.generateContent({
     model,
     config,
     contents,
   })
 
-  let generatedImageData: string | null = null
-  let textResponse = ''
-
-  for await (const chunk of response) {
-    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
-      continue
-    }
-
-    for (const part of chunk.candidates[0].content.parts) {
-      if (part.inlineData) {
-        console.log('Found image in response!')
-        const { mimeType, data } = part.inlineData
-        generatedImageData = `data:${mimeType};base64,${data}`
-        break
-      } else if (part.text) {
-        textResponse += part.text
-        console.log('Text response:', part.text)
-      }
-    }
-
-    if (generatedImageData) break
+  if (!response.candidates || !response.candidates[0].content) {
+    throw new Error('No response from Gemini API')
   }
 
-  if (generatedImageData) {
-    return generatedImageData
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Found image in response!')
+    const { mimeType, data } = imagePart.inlineData
+    return `data:${mimeType};base64,${data}`
   }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
 
   throw new Error(`No image generated. API Response: ${textResponse || 'No response text'}`)
 }
@@ -371,17 +319,17 @@ function commandToPrompt(command: string, tinyHomeModel: TinyHomeModel, lighting
   const lowerCommand = command.toLowerCase()
 
   if (lowerCommand.includes('change lighting only') || lowerCommand.includes('maintain current position')) {
-    return `This photograph shows a property with a tiny home. Adjust only the lighting and atmospheric conditions: ${lightingPrompt}. The tiny home and all other elements remain in their current positions with the same composition.`
+    return `Adjust only the lighting and atmospheric conditions: ${lightingPrompt}. Keep the tiny home and all other elements in their current positions.`
   }
 
-  let prompt = `This photograph shows a property with a ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) placed on it. Reposition the tiny home in the scene as follows: `
+  let prompt = `Reposition the ${tinyHomeModel.name} tiny home in this scene: `
 
-  if (lowerCommand.includes('left')) prompt += 'move the tiny home to the left within the property scene, '
-  if (lowerCommand.includes('right')) prompt += 'move the tiny home to the right within the property scene, '
-  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'move the tiny home further back (away from the camera), '
-  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'move the tiny home closer (toward the camera), '
+  if (lowerCommand.includes('left')) prompt += 'move it to the left, '
+  if (lowerCommand.includes('right')) prompt += 'move it to the right, '
+  if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'move it further back, '
+  if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'move it closer, '
 
-  prompt += 'maintaining realistic proportions using visible objects for scale reference (doors ~2m, people ~1.7m, cars ~4.5m). The property scene, composition, and framing remain unchanged with only the tiny home repositioned. Apply natural shadows and lighting integration for the new position.'
+  prompt += 'keeping realistic proportions. Keep the property scene unchanged except for the tiny home position.'
 
   if (lightingPrompt) prompt += ` Lighting conditions: ${lightingPrompt}`
 
@@ -453,24 +401,17 @@ export async function processWithWireframeGuide(
     ? wireframeGuideDataUrl.split('base64,')[1]
     : wireframeGuideDataUrl
 
-  const prompt = `You are creating a precision architectural visualization by compositing a tiny home into a property photograph using exact positioning guidance. This must look like an authentic photograph taken on location, not a digital composite.
+  const prompt = `Take the property photo from the first image, the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image, and the wireframe positioning guide from the third image.
 
-The first image shows the customer's property photograph - your base canvas preserving the exact scene. The second image shows the ${tinyHomeModel.name} tiny home model (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) as a design reference - transform this pristine render into a realistic, naturally weathered outdoor structure. The third image shows a wireframe overlay indicating the precise position, rotation, scale, and perspective for placement.
+Composite the tiny home onto the property matching the exact position, angle, and scale shown in the wireframe. Make it look like a realistic outdoor structure with natural weathering, realistic shadows, and windows reflecting the sky. Match the lighting from the property photo exactly.
 
-Create a photorealistic composite photographed from a standard architectural perspective using a 50mm equivalent lens at eye level (approximately 1.6 meters above ground). The tiny home must match the exact position, angle, and scale indicated by the wireframe guide. The wireframe demonstrates the specific placement, orientation, and proportions - replicate this positioning precisely while transforming the reference render into a believable outdoor structure that belongs in the property photograph.
-
-Ensure the ${tinyHomeModel.dimensions.length}-meter structure appears proportionally accurate relative to environmental reference objects visible in the scene: doors (2m tall), people (1.7m average), cars (4.5m long), fence posts (1.8-2m). The wireframe provides the spatial template - apply photorealistic weathering, realistic materials, and natural outdoor characteristics.
-
-CRITICAL PHOTOREALISM - Transform the reference into a real outdoor structure:
-Add subtle natural weathering (slight dirt, dust, minor color variations, realistic surface imperfections, outdoor patina). Match exact lighting quality from the property photo - same shadow softness, reflection intensity, color temperature. Cast natural shadows with realistic soft falloff, not hard CG edges. Soften edges slightly to match photographic characteristics. Render materials with authentic texture variations, subtle scratches, realistic specular highlights. Windows reflect the actual environment from the photo. Match color palette and tonal range exactly. Apply same image grain and atmospheric characteristics as the property photograph. Ground contact shows realistic interaction with terrain. The result must be indistinguishable from a photograph where the tiny home was actually present.
-
-Output the final composite as a single cohesive photograph matching the exact dimensions and aspect ratio of the original property image.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
+Keep the property photo unchanged except where the tiny home is placed.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
   }
 
-  const model = 'gemini-2.5-flash-image-preview'
+  const model = 'gemini-2.5-flash-image'
 
   const contents = [
     {
@@ -503,38 +444,28 @@ Output the final composite as a single cohesive photograph matching the exact di
 
   console.log('Sending wireframe-guided request to Gemini API with model:', model)
 
-  const response = await ai.models.generateContentStream({
+  const response = await ai.models.generateContent({
     model,
     config,
     contents,
   })
 
-  let generatedImageData: string | null = null
-  let textResponse = ''
-
-  for await (const chunk of response) {
-    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
-      continue
-    }
-
-    for (const part of chunk.candidates[0].content.parts) {
-      if (part.inlineData) {
-        console.log('Found image in wireframe-guided response!')
-        const { mimeType, data } = part.inlineData
-        generatedImageData = `data:${mimeType};base64,${data}`
-        break
-      } else if (part.text) {
-        textResponse += part.text
-        console.log('Text response:', part.text)
-      }
-    }
-
-    if (generatedImageData) break
+  if (!response.candidates || !response.candidates[0].content) {
+    throw new Error('No response from Gemini API')
   }
 
-  if (generatedImageData) {
-    return generatedImageData
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Found image in wireframe-guided response!')
+    const { mimeType, data } = imagePart.inlineData
+    return `data:${mimeType};base64,${data}`
   }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
 
   throw new Error(`No image generated with wireframe guide. API Response: ${textResponse || 'No response text'}`)
 }
@@ -547,21 +478,15 @@ export async function conversationalEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const prompt = `This photograph shows a property with a tiny home placed on it. Apply the following modification to the scene:
+  const prompt = `This photograph shows a property with a tiny home on it. Make this change: ${editPrompt}
 
-${editPrompt}
-
-Interpret this request naturally and apply the changes with photographic realism. If the request involves lighting, weather, or atmospheric changes, adjust the sun angle, shadows, sky appearance, and color temperature throughout the scene. If the request involves repositioning or modifying the tiny home, make those spatial adjustments while maintaining realistic proportions and natural integration with the property.
-
-Elements not mentioned in the request should remain consistent with the input photograph. Maintain realistic photographic quality with natural lighting behavior, accurate shadows, proper depth of field, and cohesive composition.
-
-Output the modified photograph preserving the exact dimensions and aspect ratio of the input image.`
+Apply the change naturally with photographic realism. Keep elements not mentioned in the request unchanged from the input photograph.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
   }
 
-  const model = 'gemini-2.5-flash-image-preview'
+  const model = 'gemini-2.5-flash-image'
 
   const contents = [
     {
@@ -582,38 +507,28 @@ Output the modified photograph preserving the exact dimensions and aspect ratio 
 
   console.log('Sending conversational edit request to Gemini API')
 
-  const response = await ai.models.generateContentStream({
+  const response = await ai.models.generateContent({
     model,
     config,
     contents,
   })
 
-  let generatedImageData: string | null = null
-  let textResponse = ''
-
-  for await (const chunk of response) {
-    if (!chunk.candidates || !chunk.candidates[0].content || !chunk.candidates[0].content.parts) {
-      continue
-    }
-
-    for (const part of chunk.candidates[0].content.parts) {
-      if (part.inlineData) {
-        console.log('Found image in conversational edit response!')
-        const { mimeType, data } = part.inlineData
-        generatedImageData = `data:${mimeType};base64,${data}`
-        break
-      } else if (part.text) {
-        textResponse += part.text
-        console.log('Text response:', part.text)
-      }
-    }
-
-    if (generatedImageData) break
+  if (!response.candidates || !response.candidates[0].content) {
+    throw new Error('No response from Gemini API')
   }
 
-  if (generatedImageData) {
-    return generatedImageData
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Found image in conversational edit response!')
+    const { mimeType, data } = imagePart.inlineData
+    return `data:${mimeType};base64,${data}`
   }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
 
   throw new Error(`No image generated for conversational edit. API Response: ${textResponse || 'No response text'}`)
 }
