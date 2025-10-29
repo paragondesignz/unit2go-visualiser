@@ -42,24 +42,6 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: Vi
     "The AI aligns with fence lines and boundaries for realistic placement"
   ]
 
-  const getTimeDescription = (hour: number): string => {
-    if (hour >= 7 && hour < 8) return 'sunrise'
-    if (hour >= 8 && hour < 11) return 'morning'
-    if (hour >= 11 && hour < 15) return 'midday'
-    if (hour >= 15 && hour < 18) return 'afternoon'
-    if (hour >= 18 && hour < 19) return 'golden hour'
-    if (hour >= 19 && hour < 21) return 'sunset'
-    if (hour >= 21 && hour <= 22) return 'night'
-    return 'daylight'
-  }
-
-  const formatTime12Hour = (hour: number): string => {
-    if (hour === 0) return '12:00 AM'
-    if (hour < 12) return `${hour}:00 AM`
-    if (hour === 12) return '12:00 PM'
-    return `${hour - 12}:00 PM`
-  }
-
   const getLightingPrompt = (hour: number): string => {
     if (hour >= 7 && hour < 8) return 'NEW ZEALAND SUNRISE LIGHTING: Apply subtle and realistic New Zealand sunrise lighting with gentle warm tones. The sun is low on the horizon creating moderate shadows. The sky shows soft oranges and pinks. Keep lighting natural and understated - avoid oversaturation. Surfaces have warm but realistic illumination'
 
@@ -522,28 +504,79 @@ MANDATORY PERSON REMOVAL:
 
         <div className="control-panel">
           <h3>Lighting & Time of Day</h3>
-          <div className="time-control">
-            <div className="time-display">
-              <span className="time-value">{formatTime12Hour(timeOfDay)}</span>
-              <span className="time-description">{getTimeDescription(timeOfDay)}</span>
-            </div>
-            <input
-              type="range"
-              min="7"
-              max="22"
-              value={timeOfDay}
-              onChange={(e) => setTimeOfDay(parseInt(e.target.value))}
-              className="time-slider"
-              disabled={processing}
-            />
+          <div className="time-button-grid">
             <button
-              className="apply-button"
-              onClick={handleTimeChange}
+              className={`time-button ${timeOfDay === 9 ? 'active' : ''}`}
+              onClick={() => setTimeOfDay(9)}
               disabled={processing}
             >
-              Apply Lighting
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+              <span>Morning</span>
+            </button>
+            <button
+              className={`time-button ${timeOfDay === 13 ? 'active' : ''}`}
+              onClick={() => setTimeOfDay(13)}
+              disabled={processing}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+              <span>Midday</span>
+            </button>
+            <button
+              className={`time-button ${timeOfDay === 18 ? 'active' : ''}`}
+              onClick={() => setTimeOfDay(18)}
+              disabled={processing}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+              <span>Golden Hour</span>
+            </button>
+            <button
+              className={`time-button ${timeOfDay === 21 ? 'active' : ''}`}
+              onClick={() => setTimeOfDay(21)}
+              disabled={processing}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+              <span>Night</span>
             </button>
           </div>
+          <button
+            className="apply-button"
+            onClick={handleTimeChange}
+            disabled={processing}
+          >
+            Apply Lighting
+          </button>
         </div>
 
         <div className="control-panel">

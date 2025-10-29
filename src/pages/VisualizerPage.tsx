@@ -68,33 +68,24 @@ function VisualizerPage() {
               Back to Upload
             </button>
 
-            <div className="select-content">
-              <div className="select-left">
-                <h2>Your Property Photo</h2>
+            <div className="select-content-centered">
+              <div className="model-selection-full">
+                <h2>Choose Your Tiny Home</h2>
                 <p className="select-instruction">AI will automatically place the tiny home in the best natural position on your property.</p>
-                <div className="select-image-container">
-                  <img src={uploadedImage.url} alt="Your property" className="select-image" />
-                </div>
-              </div>
-
-              <div className="select-right">
-                <div className="model-selection-compact">
-                  <h3>Choose Model</h3>
-                  <div className="model-cards-compact">
-                    {tinyHomeModels.map((model) => (
-                      <div
-                        key={model.id}
-                        className={`model-card-compact ${selectedTinyHome.id === model.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedTinyHome(model)}
-                      >
-                        <img src={model.imageUrl} alt={model.name} className="model-preview-compact" />
-                        <div className="model-info-compact">
-                          <h4>{model.name}</h4>
-                          <p>{model.dimensions.length}m × {model.dimensions.width}m</p>
-                        </div>
+                <div className="model-cards-grid">
+                  {tinyHomeModels.map((model) => (
+                    <div
+                      key={model.id}
+                      className={`model-card-full ${selectedTinyHome.id === model.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedTinyHome(model)}
+                    >
+                      <img src={model.imageUrl} alt={model.name} className="model-preview-full" />
+                      <div className="model-info-full">
+                        <h4>{model.name}</h4>
+                        <p>{model.dimensions.length}m × {model.dimensions.width}m</p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
 
                 <button
