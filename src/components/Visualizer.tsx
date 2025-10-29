@@ -262,7 +262,20 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
     setError(null)
 
     try {
-      const povPrompt = 'Photograph this exact scene from a different camera angle. Keep the tiny home in the same position within the property. Only change the viewpoint - keep everything else unchanged.'
+      // Randomize camera perspectives to ensure variety on each click
+      const perspectives = [
+        'from a lower camera angle looking slightly upward',
+        'from a higher elevated viewpoint',
+        'from a side angle showing more of the property width',
+        'from further back to show more context',
+        'from closer to emphasize architectural details',
+        'from the opposite side of the property',
+        'from a diagonal angle',
+        'from ground level perspective'
+      ]
+      const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
+
+      const povPrompt = `Photograph this exact scene ${randomPerspective}. Keep the tiny home in the same position within the property. Only change the camera viewpoint - keep everything else unchanged.`
       const editedImage = await conversationalEdit(resultImage, povPrompt)
       addToHistory(editedImage)
       setShowingOriginal(false)
