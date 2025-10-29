@@ -26,6 +26,10 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: Vi
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   const tips = [
     "The AI intelligently scales your tiny home based on surrounding objects",
@@ -321,15 +325,73 @@ MANDATORY PERSON REMOVAL:
   const openLightbox = () => {
     if (resultImage) {
       setIsLightboxOpen(true)
+      setZoomLevel(1)
+      setPanPosition({ x: 0, y: 0 })
     }
   }
 
   const closeLightbox = () => {
     setIsLightboxOpen(false)
+    setZoomLevel(1)
+    setPanPosition({ x: 0, y: 0 })
   }
 
   const handleLightboxDownload = async () => {
     await handleDownload()
+  }
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 4))
+  }
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => {
+      const newZoom = Math.max(prev - 0.5, 1)
+      if (newZoom === 1) {
+        setPanPosition({ x: 0, y: 0 })
+      }
+      return newZoom
+    })
+  }
+
+  const handleZoomReset = () => {
+    setZoomLevel(1)
+    setPanPosition({ x: 0, y: 0 })
+  }
+
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -0.1 : 0.1
+    setZoomLevel(prev => {
+      const newZoom = Math.max(1, Math.min(prev + delta, 4))
+      if (newZoom === 1) {
+        setPanPosition({ x: 0, y: 0 })
+      }
+      return newZoom
+    })
+  }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel > 1) {
+      setIsDragging(true)
+      setDragStart({
+        x: e.clientX - panPosition.x,
+        y: e.clientY - panPosition.y
+      })
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoomLevel > 1) {
+      setPanPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
   }
 
   return (
@@ -537,11 +599,74 @@ MANDATORY PERSON REMOVAL:
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
-            <img
-              src={showingOriginal ? uploadedImage.url : resultImage}
-              alt={showingOriginal ? "Original space" : "Tiny home visualization"}
-              className="lightbox-image"
-            />
+
+            <div className="zoom-controls">
+              <button
+                className="zoom-button"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 4}
+                aria-label="Zoom in"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="11" y1="8" x2="11" y2="14" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+              <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+              <button
+                className="zoom-button"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 1}
+                aria-label="Zoom out"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+              {zoomLevel > 1 && (
+                <button
+                  className="zoom-button zoom-reset"
+                  onClick={handleZoomReset}
+                  aria-label="Reset zoom"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <div
+              className="lightbox-image-container"
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{
+                cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                overflow: 'hidden'
+              }}
+            >
+              <img
+                src={showingOriginal ? uploadedImage.url : resultImage}
+                alt={showingOriginal ? "Original space" : "Tiny home visualization"}
+                className="lightbox-image"
+                style={{
+                  transform: `scale(${zoomLevel}) translate(${panPosition.x / zoomLevel}px, ${panPosition.y / zoomLevel}px)`,
+                  transition: isDragging ? 'none' : 'transform 0.2s ease'
+                }}
+                draggable={false}
+              />
+            </div>
+
             <button className="lightbox-download" onClick={handleLightboxDownload}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
