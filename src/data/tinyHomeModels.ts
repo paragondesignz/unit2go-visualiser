@@ -63,5 +63,26 @@ export const tinyHomeModels: TinyHomeModel[] = [
       'Sustainable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'deluxe-perspective-2',
+    name: 'Deluxe Tiny Home - Perspective 2',
+    dimensions: {
+      length: 13.0,
+      width: 5.0,
+      height: 3.5
+    },
+    price: 89900,
+    imageUrl: '/tiny-home-models/tiny-home-perspective-test-2.png',
+    description: 'Premium deluxe model with alternative perspective view for enhanced visualization accuracy',
+    features: [
+      'Modern architectural design',
+      'Premium interior finishes',
+      'Energy-efficient construction',
+      'Full kitchen and bathroom',
+      'Smart home ready',
+      'Sustainable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
