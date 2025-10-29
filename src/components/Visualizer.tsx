@@ -256,22 +256,15 @@ ${horizontalDescriptions[placementPreferences.horizontal]}. ${depthDescriptions[
   }
 
   const handleDifferentPOV = async () => {
+    if (!resultImage) return
+
     setProcessing(true)
     setError(null)
 
     try {
-      const povPrompt = 'Generate from a different camera angle and perspective while maintaining natural placement. Try a different viewpoint that showcases the property and tiny home in a new way.'
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt() + ` ${povPrompt}`
-      const result = await processWithGemini(
-        uploadedImage,
-        selectedTinyHome,
-        'initial',
-        undefined,
-        undefined,
-        combinedPrompt
-      )
-      setPosition(result.position)
-      addToHistory(result.imageUrl)
+      const povPrompt = 'Photograph this exact scene from a different camera angle. Keep the tiny home in the same position within the property. Only change the viewpoint - keep everything else unchanged.'
+      const editedImage = await conversationalEdit(resultImage, povPrompt)
+      addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to generate different POV. Please try again.')
