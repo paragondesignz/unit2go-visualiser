@@ -30,6 +30,7 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: Vi
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [povClickCount, setPovClickCount] = useState(0)
 
   const tips = [
     "The AI intelligently scales your tiny home based on surrounding objects",
@@ -186,6 +187,7 @@ MANDATORY PERSON REMOVAL:
 
       addToHistory(imageUrl)
       setShowingOriginal(false)
+      setPovClickCount(0) // Reset POV counter for new generation
     } catch (err) {
       setError('Failed to process image. Please try again.')
       console.error(err)
@@ -228,23 +230,36 @@ MANDATORY PERSON REMOVAL:
     setError(null)
 
     try {
-      // Randomize camera perspectives to ensure variety on each click
-      const perspectives = [
-        'from a slightly lower camera angle, shifting the viewpoint down while keeping the same general direction',
-        'from a moderately elevated viewpoint, raising the camera position to show more of the property',
-        'from a side angle, moving the camera position to reveal different surfaces',
-        'from slightly further back, widening the view to show more context',
-        'from closer proximity, focusing more on the tiny home details',
-        'from the opposite side, showing the other perspective of the scene',
-        'from a diagonal angle, creating a different compositional view'
-      ]
-      const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
+      let povPrompt: string
 
-      const povPrompt = `Adjust the camera viewpoint of this exact scene ${randomPerspective}. Keep the tiny home in precisely the same physical position and preserve the property layout exactly as shown. Only change the camera angle and framing to provide a different perspective while maintaining all elements in their current locations. This should look like the same scene photographed from a slightly different position.`
+      // Sequential POV: first click = top-down, second = side, then random
+      if (povClickCount === 0) {
+        // First click: angled top-down view
+        povPrompt = `Adjust the camera viewpoint to a slightly angled top-down perspective, positioned moderately above the scene looking down at approximately 30-40 degrees from horizontal. This elevated angle should reveal more of the property layout, rooflines, and spatial relationships while maintaining the tiny home in precisely the same physical location. Keep all elements in their current positions - only change the camera elevation and angle to provide this bird's-eye perspective of the scene.`
+      } else if (povClickCount === 1) {
+        // Second click: side view
+        povPrompt = `Adjust the camera viewpoint to a side angle perspective, moving the camera position to the side to show the scene from a lateral viewpoint. This side angle should reveal different surfaces and the profile of the tiny home while keeping it in precisely the same physical location on the property. Preserve the property layout exactly as shown - only change the horizontal camera position to provide this side perspective of the scene.`
+      } else {
+        // Subsequent clicks: random perspectives
+        const perspectives = [
+          'from a slightly lower camera angle, shifting the viewpoint down while keeping the same general direction',
+          'from a moderately elevated viewpoint, raising the camera position to show more of the property',
+          'from a different side angle, moving the camera position to reveal alternative surfaces',
+          'from slightly further back, widening the view to show more context',
+          'from closer proximity, focusing more on the tiny home details',
+          'from the opposite side, showing the other perspective of the scene',
+          'from a diagonal corner angle, creating a different compositional view'
+        ]
+        const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
+        povPrompt = `Adjust the camera viewpoint of this exact scene ${randomPerspective}. Keep the tiny home in precisely the same physical position and preserve the property layout exactly as shown. Only change the camera angle and framing to provide a different perspective while maintaining all elements in their current locations. This should look like the same scene photographed from a slightly different position.`
+      }
+
       const editedImage = await conversationalEdit(resultImage, povPrompt, {
         temperature: 0.4,
         topP: 0.85
       })
+
+      setPovClickCount(prev => prev + 1)
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
