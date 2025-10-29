@@ -78,9 +78,7 @@ async function generateConversationalLightingEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const conversationalPrompt = `This photograph shows a property with a tiny home on it. Adjust the lighting and atmosphere: ${lightingPrompt}
-
-Keep all elements in their current positions. Only change the lighting, shadows, sky colors, and atmospheric conditions to match the request.`
+  const conversationalPrompt = `Using the provided photograph, change only the lighting and atmosphere: ${lightingPrompt}. Keep everything else exactly the same - same positions, same structures, same composition. Only adjust lighting, shadows, and atmospheric conditions.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -214,11 +212,7 @@ async function generateImageWithTinyHome(
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
 
-  const prompt = customPrompt || `Take the property photo from the first image and the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image.
-
-Place the tiny home naturally on the property where it looks most realistic given the terrain, available space, and composition. Make it appear as a realistic outdoor structure with natural weathering, realistic shadows, and windows that reflect the sky. Match the lighting from the property photo exactly.
-
-Keep the property photo unchanged except where the tiny home is placed. Scale it properly using visible objects for reference (doors are 2m tall, cars are 4.5m long).${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+  const prompt = customPrompt || `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image. Place it naturally where it looks most realistic. Keep the property photo exactly the same - same lighting, same colors, same background, same sky, same ground. Only add the tiny home with realistic shadows and reflections.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -401,11 +395,7 @@ export async function processWithWireframeGuide(
     ? wireframeGuideDataUrl.split('base64,')[1]
     : wireframeGuideDataUrl
 
-  const prompt = `Take the property photo from the first image, the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image, and the wireframe positioning guide from the third image.
-
-Composite the tiny home onto the property matching the exact position, angle, and scale shown in the wireframe. Make it look like a realistic outdoor structure with natural weathering, realistic shadows, and windows reflecting the sky. Match the lighting from the property photo exactly.
-
-Keep the property photo unchanged except where the tiny home is placed.${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
+  const prompt = `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home from the second image at the position shown in the wireframe guide (third image). Keep the property photo exactly the same - same lighting, same colors, same background. Only add the tiny home with realistic shadows and reflections matching the wireframe position.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
@@ -478,9 +468,7 @@ export async function conversationalEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const prompt = `This photograph shows a property with a tiny home on it. Make this change: ${editPrompt}
-
-Apply the change naturally with photographic realism. Keep elements not mentioned in the request unchanged from the input photograph.`
+  const prompt = `Using the provided photograph, change only: ${editPrompt}. Keep everything else exactly the same. Only modify what was specifically requested.`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
