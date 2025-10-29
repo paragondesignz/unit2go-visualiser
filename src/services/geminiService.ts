@@ -78,10 +78,17 @@ async function generateConversationalLightingEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
+  const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
+
   const conversationalPrompt = `Using the provided photograph, change only the lighting and atmosphere: ${lightingPrompt}. Keep everything else exactly the same - same positions, same structures, same composition. Only adjust lighting, shadows, and atmospheric conditions.`
+
+  console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
+    imageConfig: {
+      aspectRatio: aspectRatio,
+    },
   }
 
   const model = 'gemini-2.5-flash-image'
@@ -211,11 +218,17 @@ async function generateImageWithTinyHome(
 ): Promise<string> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
+  const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
   const prompt = customPrompt || `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image. Place it naturally where it looks most realistic. Keep the property photo exactly the same - same lighting, same colors, same background, same sky, same ground. Only add the tiny home with realistic shadows and reflections.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
+  console.log(`Detected aspect ratio: ${aspectRatio}`)
+
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
+    imageConfig: {
+      aspectRatio: aspectRatio,
+    },
   }
 
   const model = 'gemini-2.5-flash-image'
@@ -269,6 +282,74 @@ async function generateImageWithTinyHome(
     .join('')
 
   throw new Error(`No image generated. API Response: ${textResponse || 'No response text'}`)
+}
+
+/**
+ * Map ratio value to closest Gemini-supported aspect ratio string
+ * Supported: "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"
+ */
+function mapToAspectRatio(ratio: number): string {
+  // Map to closest supported aspect ratio
+  if (Math.abs(ratio - 1) < 0.1) return "1:1"
+  if (Math.abs(ratio - 4/3) < 0.1) return "4:3"
+  if (Math.abs(ratio - 3/4) < 0.1) return "3:4"
+  if (Math.abs(ratio - 16/9) < 0.1) return "16:9"
+  if (Math.abs(ratio - 9/16) < 0.1) return "9:16"
+  if (Math.abs(ratio - 3/2) < 0.1) return "3:2"
+  if (Math.abs(ratio - 2/3) < 0.1) return "2:3"
+  if (Math.abs(ratio - 5/4) < 0.1) return "5:4"
+  if (Math.abs(ratio - 4/5) < 0.1) return "4:5"
+  if (Math.abs(ratio - 21/9) < 0.1) return "21:9"
+
+  // Default to closest common ratio
+  if (ratio > 1.5) return "16:9"
+  if (ratio > 1.2) return "4:3"
+  if (ratio > 0.9) return "1:1"
+  if (ratio > 0.6) return "3:4"
+  return "9:16"
+}
+
+/**
+ * Detect aspect ratio from File
+ */
+async function detectAspectRatio(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+
+    img.onload = () => {
+      const ratio = img.width / img.height
+      URL.revokeObjectURL(url)
+      resolve(mapToAspectRatio(ratio))
+    }
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to load image for aspect ratio detection'))
+    }
+
+    img.src = url
+  })
+}
+
+/**
+ * Detect aspect ratio from data URL
+ */
+async function detectAspectRatioFromDataUrl(dataUrl: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+
+    img.onload = () => {
+      const ratio = img.width / img.height
+      resolve(mapToAspectRatio(ratio))
+    }
+
+    img.onerror = () => {
+      reject(new Error('Failed to load image from data URL'))
+    }
+
+    img.src = dataUrl
+  })
 }
 
 async function fileToBase64(file: File): Promise<string> {
@@ -394,11 +475,17 @@ export async function processWithWireframeGuide(
   const wireframeBase64 = wireframeGuideDataUrl.includes('base64,')
     ? wireframeGuideDataUrl.split('base64,')[1]
     : wireframeGuideDataUrl
+  const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
   const prompt = `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home from the second image at the position shown in the wireframe guide (third image). Keep the property photo exactly the same - same lighting, same colors, same background. Only add the tiny home with realistic shadows and reflections matching the wireframe position.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
+  console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
+
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
+    imageConfig: {
+      aspectRatio: aspectRatio,
+    },
   }
 
   const model = 'gemini-2.5-flash-image'
@@ -468,10 +555,17 @@ export async function conversationalEdit(
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
+  const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
+
   const prompt = `Using the provided photograph, change only: ${editPrompt}. Keep everything else exactly the same. Only modify what was specifically requested.`
+
+  console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],
+    imageConfig: {
+      aspectRatio: aspectRatio,
+    },
   }
 
   const model = 'gemini-2.5-flash-image'
