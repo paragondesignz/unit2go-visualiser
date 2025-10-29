@@ -85,7 +85,8 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    responseModalities: ['IMAGE', 'TEXT'] as string[],
+    temperature: 0.4, // Lower temperature for more consistent results
+    responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
     },
@@ -220,12 +221,77 @@ async function generateImageWithTinyHome(
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  const prompt = customPrompt || `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image. Place it naturally where it looks most realistic, orienting the rectangular structure parallel to visible features like fences, paths, decks, or property boundaries. Keep the property photo exactly the same - same lighting, same colors, same background, same sky, same ground. Only add the tiny home with realistic shadows and reflections.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+  // Get tiny home dimensions
+  const { length, width, height } = tinyHomeModel.dimensions
+
+  // Create detailed, step-by-step prompt following Google's best practices
+  const prompt = customPrompt || `You are an expert at photo composition and 3D placement. Analyze this scene and place the tiny home from the reference image into the property photo with PERFECT sizing and positioning.
+
+🎯 CRITICAL TASK STEPS:
+
+STEP 1: ANALYZE THE SCENE
+- Identify ALL reference objects for scale (doors ~2m high, windows ~1-1.5m, chairs ~0.8m high, tables ~1.5m, railings ~1m, people ~1.7m, vehicles ~1.8m high, decking boards ~12-15cm wide)
+- Determine if this is indoor or outdoor
+- Identify the ground plane (deck, patio, lawn, gravel, concrete, etc.)
+- Note the lighting direction, quality, and time of day (sun position, shadow angles)
+- Identify the camera perspective and viewing angle
+
+STEP 2: CALCULATE TINY HOME SIZE
+This tiny home is EXACTLY ${length}m x ${width}m x ${height}m (length x width x height).
+- Use identified reference objects to calculate the correct pixel size for the tiny home
+- Ensure the tiny home appears at the EXACT real-world scale relative to all objects in the scene
+- The tiny home must be proportionally accurate - not too large, not too small
+- Consider perspective: objects further away appear smaller
+
+STEP 3: DETERMINE BEST POSITION
+Find the most logical and aesthetically pleasing position:
+- Place on flat, stable ground (deck, patio, lawn, gravel pad, concrete)
+- Ensure adequate clearance around the tiny home (~1m minimum on all sides for access)
+- Follow good photographic composition (rule of thirds, visual balance)
+- Avoid blocking important scene elements
+- Orient the rectangular structure parallel to visible features like fences, paths, decks, or property boundaries
+- Consider typical placement for tiny homes (not in the middle of a lawn, but on prepared surfaces)
+
+STEP 4: MATCH THE ENVIRONMENT
+- Match lighting precisely (shadows must fall correctly based on sun position and time of day)
+- Match perspective (tiny home must follow scene's perspective lines and vanishing points)
+- Integrate naturally (tiny home should look like it has always been part of this space)
+- Add proper shadows that match the direction, length, and softness of existing shadows in the scene
+- Add subtle reflections if there are reflective surfaces nearby
+- Ensure the tiny home's materials reflect light realistically for the conditions
+${lightingPrompt ? `- Lighting conditions: ${lightingPrompt}` : ''}
+
+🏠 TINY HOME APPEARANCE REQUIREMENTS:
+
+The ${tinyHomeModel.name} from the reference image must be reproduced EXACTLY:
+✓ Copy the EXACT tiny home design, color, and texture from the reference
+✓ Keep the same exterior cladding, roof style, windows, and door placement
+✓ Preserve all surface details exactly as shown in the reference
+✓ Maintain the architectural style and proportions
+
+❌ DO NOT add any features not in the reference:
+- NO additional windows, doors, or skylights (unless visible in reference)
+- NO logos, signage, or text
+- NO steps, decks, or accessories (unless in reference)
+- NO modifications to the design
+
+🎨 INTEGRATION REQUIREMENTS:
+
+- Tiny home must cast appropriate shadows based on scene lighting (direction, length, softness)
+- If there's sunlight, show directional shadows with correct angle and length
+- Match the color temperature of the scene (warm sunset, cool overcast, etc.)
+- Add atmospheric perspective if the tiny home is placed far from camera
+- Integrate seamlessly - it should look like a professional architectural visualization
+- Maintain photorealistic quality throughout
+
+OUTPUT:
+Generate the final composited image with the tiny home perfectly placed, sized, and integrated into the scene. The result should look like a professional real estate or marketing photograph where the tiny home has always been part of this property.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    responseModalities: ['IMAGE', 'TEXT'] as string[],
+    temperature: 0.4, // Lower temperature for more consistent, realistic placement
+    responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
     },
@@ -482,7 +548,8 @@ export async function processWithWireframeGuide(
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    responseModalities: ['IMAGE', 'TEXT'] as string[],
+    temperature: 0.4, // Lower temperature for more consistent results
+    responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
     },
@@ -562,7 +629,8 @@ export async function conversationalEdit(
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
-    responseModalities: ['IMAGE', 'TEXT'] as string[],
+    temperature: 0.4, // Lower temperature for more consistent results
+    responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
     },

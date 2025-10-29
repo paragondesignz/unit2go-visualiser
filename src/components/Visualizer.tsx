@@ -132,7 +132,7 @@ MANDATORY PERSON REMOVAL:
   }, [])
 
   useEffect(() => {
-    let tipInterval: number
+    let tipInterval: ReturnType<typeof setInterval>
 
     if (processing) {
       tipInterval = setInterval(() => {
