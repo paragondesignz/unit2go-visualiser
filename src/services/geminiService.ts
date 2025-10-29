@@ -220,7 +220,7 @@ async function generateImageWithTinyHome(
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  const prompt = customPrompt || `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image. Place it naturally where it looks most realistic. Keep the property photo exactly the same - same lighting, same colors, same background, same sky, same ground. Only add the tiny home with realistic shadows and reflections.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+  const prompt = customPrompt || `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image. Place it naturally where it looks most realistic, orienting the rectangular structure parallel to visible features like fences, paths, decks, or property boundaries. Keep the property photo exactly the same - same lighting, same colors, same background, same sky, same ground. Only add the tiny home with realistic shadows and reflections.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
@@ -477,7 +477,7 @@ export async function processWithWireframeGuide(
     : wireframeGuideDataUrl
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  const prompt = `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home from the second image at the position shown in the wireframe guide (third image). Keep the property photo exactly the same - same lighting, same colors, same background. Only add the tiny home with realistic shadows and reflections matching the wireframe position.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+  const prompt = `Using the provided property photo, add only the ${tinyHomeModel.name} tiny home from the second image at the position shown in the wireframe guide (third image). Orient the rectangular structure parallel to visible features like fences, paths, decks, or property boundaries. Keep the property photo exactly the same - same lighting, same colors, same background. Only add the tiny home with realistic shadows and reflections matching the wireframe position.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
