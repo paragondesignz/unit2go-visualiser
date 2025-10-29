@@ -8,6 +8,7 @@ function VisualizerPage() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
   const [currentStep, setCurrentStep] = useState<'upload' | 'select' | 'visualize'>('upload')
   const [selectedTinyHome, setSelectedTinyHome] = useState<TinyHomeModel>(tinyHomeModels[0])
+  const [tinyHomePosition, setTinyHomePosition] = useState<'center' | 'left' | 'right'>('center')
 
   const handleImageUpload = (image: UploadedImage) => {
     setUploadedImage(image)
@@ -88,6 +89,50 @@ function VisualizerPage() {
                   ))}
                 </div>
 
+                <div className="position-selection">
+                  <h3>Tiny Home Position</h3>
+                  <p className="position-instruction">Choose where the tiny home should be positioned in the frame</p>
+                  <div className="position-buttons">
+                    <button
+                      className={`position-btn ${tinyHomePosition === 'left' ? 'active' : ''}`}
+                      onClick={() => setTinyHomePosition('left')}
+                    >
+                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="2" y="5" width="14" height="20" rx="2" />
+                        <line x1="20" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="20" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="20" y1="22" x2="38" y2="22" strokeDasharray="2 2" opacity="0.4" />
+                      </svg>
+                      <span>Left</span>
+                    </button>
+                    <button
+                      className={`position-btn ${tinyHomePosition === 'center' ? 'active' : ''}`}
+                      onClick={() => setTinyHomePosition('center')}
+                    >
+                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="13" y="5" width="14" height="20" rx="2" />
+                        <line x1="2" y1="8" x2="10" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="30" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="2" y1="15" x2="10" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="30" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                      </svg>
+                      <span>Center</span>
+                    </button>
+                    <button
+                      className={`position-btn ${tinyHomePosition === 'right' ? 'active' : ''}`}
+                      onClick={() => setTinyHomePosition('right')}
+                    >
+                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="24" y="5" width="14" height="20" rx="2" />
+                        <line x1="2" y1="8" x2="20" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="2" y1="15" x2="20" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                        <line x1="2" y1="22" x2="20" y2="22" strokeDasharray="2 2" opacity="0.4" />
+                      </svg>
+                      <span>Right</span>
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   className="generate-button-large"
                   onClick={handleGenerate}
@@ -110,6 +155,7 @@ function VisualizerPage() {
             <Visualizer
               uploadedImage={uploadedImage}
               selectedTinyHome={selectedTinyHome}
+              tinyHomePosition={tinyHomePosition}
             />
           </>
         )}

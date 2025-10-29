@@ -7,9 +7,10 @@ interface VisualizerProps {
   uploadedImage: UploadedImage
   selectedTinyHome: TinyHomeModel
   wireframeGuideImage?: string | null
+  tinyHomePosition?: 'center' | 'left' | 'right'
 }
 
-function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tinyHomePosition = 'center' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -161,7 +162,8 @@ MANDATORY PERSON REMOVAL:
         imageUrl = await generateVisualization(
           uploadedImage,
           selectedTinyHome,
-          lightingPrompt
+          lightingPrompt,
+          tinyHomePosition
         )
         setPosition({
           x: 50,
@@ -175,7 +177,8 @@ MANDATORY PERSON REMOVAL:
         imageUrl = await generateVisualization(
           uploadedImage,
           selectedTinyHome,
-          lightingPrompt
+          lightingPrompt,
+          tinyHomePosition
         )
         setPosition({
           x: 50,

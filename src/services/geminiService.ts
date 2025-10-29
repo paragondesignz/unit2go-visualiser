@@ -18,7 +18,8 @@ export async function processWithGemini(
   command?: string,
   currentPosition?: Position,
   lightingPrompt?: string,
-  currentResultImage?: string
+  currentResultImage?: string,
+  tinyHomePosition?: 'center' | 'left' | 'right'
 ): Promise<VisualizationResult> {
 
   if (!API_KEY) {
@@ -26,7 +27,7 @@ export async function processWithGemini(
   }
 
   if (mode === 'initial') {
-    const generatedImage = await generateImageWithTinyHome(uploadedImage, tinyHomeModel, undefined, lightingPrompt)
+    const generatedImage = await generateImageWithTinyHome(uploadedImage, tinyHomeModel, undefined, lightingPrompt, tinyHomePosition)
 
     return {
       imageUrl: generatedImage,
@@ -211,7 +212,8 @@ async function generateImageWithTinyHome(
   uploadedImage: UploadedImage,
   tinyHomeModel: TinyHomeModel,
   customPrompt?: string,
-  lightingPrompt?: string
+  lightingPrompt?: string,
+  tinyHomePosition: 'center' | 'left' | 'right' = 'center'
 ): Promise<string> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
@@ -227,6 +229,13 @@ async function generateImageWithTinyHome(
   const randomLens = lenses[Math.floor(Math.random() * lenses.length)]
   const randomISO = isos[Math.floor(Math.random() * isos.length)]
   const randomAperture = apertures[Math.floor(Math.random() * apertures.length)]
+
+  // Position instructions based on user selection
+  const positionInstructions: Record<string, string> = {
+    center: 'Position the tiny home in the CENTER of the frame as the dominant focal point. Use center-weighted composition with the tiny home as the main subject.',
+    left: 'Position the tiny home on the LEFT side of the frame (left third), allowing more environmental context, scenery, and breathing room on the right side. This creates visual balance and shows more of the property setting.',
+    right: 'Position the tiny home on the RIGHT side of the frame (right third), allowing more environmental context, scenery, and breathing room on the left side. This creates visual balance and shows more of the property setting.'
+  }
 
   // Create narrative, descriptive prompt following Google's best practices with photography focus
   const prompt = customPrompt || `PHOTOREALISTIC PHOTOGRAPHY OBJECTIVE:
@@ -258,7 +267,7 @@ TINY HOME SPECIFICATIONS:
 The ${tinyHomeModel.name} measures exactly ${length}m × ${width}m × ${height}m. Using the reference objects identified, ensure the tiny home appears at its true real-world scale relative to everything in the scene. Proportions must be accurate, accounting for perspective diminishment if placed further from the camera.
 
 COMPOSITION AND PLACEMENT:
-Position the tiny home using professional real estate photography techniques. Apply the rule of thirds for visual interest, with natural leading lines such as pathways, fencing, or terrain features drawing the eye toward the structure. Place it on flat, stable ground: existing deck, patio area, lawn, gravel pad, or concrete surface. Ensure adequate clearance of approximately 1 meter minimum on accessible sides. Orient the structure parallel to visible features like fences, pathways, or deck edges. The composition should create depth through layered elements: foreground details, the tiny home as midground focal point, and detailed background.
+${positionInstructions[tinyHomePosition]} Position the tiny home using professional real estate photography techniques. Apply the rule of thirds for visual interest, with natural leading lines such as pathways, fencing, or terrain features drawing the eye toward the structure. Place it on flat, stable ground: existing deck, patio area, lawn, gravel pad, or concrete surface. Ensure adequate clearance of approximately 1 meter minimum on accessible sides. Orient the structure parallel to visible features like fences, pathways, or deck edges. The composition should create depth through layered elements: foreground details, the tiny home as midground focal point, and detailed background.
 
 EXACT TINY HOME REPLICATION:
 Use the EXACT tiny home from the second reference image without ANY modifications:
