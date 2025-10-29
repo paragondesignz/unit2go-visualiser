@@ -85,7 +85,7 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.4, // Lower temperature for more consistent results
+    temperature: 0.6, // Balanced temperature for creative yet consistent results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -290,7 +290,7 @@ Generate the final composited image with the tiny home perfectly placed, sized, 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.4, // Lower temperature for more consistent, realistic placement
+    temperature: 0.6, // Balanced temperature for creative yet consistent placement
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -548,7 +548,7 @@ export async function processWithWireframeGuide(
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.4, // Lower temperature for more consistent results
+    temperature: 0.6, // Balanced temperature for creative yet consistent results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -629,7 +629,7 @@ export async function conversationalEdit(
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.4, // Lower temperature for more consistent results
+    temperature: 0.6, // Balanced temperature for creative yet consistent results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
