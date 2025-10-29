@@ -190,10 +190,6 @@ export async function addWatermarkToImage(imageDataUrl: string): Promise<string>
         const textY = y + logoHeight / 2 + 7
         ctx.fillText('www.unit2go.co.nz', textX, textY)
 
-        ctx.globalAlpha = 0.4
-        ctx.fillStyle = 'black'
-        ctx.fillText('www.unit2go.co.nz', textX + 1, textY + 1)
-
         const watermarkedImage = canvas.toDataURL('image/png')
         resolve(watermarkedImage)
       }

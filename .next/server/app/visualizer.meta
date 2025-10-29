@@ -1,0 +1,14 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/visualizer/layout,_N_T_/visualizer/page,_N_T_/visualizer"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/visualizer/__PAGE__",
+    "/visualizer",
+    "/_index"
+  ]
+}
