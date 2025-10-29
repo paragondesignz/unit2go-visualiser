@@ -113,7 +113,7 @@ Keep all elements in their current positions. Only change the lighting, shadows,
     contents,
   })
 
-  if (!response.candidates || !response.candidates[0].content) {
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
     throw new Error('No response from Gemini API')
   }
 
@@ -257,7 +257,7 @@ Keep the property photo unchanged except where the tiny home is placed. The tiny
     contents,
   })
 
-  if (!response.candidates || !response.candidates[0].content) {
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
     throw new Error('No response from Gemini API')
   }
 
@@ -450,7 +450,7 @@ Keep the property photo unchanged except where the tiny home is placed.${lightin
     contents,
   })
 
-  if (!response.candidates || !response.candidates[0].content) {
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
     throw new Error('No response from Gemini API')
   }
 
@@ -513,7 +513,7 @@ Apply the change naturally with photographic realism. Keep elements not mentione
     contents,
   })
 
-  if (!response.candidates || !response.candidates[0].content) {
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
     throw new Error('No response from Gemini API')
   }
 
