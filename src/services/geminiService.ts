@@ -562,7 +562,8 @@ export async function processWithWireframeGuide(
 
 export async function conversationalEdit(
   currentImageDataUrl: string,
-  editPrompt: string
+  editPrompt: string,
+  customConfig?: { temperature?: number; topP?: number; topK?: number }
 ): Promise<string> {
   const imageBase64 = currentImageDataUrl.includes('base64,')
     ? currentImageDataUrl.split('base64,')[1]
@@ -575,7 +576,9 @@ export async function conversationalEdit(
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.2, // Low temperature for highly consistent and deterministic results
+    temperature: customConfig?.temperature ?? 0.2,
+    ...(customConfig?.topP && { topP: customConfig.topP }),
+    ...(customConfig?.topK && { topK: customConfig.topK }),
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,

@@ -194,12 +194,14 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
-  const handleTimeChange = async () => {
+  const handleTimeChange = async (newTime?: number) => {
+    const timeToUse = newTime ?? timeOfDay
+
     setProcessing(true)
     setError(null)
 
     try {
-      const combinedPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
+      const combinedPrompt = getLightingPrompt(timeToUse) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
         selectedTinyHome,
@@ -228,19 +230,22 @@ MANDATORY PERSON REMOVAL:
     try {
       // Randomize camera perspectives to ensure variety on each click
       const perspectives = [
-        'from a lower camera angle looking slightly upward',
-        'from a higher elevated viewpoint',
-        'from a side angle showing more of the property width',
-        'from further back to show more context',
-        'from closer to emphasize architectural details',
-        'from the opposite side of the property',
-        'from a diagonal angle',
-        'from ground level perspective'
+        'from a dramatically lower camera angle positioned near ground level, looking upward to show the underside of structures and create an imposing perspective',
+        'from a significantly elevated aerial viewpoint as if photographed from a drone 15-20 feet above, showing the property layout from above',
+        'from the far left side of the property showing the complete opposite angle, revealing surfaces and details not visible in the current view',
+        'from much further back with a wider field of view, capturing substantially more of the surrounding property and context',
+        'from very close proximity focusing on the tiny home and immediate foreground details, creating an intimate perspective',
+        'from the completely opposite side behind the tiny home, showing the rear perspective and different property features',
+        'from a sharp diagonal corner angle at 45 degrees, creating dynamic compositional lines and revealing multiple sides simultaneously',
+        'from an extreme low ground level perspective as if the camera is resting on the surface, showing an unusual worm\'s-eye view'
       ]
       const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
 
-      const povPrompt = `Photograph this exact scene ${randomPerspective}. Keep the tiny home in the same position within the property. Only change the camera viewpoint - keep everything else unchanged.`
-      const editedImage = await conversationalEdit(resultImage, povPrompt)
+      const povPrompt = `Create a completely different photographic composition of this scene ${randomPerspective}. This must be a distinctly different viewpoint with noticeably changed framing, angle, and perspective. The tiny home remains in exactly the same physical location on the property, but photograph it from this dramatically different camera position. Ensure the new viewpoint reveals different aspects of the scene and creates a fresh visual composition that looks substantially different from the current image.`
+      const editedImage = await conversationalEdit(resultImage, povPrompt, {
+        temperature: 1.0,
+        topP: 0.95
+      })
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
@@ -507,7 +512,7 @@ MANDATORY PERSON REMOVAL:
           <div className="time-button-grid">
             <button
               className={`time-button ${timeOfDay === 9 ? 'active' : ''}`}
-              onClick={() => setTimeOfDay(9)}
+              onClick={() => { setTimeOfDay(9); if (timeOfDay !== 9) handleTimeChange(9); }}
               disabled={processing}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -525,7 +530,7 @@ MANDATORY PERSON REMOVAL:
             </button>
             <button
               className={`time-button ${timeOfDay === 13 ? 'active' : ''}`}
-              onClick={() => setTimeOfDay(13)}
+              onClick={() => { setTimeOfDay(13); if (timeOfDay !== 13) handleTimeChange(13); }}
               disabled={processing}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -543,7 +548,7 @@ MANDATORY PERSON REMOVAL:
             </button>
             <button
               className={`time-button ${timeOfDay === 18 ? 'active' : ''}`}
-              onClick={() => setTimeOfDay(18)}
+              onClick={() => { setTimeOfDay(18); if (timeOfDay !== 18) handleTimeChange(18); }}
               disabled={processing}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -561,7 +566,7 @@ MANDATORY PERSON REMOVAL:
             </button>
             <button
               className={`time-button ${timeOfDay === 21 ? 'active' : ''}`}
-              onClick={() => setTimeOfDay(21)}
+              onClick={() => { setTimeOfDay(21); if (timeOfDay !== 21) handleTimeChange(21); }}
               disabled={processing}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -570,13 +575,6 @@ MANDATORY PERSON REMOVAL:
               <span>Night</span>
             </button>
           </div>
-          <button
-            className="apply-button"
-            onClick={handleTimeChange}
-            disabled={processing}
-          >
-            Apply Lighting
-          </button>
         </div>
 
         <div className="control-panel">
