@@ -216,9 +216,9 @@ async function generateImageWithTinyHome(
 
   const prompt = customPrompt || `Take the property photo from the first image and the ${tinyHomeModel.name} tiny home (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) from the second image.
 
-Composite the tiny home onto the property so it looks like it was there when the photo was taken. Make it appear as a realistic outdoor structure with natural weathering, realistic shadows beneath it, and windows that reflect the sky from the property photo. Match the lighting direction and color temperature from the property photo exactly.
+Place the tiny home naturally on the property where it looks most realistic given the terrain, available space, and composition. Make it appear as a realistic outdoor structure with natural weathering, realistic shadows, and windows that reflect the sky. Match the lighting from the property photo exactly.
 
-Keep the property photo unchanged except where the tiny home is placed. The tiny home should be properly scaled - use visible objects for reference (doors are 2m tall, cars are 4.5m long).${lightingPrompt ? ` Lighting conditions: ${lightingPrompt}` : ''}`
+Keep the property photo unchanged except where the tiny home is placed. Scale it properly using visible objects for reference (doors are 2m tall, cars are 4.5m long).${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 
   const config = {
     responseModalities: ['IMAGE', 'TEXT'] as string[],

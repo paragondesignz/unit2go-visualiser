@@ -1,22 +1,17 @@
 import { useState } from 'react'
 import ImageUpload from '../components/ImageUpload'
 import Visualizer from '../components/Visualizer'
-import { UploadedImage, TinyHomeModel, PlacementPreferences } from '../types'
+import { UploadedImage, TinyHomeModel } from '../types'
 import { tinyHomeModels } from '../data/tinyHomeModels'
 
 function VisualizerPage() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
-  const [currentStep, setCurrentStep] = useState<'upload' | 'position' | 'visualize'>('upload')
+  const [currentStep, setCurrentStep] = useState<'upload' | 'select' | 'visualize'>('upload')
   const [selectedTinyHome, setSelectedTinyHome] = useState<TinyHomeModel>(tinyHomeModels[0])
-  const [placementPreferences, setPlacementPreferences] = useState<PlacementPreferences>({
-    horizontal: 'center',
-    depth: 'midground'
-  })
-  const [clickPosition, setClickPosition] = useState<{ x: number; y: number } | null>(null)
 
   const handleImageUpload = (image: UploadedImage) => {
     setUploadedImage(image)
-    setCurrentStep('position')
+    setCurrentStep('select')
   }
 
   const handleGenerate = () => {
@@ -24,12 +19,11 @@ function VisualizerPage() {
   }
 
   const handleBack = () => {
-    if (currentStep === 'position') {
+    if (currentStep === 'select') {
       setUploadedImage(null)
-      setClickPosition(null)
       setCurrentStep('upload')
     } else {
-      setCurrentStep('position')
+      setCurrentStep('select')
     }
   }
 
@@ -46,9 +40,9 @@ function VisualizerPage() {
               <span className="step-number">1</span>
               <span className="step-label">Upload Photo</span>
             </div>
-            <div className={`step ${currentStep === 'position' ? 'active' : ''}`}>
+            <div className={`step ${currentStep === 'select' ? 'active' : ''}`}>
               <span className="step-number">2</span>
-              <span className="step-label">Position</span>
+              <span className="step-label">Select Model</span>
             </div>
             <div className={`step ${currentStep === 'visualize' ? 'active' : ''}`}>
               <span className="step-number">3</span>
@@ -65,8 +59,8 @@ function VisualizerPage() {
           </div>
         )}
 
-        {currentStep === 'position' && uploadedImage && (
-          <div className="position-section">
+        {currentStep === 'select' && uploadedImage && (
+          <div className="select-section">
             <button className="back-button" onClick={handleBack}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -74,46 +68,16 @@ function VisualizerPage() {
               Back to Upload
             </button>
 
-            <div className="position-content">
-              <div className="position-left">
-                <h2>Click where you want the tiny home</h2>
-                <p className="position-instruction">Click on the image to position your tiny home. The placement indicator shows where it will be placed.</p>
-
-                <div
-                  className="position-image-container"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect()
-                    const x = ((e.clientX - rect.left) / rect.width) * 100
-                    const y = ((e.clientY - rect.top) / rect.height) * 100
-                    setClickPosition({ x, y })
-
-                    // Update horizontal based on click position
-                    if (x < 33.33) {
-                      setPlacementPreferences({...placementPreferences, horizontal: 'left'})
-                    } else if (x > 66.66) {
-                      setPlacementPreferences({...placementPreferences, horizontal: 'right'})
-                    } else {
-                      setPlacementPreferences({...placementPreferences, horizontal: 'center'})
-                    }
-                  }}
-                >
-                  <img src={uploadedImage.url} alt="Your property" className="position-image" />
-                  {clickPosition && (
-                    <div
-                      className="position-indicator"
-                      style={{
-                        left: `${clickPosition.x}%`,
-                        top: `${clickPosition.y}%`
-                      }}
-                    >
-                      <div className="position-crosshair"></div>
-                      <div className="position-circle"></div>
-                    </div>
-                  )}
+            <div className="select-content">
+              <div className="select-left">
+                <h2>Your Property Photo</h2>
+                <p className="select-instruction">AI will automatically place the tiny home in the best natural position on your property.</p>
+                <div className="select-image-container">
+                  <img src={uploadedImage.url} alt="Your property" className="select-image" />
                 </div>
               </div>
 
-              <div className="position-right">
+              <div className="select-right">
                 <div className="model-selection-compact">
                   <h3>Choose Model</h3>
                   <div className="model-cards-compact">
@@ -136,7 +100,6 @@ function VisualizerPage() {
                 <button
                   className="generate-button-large"
                   onClick={handleGenerate}
-                  disabled={!clickPosition}
                 >
                   Generate Visualization
                 </button>
@@ -156,7 +119,6 @@ function VisualizerPage() {
             <Visualizer
               uploadedImage={uploadedImage}
               selectedTinyHome={selectedTinyHome}
-              placementPreferences={placementPreferences}
             />
           </>
         )}

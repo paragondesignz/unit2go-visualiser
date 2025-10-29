@@ -33,14 +33,6 @@ export interface VisualizationResult {
   position: Position
 }
 
-export type HorizontalPosition = 'left' | 'center' | 'right'
-export type DepthPosition = 'foreground' | 'midground' | 'background'
-
-export interface PlacementPreferences {
-  horizontal: HorizontalPosition
-  depth: DepthPosition
-}
-
 export type ImageModelProvider = 'gemini' | 'flux'
 
 export interface DepthMapData {
@@ -54,7 +46,6 @@ export interface FLUXGenerationOptions {
   tinyHomeImageUrl: string
   depthMap?: DepthMapData
   clickPosition?: { x: number; y: number }
-  placementPreferences: PlacementPreferences
   lightingPrompt?: string
   controlnetStrength?: number
 }

@@ -1,5 +1,5 @@
 import * as fal from '@fal-ai/serverless-client'
-import { FLUXGenerationOptions, TinyHomeModel, PlacementPreferences, DepthMapData } from '../types'
+import { FLUXGenerationOptions, TinyHomeModel, DepthMapData } from '../types'
 
 const FAL_API_KEY = import.meta.env.VITE_FAL_API_KEY || ''
 
@@ -51,36 +51,22 @@ async function fileToDataUrl(file: File): Promise<string> {
 }
 
 /**
- * Build photorealistic prompt for FLUX based on placement preferences
+ * Build compositing-focused prompt for FLUX
+ * Natural placement, focus on integration elements
  */
 function buildFLUXPrompt(
-  tinyHomeModel: TinyHomeModel,
-  placementPreferences: PlacementPreferences,
+  _tinyHomeModel: TinyHomeModel, // Unused - kept for function signature compatibility
   lightingPrompt?: string
 ): string {
-  const horizontalDescriptions = {
-    left: 'positioned toward the left side of the property',
-    center: 'centrally positioned in the scene',
-    right: 'positioned toward the right side of the property',
-  }
+  return `Composite the tiny home from the reference image naturally onto this property where it looks most realistic given the terrain and available space.
 
-  const depthDescriptions = {
-    foreground: 'in the foreground, close to the camera with strong presence and clearly visible architectural details',
-    midground: 'at mid-ground distance with balanced visibility showing both structure and surrounding context',
-    background: 'in the background, integrated into the wider landscape with environmental context',
-  }
+Preserve both the property photo and tiny home design exactly. Only add these integration elements:
+- Natural contact shadows beneath the tiny home
+- Ground interaction where the foundation meets terrain
+- Lighting adjustments to match the property photo
+- Window reflections matching the sky/environment
 
-  return `A photorealistic photograph showing the exact ${tinyHomeModel.name} tiny home from the reference image (${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m × ${tinyHomeModel.dimensions.height}m) seamlessly integrated into an outdoor property. The tiny home is ${horizontalDescriptions[placementPreferences.horizontal]}, ${depthDescriptions[placementPreferences.depth]}.
-
-CRITICAL DESIGN PRESERVATION: The tiny home MUST maintain its EXACT architectural design from the reference image - same exterior material colors, same window placements, same door positions, same roof style, same proportions. DO NOT change the design, layout, or exterior appearance. The reference image shows the EXACT tiny home to place in the scene.
-
-SUBTLE REALISM ONLY: Add only minimal natural weathering to make it look real - very subtle dirt hints on lower sections, slight natural patina appropriate for outdoor structures. Keep weathering extremely subtle - the design and colors should remain virtually identical to the reference image. Windows should reflect the actual sky and environment from the property photo.
-
-NATURAL INTEGRATION: Cast natural contact shadows with soft falloff - darker at ground contact, gradually softening at edges with realistic penumbra. Match exact lighting from the property photo - same shadow softness, reflection intensity, color temperature. Soften edges very slightly to match photographic lens characteristics, not CG-sharp edges.
-
-Ground contact shows realistic terrain interaction - grass or dirt slightly displaced at foundation, natural settling. Match the atmospheric characteristics of the property photograph. The result must look like the exact tiny home from the reference was photographed on this property.
-
-Captured with 50mm lens at eye level (1.6m), natural depth of field, photographic grain matching the base image.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The tiny home should appear as if it was physically present when the property photo was taken.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 }
 
 /**
@@ -105,25 +91,26 @@ export async function generateWithFLUX(
     // Build the prompt
     const prompt = buildFLUXPrompt(
       tinyHomeModel,
-      options.placementPreferences,
       options.lightingPrompt
     )
 
-    console.log('Calling FLUX.1 ControlNet Inpainting API with reference image...')
+    console.log('Calling FLUX.1 image-to-image with ControlNet for compositing...')
 
-    // Use FLUX general inpainting with ControlNet and reference image for design preservation
-    const result = await fal.subscribe('fal-ai/flux-general/inpainting', {
+    // Use FLUX image-to-image for compositing (preserving both images, only adding integration)
+    const result = await fal.subscribe('fal-ai/flux-general/image-to-image', {
       input: {
         image_url: propertyImageDataUrl,
         prompt: prompt,
-        // CRITICAL: Pass tiny home reference image to preserve exact design
+        // Reference image: preserve tiny home design 100%
         reference_image_url: options.tinyHomeImageUrl,
-        reference_strength: 0.85, // High strength to preserve reference design (0.65 default, 0.85 for strong preservation)
+        reference_strength: 0.95, // Near-perfect preservation of reference design (range: -3 to 3, default 0.65)
+        // ControlNet depth: guide spatial positioning
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
-        strength: 0.75, // Balance between preservation and integration (0.0 = preserve original, 1.0 = complete remake)
+        // Low strength: minimal transformation, focus on compositing
+        strength: 0.30, // Very low = preserve base image, only composite tiny home (0.0 = no change, 1.0 = complete remake)
         num_inference_steps: 28,
-        guidance_scale: 4.0, // Slightly higher to follow prompt more closely
+        guidance_scale: 3.5, // Standard guidance for following prompt
         seed: Math.floor(Math.random() * 1000000),
         enable_safety_checker: true,
       },
