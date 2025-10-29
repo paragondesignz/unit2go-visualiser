@@ -25,6 +25,7 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage }: Vi
   const [editPrompt, setEditPrompt] = useState<string>('')
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
   const tips = [
     "The AI intelligently scales your tiny home based on surrounding objects",
@@ -317,6 +318,20 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
+  const openLightbox = () => {
+    if (resultImage) {
+      setIsLightboxOpen(true)
+    }
+  }
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false)
+  }
+
+  const handleLightboxDownload = async () => {
+    await handleDownload()
+  }
+
   return (
     <div className="visualizer">
       <div className="visualization-wrapper">
@@ -333,7 +348,9 @@ MANDATORY PERSON REMOVAL:
             <img
               src={showingOriginal ? uploadedImage.url : resultImage}
               alt={showingOriginal ? "Original space" : "Tiny home visualization"}
-              className="result-image"
+              className="result-image clickable"
+              onClick={openLightbox}
+              style={{ cursor: 'pointer' }}
             />
           ) : (
             <img
@@ -509,6 +526,33 @@ MANDATORY PERSON REMOVAL:
           </button>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && resultImage && (
+        <div className="lightbox-overlay" onClick={closeLightbox}>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button className="lightbox-close" onClick={closeLightbox} aria-label="Close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <img
+              src={showingOriginal ? uploadedImage.url : resultImage}
+              alt={showingOriginal ? "Original space" : "Tiny home visualization"}
+              className="lightbox-image"
+            />
+            <button className="lightbox-download" onClick={handleLightboxDownload}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download Image
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
