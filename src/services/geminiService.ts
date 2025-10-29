@@ -85,7 +85,8 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.2, // Low temperature for highly consistent and deterministic results
+    temperature: 0.5, // Moderate temperature for natural-looking lighting adjustments
+    topP: 0.9, // Nucleus sampling for quality lighting effects
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -236,7 +237,8 @@ Integration with the environment must be seamless and photorealistic. The tiny h
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.2, // Low temperature for highly consistent and deterministic placement
+    temperature: 0.6, // Moderate temperature for realistic, natural-looking placement with some variation
+    topP: 0.9, // Nucleus sampling for quality while allowing creative placement
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -494,7 +496,8 @@ export async function processWithWireframeGuide(
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.2, // Low temperature for highly consistent and deterministic results
+    temperature: 0.6, // Moderate temperature for realistic, natural-looking placement
+    topP: 0.9, // Nucleus sampling for quality while allowing creative placement
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,

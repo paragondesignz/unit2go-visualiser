@@ -230,21 +230,20 @@ MANDATORY PERSON REMOVAL:
     try {
       // Randomize camera perspectives to ensure variety on each click
       const perspectives = [
-        'from a dramatically lower camera angle positioned near ground level, looking upward to show the underside of structures and create an imposing perspective',
-        'from a significantly elevated aerial viewpoint as if photographed from a drone 15-20 feet above, showing the property layout from above',
-        'from the far left side of the property showing the complete opposite angle, revealing surfaces and details not visible in the current view',
-        'from much further back with a wider field of view, capturing substantially more of the surrounding property and context',
-        'from very close proximity focusing on the tiny home and immediate foreground details, creating an intimate perspective',
-        'from the completely opposite side behind the tiny home, showing the rear perspective and different property features',
-        'from a sharp diagonal corner angle at 45 degrees, creating dynamic compositional lines and revealing multiple sides simultaneously',
-        'from an extreme low ground level perspective as if the camera is resting on the surface, showing an unusual worm\'s-eye view'
+        'from a slightly lower camera angle, shifting the viewpoint down while keeping the same general direction',
+        'from a moderately elevated viewpoint, raising the camera position to show more of the property',
+        'from a side angle, moving the camera position to reveal different surfaces',
+        'from slightly further back, widening the view to show more context',
+        'from closer proximity, focusing more on the tiny home details',
+        'from the opposite side, showing the other perspective of the scene',
+        'from a diagonal angle, creating a different compositional view'
       ]
       const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
 
-      const povPrompt = `Create a completely different photographic composition of this scene ${randomPerspective}. This must be a distinctly different viewpoint with noticeably changed framing, angle, and perspective. The tiny home remains in exactly the same physical location on the property, but photograph it from this dramatically different camera position. Ensure the new viewpoint reveals different aspects of the scene and creates a fresh visual composition that looks substantially different from the current image.`
+      const povPrompt = `Adjust the camera viewpoint of this exact scene ${randomPerspective}. Keep the tiny home in precisely the same physical position and preserve the property layout exactly as shown. Only change the camera angle and framing to provide a different perspective while maintaining all elements in their current locations. This should look like the same scene photographed from a slightly different position.`
       const editedImage = await conversationalEdit(resultImage, povPrompt, {
-        temperature: 1.0,
-        topP: 0.95
+        temperature: 0.4,
+        topP: 0.85
       })
       addToHistory(editedImage)
       setShowingOriginal(false)
