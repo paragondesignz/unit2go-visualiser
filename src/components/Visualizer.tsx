@@ -31,7 +31,6 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [povClickCount, setPovClickCount] = useState(0)
 
   const tips = [
     "The AI intelligently scales and places your tiny home based on surrounding objects",
@@ -190,7 +189,6 @@ MANDATORY PERSON REMOVAL:
 
       addToHistory(imageUrl)
       setShowingOriginal(false)
-      setPovClickCount(0) // Reset generation counter for new visualization
     } catch (err) {
       setError('Failed to process image. Please try again.')
       console.error(err)
@@ -251,7 +249,6 @@ MANDATORY PERSON REMOVAL:
         topP: 0.9
       })
 
-      setPovClickCount(prev => prev + 1)
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
