@@ -62,7 +62,7 @@ function HomePage() {
           scene with Quick Enhancements like decks, landscaping, and furniture, or use natural
           language editing for unlimited creative possibilities.
         </p>
-        <p style="margin-top: 1rem; font-size: 0.95rem; opacity: 0.8; font-style: italic;">
+        <p style={{ marginTop: '1rem', fontSize: '0.95rem', opacity: 0.8, fontStyle: 'italic' }}>
           Images are AI-generated artistic representations for entertainment purposes only.
           Results may vary and should not be used as a substitute for professional advice.
         </p>
