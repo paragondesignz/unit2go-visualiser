@@ -38,7 +38,7 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
     "After generation, try Quick Enhancement buttons for instant additions like decks and landscaping",
     "Use conversational editing to customize any aspect of the scene with natural language",
     "Try different lighting and times of day to see your tiny home in various conditions",
-    "Generate different camera angles with the POV button for multiple perspectives",
+    "Use the New Generation button to try different positions for your tiny home",
     "Use Undo/Redo to navigate through your editing history",
     "Download your image to share with family, friends, or planning consultants",
     "The visualization helps you make confident decisions about your tiny home placement"
@@ -190,7 +190,7 @@ MANDATORY PERSON REMOVAL:
 
       addToHistory(imageUrl)
       setShowingOriginal(false)
-      setPovClickCount(0) // Reset POV counter for new generation
+      setPovClickCount(0) // Reset generation counter for new visualization
     } catch (err) {
       setError('Failed to process image. Please try again.')
       console.error(err)
@@ -226,47 +226,36 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
-  const handleDifferentPOV = async () => {
+  const handleNewGeneration = async () => {
     if (!resultImage) return
 
     setProcessing(true)
     setError(null)
 
     try {
-      let povPrompt: string
+      // Define different positioning variations following Gemini best practices
+      const positionVariations = [
+        'Reposition the tiny home to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
+        'Reposition the tiny home to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
+        'Reposition the tiny home toward the center of the frame as the dominant focal point, using center-weighted composition. The tiny home should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.',
+        'Reposition the tiny home slightly further back in the scene, creating more distance and showing additional foreground elements. This placement should reveal more of the property layout and spatial context while keeping the tiny home clearly visible. Maintain the same photorealistic quality and lighting conditions.',
+        'Reposition the tiny home in the foreground, closer to the camera viewpoint, making it more prominent in the composition. This placement should emphasize the tiny home details while still showing environmental context. Maintain the same photorealistic quality and lighting conditions.',
+        'Reposition the tiny home at a diagonal angle within the frame, creating a dynamic composition that shows both the front and side perspectives. This placement should provide visual interest through asymmetrical balance. Maintain the same photorealistic quality and lighting conditions.'
+      ]
 
-      // Sequential POV: first click = top-down, second = side, then random
-      if (povClickCount === 0) {
-        // First click: angled top-down view
-        povPrompt = `Adjust the camera viewpoint to a slightly angled top-down perspective, positioned moderately above the scene looking down at approximately 30-40 degrees from horizontal. This elevated angle should reveal more of the property layout, rooflines, and spatial relationships while maintaining the tiny home in precisely the same physical location. Keep all elements in their current positions - only change the camera elevation and angle to provide this bird's-eye perspective of the scene.`
-      } else if (povClickCount === 1) {
-        // Second click: side view
-        povPrompt = `Adjust the camera viewpoint to a side angle perspective, moving the camera position to the side to show the scene from a lateral viewpoint. This side angle should reveal different surfaces and the profile of the tiny home while keeping it in precisely the same physical location on the property. Preserve the property layout exactly as shown - only change the horizontal camera position to provide this side perspective of the scene.`
-      } else {
-        // Subsequent clicks: random perspectives
-        const perspectives = [
-          'from a slightly lower camera angle, shifting the viewpoint down while keeping the same general direction',
-          'from a moderately elevated viewpoint, raising the camera position to show more of the property',
-          'from a different side angle, moving the camera position to reveal alternative surfaces',
-          'from slightly further back, widening the view to show more context',
-          'from closer proximity, focusing more on the tiny home details',
-          'from the opposite side, showing the other perspective of the scene',
-          'from a diagonal corner angle, creating a different compositional view'
-        ]
-        const randomPerspective = perspectives[Math.floor(Math.random() * perspectives.length)]
-        povPrompt = `Adjust the camera viewpoint of this exact scene ${randomPerspective}. Keep the tiny home in precisely the same physical position and preserve the property layout exactly as shown. Only change the camera angle and framing to provide a different perspective while maintaining all elements in their current locations. This should look like the same scene photographed from a slightly different position.`
-      }
+      // Select a random position variation
+      const randomPosition = positionVariations[Math.floor(Math.random() * positionVariations.length)]
 
-      const editedImage = await conversationalEdit(resultImage, povPrompt, {
-        temperature: 0.4,
-        topP: 0.85
+      const editedImage = await conversationalEdit(resultImage, randomPosition, {
+        temperature: 0.7,
+        topP: 0.9
       })
 
       setPovClickCount(prev => prev + 1)
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
-      setError('Failed to generate different POV. Please try again.')
+      setError('Failed to generate new position. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
@@ -561,12 +550,12 @@ MANDATORY PERSON REMOVAL:
 
             <button
               className="pov-button"
-              onClick={handleDifferentPOV}
+              onClick={handleNewGeneration}
               disabled={processing || !resultImage}
             >
-              Generate Different POV
+              New Generation
             </button>
-            <p className="control-info">Try a different camera angle and perspective</p>
+            <p className="control-info">Generate the tiny home in a different position</p>
 
             <button
               className="toggle-button"
