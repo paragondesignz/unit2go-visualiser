@@ -37,28 +37,28 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
     "After generation, try Quick Enhancement buttons for instant additions like decks and landscaping",
     "Use conversational editing to customize any aspect of the scene with natural language",
     "Try different lighting and times of day to see your tiny home in various conditions",
-    "Use the New Generation button to try different positions for your tiny home",
+    "Use the left/center/right position buttons to reposition your tiny home in the frame",
     "Use Undo/Redo to navigate through your editing history",
     "Download your image to share with family, friends, or planning consultants",
     "The visualization helps you make confident decisions about your tiny home placement"
   ]
 
   const getLightingPrompt = (hour: number): string => {
-    if (hour >= 7 && hour < 8) return 'NEW ZEALAND SUNRISE LIGHTING: Apply subtle and realistic New Zealand sunrise lighting with gentle warm tones. The sun is low on the horizon creating moderate shadows. The sky shows soft oranges and pinks. Keep lighting natural and understated - avoid oversaturation. Surfaces have warm but realistic illumination'
+    if (hour >= 7 && hour < 8) return 'Sunrise in New Zealand with the sun low on the horizon. Gentle warm tones with soft oranges and pinks in the sky. Moderate shadows. Natural, understated lighting'
 
-    if (hour >= 8 && hour < 11) return 'NEW ZEALAND MORNING LIGHTING: Apply clear, natural New Zealand morning sunlight with realistic intensity. Create well-defined but natural shadows and a blue sky. The lighting should feel fresh and natural with good visibility - avoid oversaturation'
+    if (hour >= 8 && hour < 11) return 'New Zealand morning sunlight. Clear, fresh lighting with well-defined natural shadows and blue sky. Good visibility'
 
-    if (hour >= 11 && hour < 15) return 'NEW ZEALAND MIDDAY LIGHTING: Apply natural New Zealand midday sun from overhead with realistic intensity. Create short shadows directly under objects with clear but natural illumination. Keep lighting realistic and natural. The sky should be blue and colors should appear natural'
+    if (hour >= 11 && hour < 15) return 'New Zealand midday sun from overhead. Short shadows directly under objects. Blue sky with natural illumination'
 
-    if (hour >= 15 && hour < 18) return 'NEW ZEALAND AFTERNOON LIGHTING: Apply warm, natural New Zealand afternoon sunlight with moderately long shadows. Gentle warm tones appear on surfaces with comfortable natural lighting. Keep effects subtle and realistic - avoid oversaturation'
+    if (hour >= 15 && hour < 18) return 'New Zealand afternoon sunlight with warm tones. Moderately long shadows. Comfortable natural lighting'
 
-    if (hour >= 18 && hour < 19) return 'NEW ZEALAND GOLDEN HOUR: Apply New Zealand natural golden hour lighting with subtle warm tones. Create gentle side-lighting and longer shadows with soft reflections. Keep the golden effect natural and understated - avoid oversaturation'
+    if (hour >= 18 && hour < 19) return 'New Zealand golden hour with subtle warm light. Gentle side-lighting creating longer shadows. Natural golden effect'
 
-    if (hour >= 19 && hour < 21) return 'NEW ZEALAND SUNSET LIGHTING: Apply realistic New Zealand sunset lighting with natural oranges, soft pinks, and gentle purples in the sky. Keep colors natural and avoid oversaturation. The setting sun casts warm tones across surfaces with natural shadows'
+    if (hour >= 19 && hour < 21) return 'New Zealand sunset with natural oranges, soft pinks, and gentle purples in the sky. The setting sun casts warm tones with natural shadows'
 
-    if (hour >= 21 && hour <= 22) return 'NEW ZEALAND NIGHT LIGHTING: Apply realistic New Zealand nighttime conditions with a naturally dark sky (deep blue or black with visible stars where appropriate). No daylight should be visible. Add natural outdoor lighting - warm deck lights, landscape path lights, and house lighting typical of New Zealand homes'
+    if (hour >= 21 && hour <= 22) return 'New Zealand nighttime with dark sky (deep blue or black with stars). Natural outdoor lighting from warm deck lights, landscape path lights, and house lighting'
 
-    return 'NEW ZEALAND DAYLIGHT: Apply natural New Zealand daylight with realistic intensity and natural color temperature. Keep lighting effects subtle and natural'
+    return 'Natural New Zealand daylight with realistic intensity and color temperature'
   }
 
   const getAccuracyPrompt = (): string => {
@@ -224,27 +224,20 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
-  const handleNewGeneration = async () => {
+  const handleRepositionTinyHome = async (position: 'left' | 'center' | 'right') => {
     if (!resultImage) return
 
     setProcessing(true)
     setError(null)
 
     try {
-      // Define different positioning variations following Gemini best practices
-      const positionVariations = [
-        'Reposition the tiny home to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
-        'Reposition the tiny home to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
-        'Reposition the tiny home toward the center of the frame as the dominant focal point, using center-weighted composition. The tiny home should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.',
-        'Reposition the tiny home slightly further back in the scene, creating more distance and showing additional foreground elements. This placement should reveal more of the property layout and spatial context while keeping the tiny home clearly visible. Maintain the same photorealistic quality and lighting conditions.',
-        'Reposition the tiny home in the foreground, closer to the camera viewpoint, making it more prominent in the composition. This placement should emphasize the tiny home details while still showing environmental context. Maintain the same photorealistic quality and lighting conditions.',
-        'Reposition the tiny home at a diagonal angle within the frame, creating a dynamic composition that shows both the front and side perspectives. This placement should provide visual interest through asymmetrical balance. Maintain the same photorealistic quality and lighting conditions.'
-      ]
+      const positionPrompts = {
+        left: 'Reposition the tiny home to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
+        center: 'Reposition the tiny home toward the center of the frame as the dominant focal point, using center-weighted composition. The tiny home should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.',
+        right: 'Reposition the tiny home to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.'
+      }
 
-      // Select a random position variation
-      const randomPosition = positionVariations[Math.floor(Math.random() * positionVariations.length)]
-
-      const editedImage = await conversationalEdit(resultImage, randomPosition, {
+      const editedImage = await conversationalEdit(resultImage, positionPrompts[position], {
         temperature: 0.7,
         topP: 0.9
       })
@@ -252,7 +245,7 @@ MANDATORY PERSON REMOVAL:
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
-      setError('Failed to generate new position. Please try again.')
+      setError('Failed to reposition tiny home. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
@@ -545,14 +538,51 @@ MANDATORY PERSON REMOVAL:
             </div>
             <p className="control-info">Step backward or forward through your edits</p>
 
-            <button
-              className="pov-button"
-              onClick={handleNewGeneration}
-              disabled={processing || !resultImage}
-            >
-              New Generation
-            </button>
-            <p className="control-info">Generate the tiny home in a different position</p>
+            <div className="position-selection">
+              <h4>Reposition Tiny Home</h4>
+              <div className="position-buttons">
+                <button
+                  className="position-btn"
+                  onClick={() => handleRepositionTinyHome('left')}
+                  disabled={processing || !resultImage}
+                >
+                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="5" width="14" height="20" rx="2" />
+                    <line x1="20" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="20" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="20" y1="22" x2="38" y2="22" strokeDasharray="2 2" opacity="0.4" />
+                  </svg>
+                  <span>Left</span>
+                </button>
+                <button
+                  className="position-btn"
+                  onClick={() => handleRepositionTinyHome('center')}
+                  disabled={processing || !resultImage}
+                >
+                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="13" y="5" width="14" height="20" rx="2" />
+                    <line x1="2" y1="8" x2="10" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="30" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="2" y1="15" x2="10" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="30" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                  </svg>
+                  <span>Center</span>
+                </button>
+                <button
+                  className="position-btn"
+                  onClick={() => handleRepositionTinyHome('right')}
+                  disabled={processing || !resultImage}
+                >
+                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="24" y="5" width="14" height="20" rx="2" />
+                    <line x1="2" y1="8" x2="20" y2="8" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="2" y1="15" x2="20" y2="15" strokeDasharray="2 2" opacity="0.4" />
+                    <line x1="2" y1="22" x2="20" y2="22" strokeDasharray="2 2" opacity="0.4" />
+                  </svg>
+                  <span>Right</span>
+                </button>
+              </div>
+            </div>
 
             <button
               className="toggle-button"

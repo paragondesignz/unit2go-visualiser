@@ -81,7 +81,7 @@ async function generateConversationalLightingEdit(
 
   const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
 
-  const conversationalPrompt = `Modify this photograph by adjusting only the lighting and atmospheric conditions according to these specifications: ${lightingPrompt}. Preserve everything else in the image exactly as it appears, maintaining identical positions, structures, architectural elements, and overall composition. Only change the lighting quality, shadow characteristics, and atmospheric mood to match the requested conditions while keeping all physical elements unchanged.`
+  const conversationalPrompt = `Adjust the lighting in this photograph to match these conditions: ${lightingPrompt}. Keep all structures, positions, and composition exactly the same. Only change the light quality, shadow direction and softness, and overall atmosphere. This should look like the same scene photographed at a different time of day with natural lighting.`
 
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
@@ -237,51 +237,25 @@ async function generateImageWithTinyHome(
     right: 'Position the tiny home on the RIGHT side of the frame (right third), allowing more environmental context, scenery, and breathing room on the left side. This creates visual balance and shows more of the property setting.'
   }
 
-  // Create narrative, descriptive prompt following Google's best practices with photography focus
-  const prompt = customPrompt || `PHOTOREALISTIC PHOTOGRAPHY OBJECTIVE:
-You are creating a professional real estate marketing photograph. This must look like an actual photograph taken by a professional photographer with high-end camera equipment - NOT a digital rendering or CGI. The image should be indistinguishable from a real photograph.
+  // Create narrative, descriptive prompt following Google's best practices
+  const prompt = customPrompt || `This is a professional real estate photograph showing the ${tinyHomeModel.name} tiny home (${length}m × ${width}m × ${height}m) placed on an actual property.
 
-PHOTOGRAPHY SPECIFICATIONS:
-Camera: Professional DSLR with full-frame sensor
-Lens: ${randomLens}
-ISO: ${randomISO}
-Aperture: f/${randomAperture}
-White Balance: Natural daylight, accurate color temperature
-Dynamic Range: High dynamic range with preserved highlights and shadows
-Focus: Tack-sharp focus with natural depth of field creating subtle background blur where appropriate
+PHOTOGRAPHY SETUP:
+Shot with ${randomLens} lens at ISO ${randomISO}, f/${randomAperture}. Natural daylight with soft, realistic shadows. ${lightingPrompt ? lightingPrompt + '. ' : ''}The image captures authentic depth of field with the tiny home in sharp focus while background elements show subtle natural blur.
 
-PHOTOREALISTIC ELEMENTS REQUIRED:
-- Natural imperfections: slight color variations in materials, organic weathering, authentic textures
-- Realistic shadows with proper soft edges from natural light diffusion
-- Accurate light behavior: natural fall-off, ambient occlusion, soft global illumination
-- Atmospheric perspective: subtle haze in distant elements
-- Natural color grading: realistic saturation levels, authentic color relationships
-- Real-world scale and proportions
-- Genuine environmental integration: the tiny home must look like it truly exists in this space
-- Organic details: natural ground textures, authentic surfaces, real weather effects
+SCENE COMPOSITION:
+${positionInstructions[tinyHomePosition]} The tiny home sits on stable ground—a lawn, deck, patio, or gravel area. It's oriented parallel to existing features like fences or pathways. The composition uses the rule of thirds with natural leading lines drawing attention to the structure. Foreground shows property details, the tiny home anchors the middle distance, and the background provides environmental context.
 
-SCENE ANALYSIS AND SCALE:
-Carefully analyze the property photograph to understand the environment. Look for reference objects that establish scale: doors are typically 2 meters high, windows 1 to 1.5 meters, chairs 0.8 meters high, tables 1.5 meters wide, railings 1 meter height, people 1.7 meters tall, vehicles 4-5 meters long. If decking boards are visible, they are usually 12-15 centimeters wide.
+SCALE AND PROPORTION:
+Match the tiny home's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall). The tiny home must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance.
 
-TINY HOME SPECIFICATIONS:
-The ${tinyHomeModel.name} measures exactly ${length}m × ${width}m × ${height}m. Using the reference objects identified, ensure the tiny home appears at its true real-world scale relative to everything in the scene. Proportions must be accurate, accounting for perspective diminishment if placed further from the camera.
+TINY HOME APPEARANCE:
+Use the exact tiny home from the reference image without modifications. Keep the original exterior colors, materials, window placement, and architectural details. Add only subtle warm interior lighting visible through windows to suggest the space is lived-in. The exterior shows natural weathering and authentic material textures—slight variations in siding color, realistic wood grain, genuine metal finishes.
 
-COMPOSITION AND PLACEMENT:
-${positionInstructions[tinyHomePosition]} Position the tiny home using professional real estate photography techniques. Apply the rule of thirds for visual interest, with natural leading lines such as pathways, fencing, or terrain features drawing the eye toward the structure. Place it on flat, stable ground: existing deck, patio area, lawn, gravel pad, or concrete surface. Ensure adequate clearance of approximately 1 meter minimum on accessible sides. Orient the structure parallel to visible features like fences, pathways, or deck edges. The composition should create depth through layered elements: foreground details, the tiny home as midground focal point, and detailed background.
+LIGHTING AND ATMOSPHERE:
+Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Materials respond to light realistically—wood absorbs, metal reflects slightly, glass shows subtle reflections. Include atmospheric perspective with slight depth haze if the tiny home is distant.
 
-EXACT TINY HOME REPLICATION:
-Use the EXACT tiny home from the second reference image without ANY modifications:
-- Do NOT add logos, branding, text, or graphics
-- Do NOT add extra features: no additional windows, doors, decks, or architectural elements not in reference
-- Do NOT modify color, texture, material, shape, or size
-- The ONLY change allowed: Add subtle warm interior lighting glowing through windows to suggest occupancy
-- Exterior siding, roofing, windows, doors must remain pixel-perfect to the reference
-
-PHOTOREALISTIC INTEGRATION:
-The tiny home's exterior materials must show authentic texture and subtle weathering appropriate for the environment. ${lightingPrompt ? `Lighting: ${lightingPrompt}. ` : ''}Shadows are soft-edged and realistic, falling naturally across the scene based on sun position and lighting conditions. Match the color temperature of the scene whether warm golden hour, cool overcast, or neutral daylight. Materials reflect light realistically. Add subtle reflections on reflective surfaces if appropriate. Include atmospheric perspective with slight depth haze on distant features if the tiny home is placed at distance.
-
-PROFESSIONAL REAL ESTATE RESULT:
-The final image must be indistinguishable from a genuine photograph captured by a skilled architectural photographer with professional DSLR equipment. The environment and composition are natural. The tiny home remains pixel-perfect to the reference. This is a real photograph, not a rendering.`
+The result is an authentic photograph—not a rendering—showing how this specific tiny home would actually appear on this property.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
@@ -539,7 +513,7 @@ export async function processWithWireframeGuide(
     : wireframeGuideDataUrl
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  const prompt = `Create a photorealistic composite by integrating the ${tinyHomeModel.name} tiny home from the second reference image into the property scene from the first image, following the exact position and placement indicated in the wireframe guide provided in the third image. Orient the rectangular structure parallel to visible features like fences, pathways, deck edges, or property boundaries to ensure natural alignment. Preserve the property photograph exactly as shown, maintaining identical lighting quality, color palette, and background elements. Add only the tiny home structure with realistic shadow casting and reflections that match the existing lighting conditions and the position specified in the wireframe guide.${lightingPrompt ? ` Adjust the lighting and atmosphere according to these conditions: ${lightingPrompt}.` : ''}`
+  const prompt = `This is a real estate photograph showing the ${tinyHomeModel.name} placed on a property. Use the wireframe guide (third image) to position the tiny home exactly where indicated in the property photo (first image). Match the tiny home's appearance from the reference (second image) while ensuring it looks naturally integrated with realistic shadows, lighting, and scale. Orient it parallel to visible features like fences or pathways. The result should be an authentic photograph.${lightingPrompt ? ` Use these lighting conditions: ${lightingPrompt}.` : ''}`
 
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
@@ -621,7 +595,7 @@ export async function conversationalEdit(
 
   const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
 
-  const prompt = `Modify this photograph by making only these specific changes: ${editPrompt}. Preserve all other elements in the image exactly as they appear, maintaining identical composition, positioning, and details for everything not explicitly mentioned in the modification request. Only alter what has been specifically requested while keeping the rest of the image unchanged.`
+  const prompt = `Make this specific change to the photograph: ${editPrompt}. Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Only modify what was requested. The result should look like a real photograph with the requested change naturally integrated.`
 
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
