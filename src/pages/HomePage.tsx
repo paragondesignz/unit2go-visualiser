@@ -23,7 +23,7 @@ function HomePage() {
         <div className="feature-card">
           <div className="feature-number">1</div>
           <h3>Upload Your Photo</h3>
-          <p>Take or upload a photo of your property or outdoor space</p>
+          <p>Take or upload a photo of your property or outdoor space where you'd like to place your tiny home</p>
         </div>
 
         <div className="feature-arrow">
@@ -35,8 +35,8 @@ function HomePage() {
 
         <div className="feature-card">
           <div className="feature-number">2</div>
-          <h3>AI Placement</h3>
-          <p>Our AI automatically places your Unit2Go tiny home in the perfect spot</p>
+          <h3>AI Visualization</h3>
+          <p>Our AI automatically places your selected tiny home model in a natural position on your property</p>
         </div>
 
         <div className="feature-arrow">
@@ -48,8 +48,8 @@ function HomePage() {
 
         <div className="feature-card">
           <div className="feature-number">3</div>
-          <h3>Visualize & Download</h3>
-          <p>See your tiny home in place and download the image to share</p>
+          <h3>Customize & Download</h3>
+          <p>Use Quick Enhancements and natural language editing to personalize your scene, then download to share</p>
         </div>
       </section>
 
@@ -57,8 +57,14 @@ function HomePage() {
         <h2>Experience Your Future Home</h2>
         <p>
           Unit2Go Vision uses advanced AI technology to help you visualize how our premium
-          deluxe tiny home will look on your property. Simply upload a photo, and watch as
-          our AI intelligently places a realistic representation of your future home in your space.
+          deluxe tiny home will look on your property. Simply upload a photo, select your model,
+          and our AI intelligently places a realistic representation in your space. Customize the
+          scene with Quick Enhancements like decks, landscaping, and furniture, or use natural
+          language editing for unlimited creative possibilities.
+        </p>
+        <p style="margin-top: 1rem; font-size: 0.95rem; opacity: 0.8; font-style: italic;">
+          Images are AI-generated artistic representations for entertainment purposes only.
+          Results may vary and should not be used as a substitute for professional advice.
         </p>
       </section>
 

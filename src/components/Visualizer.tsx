@@ -34,14 +34,14 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
   const [povClickCount, setPovClickCount] = useState(0)
 
   const tips = [
-    "The AI intelligently scales your tiny home based on surrounding objects",
-    "Try different times of day to see how lighting affects the appearance",
-    "Each generation creates a unique placement - experiment to find your favorite",
-    "Use the position controls for fine-tuning the placement",
+    "The AI intelligently scales and places your tiny home based on surrounding objects",
+    "After generation, try Quick Enhancement buttons for instant additions like decks and landscaping",
+    "Use conversational editing to customize any aspect of the scene with natural language",
+    "Try different lighting and times of day to see your tiny home in various conditions",
+    "Generate different camera angles with the POV button for multiple perspectives",
+    "Use Undo/Redo to navigate through your editing history",
     "Download your image to share with family, friends, or planning consultants",
-    "The visualization helps you make confident decisions about your tiny home placement",
-    "Use conversational editing to customize the scene with natural language",
-    "The AI aligns with fence lines and boundaries for realistic placement"
+    "The visualization helps you make confident decisions about your tiny home placement"
   ]
 
   const getLightingPrompt = (hour: number): string => {
@@ -302,6 +302,24 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
+  const handleQuickEdit = async (prompt: string) => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const editedImage = await conversationalEdit(resultImage, prompt)
+      addToHistory(editedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to apply edit. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const handleDownload = async () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
@@ -436,16 +454,53 @@ MANDATORY PERSON REMOVAL:
 
         {resultImage && (
           <p className="image-disclaimer">
-            Generated images are artistic representations and may not be to exact scale
+            Generated images are artistic representations for entertainment purposes only. Results may vary due to AI interpretation and may not be to exact scale. Not intended as a substitute for professional architectural or planning advice.
           </p>
+        )}
+
+        {/* Quick Action Buttons */}
+        {resultImage && (
+          <div className="quick-actions-section">
+            <h3>Quick Enhancements</h3>
+            <div className="quick-actions-grid">
+              <button
+                className="quick-action-button"
+                onClick={() => handleQuickEdit('add a deck out the front of the tiny home unit')}
+                disabled={processing}
+              >
+                Add Deck
+              </button>
+              <button
+                className="quick-action-button"
+                onClick={() => handleQuickEdit('add outdoor furniture')}
+                disabled={processing}
+              >
+                Add Outdoor Furniture
+              </button>
+              <button
+                className="quick-action-button"
+                onClick={() => handleQuickEdit('add pot plants and shrubs')}
+                disabled={processing}
+              >
+                Add Plants & Shrubs
+              </button>
+              <button
+                className="quick-action-button"
+                onClick={() => handleQuickEdit('add landscaping features')}
+                disabled={processing}
+              >
+                Add Landscaping
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Conversational Editing - moved under preview */}
         {resultImage && (
           <div className="conversational-edit-section">
-            <h3>Edit Your Visualization</h3>
+            <h3>Custom Editing</h3>
             <p className="control-info">
-              Make natural language edits to your image. Try: "make the sky more cloudy", "add some trees", "change the grass to gravel", etc.
+              Use natural language to make custom changes beyond the Quick Enhancements above. Describe any modification you'd like to see.
             </p>
             <div className="edit-input-group">
               <input
@@ -466,13 +521,13 @@ MANDATORY PERSON REMOVAL:
               </button>
             </div>
             <div className="edit-examples">
-              <strong>Example edits:</strong>
+              <strong>Try these custom edits:</strong>
               <ul>
-                <li>"make the sky more cloudy"</li>
-                <li>"add some trees in the background"</li>
-                <li>"change the grass to gravel or paving"</li>
-                <li>"make the lighting warmer"</li>
-                <li>"add a garden bed near the tiny home"</li>
+                <li>"make the sky more dramatic with clouds"</li>
+                <li>"add a gravel driveway leading to the tiny home"</li>
+                <li>"change the grass to native New Zealand plants"</li>
+                <li>"add a pergola beside the tiny home"</li>
+                <li>"add window boxes with flowers"</li>
               </ul>
             </div>
           </div>

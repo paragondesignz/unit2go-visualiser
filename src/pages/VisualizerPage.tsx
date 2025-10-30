@@ -72,7 +72,7 @@ function VisualizerPage() {
             <div className="select-content-centered">
               <div className="model-selection-full">
                 <h2>Choose Your Tiny Home</h2>
-                <p className="select-instruction">AI will automatically place the tiny home in the best natural position on your property.</p>
+                <p className="select-instruction">Our AI will automatically place your selected tiny home in a natural position. After generation, you can customize it with Quick Enhancements and natural language editing.</p>
                 <div className="model-cards-grid">
                   {tinyHomeModels.map((model) => (
                     <div

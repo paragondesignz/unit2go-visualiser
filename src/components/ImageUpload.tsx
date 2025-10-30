@@ -98,11 +98,12 @@ function ImageUpload({ onImageUpload }: ImageUploadProps) {
     <div className="image-upload">
       <div className="upload-instructions">
         <h2>Upload Your Space</h2>
-        <p>Take or upload a photo of where you'd like to place your Unit2Go tiny home</p>
+        <p>Take or upload a photo of your outdoor space. Our AI will automatically place your selected tiny home in a natural position.</p>
         <ul className="upload-tips">
-          <li>Choose a clear, well-lit outdoor photo</li>
-          <li>Include reference objects (trees, fences, buildings) for scale</li>
+          <li>Choose a clear, well-lit outdoor photo of your property</li>
+          <li>Include reference objects (trees, fences, buildings) to help the AI understand scale</li>
           <li>Ensure the ground area where you want the tiny home is visible</li>
+          <li>After generation, use Quick Enhancements and custom editing to personalize your visualization</li>
           <li>Supported formats: JPEG, PNG, WebP, HEIC (max 20MB)</li>
         </ul>
       </div>
