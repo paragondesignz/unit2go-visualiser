@@ -376,27 +376,31 @@ async function generateImageWithPool(
   }
 
   // Create narrative, descriptive prompt that emphasizes converting diagram to photorealistic pool
-  const prompt = customPrompt || `STEP 1: ANALYZE THE POOL DIAGRAM SHAPE
-Look at the second image (the pool diagram). Study its EXACT shape, outline, and geometry. Note every curve, corner, angle, and edge. This is the SHAPE you must replicate EXACTLY.
+  // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
+  const prompt = customPrompt || `You are creating a photorealistic pool visualization. 
 
-STEP 2: COPY THE EXACT SHAPE
-You must create a pool with the IDENTICAL shape to the diagram. Trace the outline from the diagram and use that EXACT outline for your pool. Do NOT modify, simplify, or approximate the shape. The pool's perimeter must match the diagram's perimeter exactly.
+REFERENCE IMAGE ANALYSIS:
+The SECOND image (image [1]) is a pool diagram showing the EXACT shape you must replicate. Look at this diagram carefully:
+- Study its outline, curves, corners, and angles
+- Note the length-to-width ratio
+- Identify any unique features (rounded ends, steps, curves, etc.)
+- This is the SHAPE TEMPLATE you must follow EXACTLY
 
-STEP 3: CONVERT TO PHOTOREALISTIC APPEARANCE
-While keeping the EXACT shape from Step 2, convert ONLY the visual appearance from diagram style to photorealistic:
-- Replace diagram lines with realistic pool edges (concrete/tile coping)
-- Fill the shape with realistic water (transparent, blue-turquoise, with depth and reflections)
-- Add realistic materials and textures
-- Integrate naturally into the property scene
+TASK: Convert diagram to photorealistic pool while preserving EXACT shape
+1. Take the EXACT outline/shape from the second image (the pool diagram)
+2. Trace that outline precisely - do not modify, simplify, or approximate
+3. Fill that EXACT shape with photorealistic water and materials
+4. Integrate it naturally into the first image (the property photo)
 
-CRITICAL SHAPE PRESERVATION RULES:
-1. The pool's outline MUST match the diagram's outline exactly - same curves, same corners, same angles
-2. The length-to-width ratio MUST match the diagram precisely
-3. Any unique features (rounded ends, steps, curves) MUST be preserved exactly
-4. The orientation/angle MUST match the diagram
-5. DO NOT simplify the shape - if the diagram has complex curves, keep those complex curves
-6. DO NOT round corners that aren't rounded in the diagram
-7. DO NOT add features that aren't in the diagram
+CRITICAL SHAPE RULES:
+- The pool's perimeter MUST match the diagram's perimeter exactly
+- Same curves, same corners, same angles - pixel-perfect shape match
+- Same length-to-width ratio
+- Same orientation/angle
+- DO NOT simplify complex curves
+- DO NOT round corners that aren't rounded in the diagram
+- DO NOT add features not in the diagram
+- ONLY change visual style (diagram → photorealistic), NOT the shape
 
 This is a professional real estate photograph showing a swimming pool (${length}m × ${width}m × ${depth}m deep) integrated into an actual property.
 
@@ -409,9 +413,9 @@ ${positionInstructions[poolPosition]} The pool is properly integrated into the p
 SCALE AND PROPORTION:
 Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance. CRITICAL: When scaling, maintain the EXACT shape proportions from the diagram - do not distort or change the shape.
 
-POOL APPEARANCE (WITH EXACT SHAPE):
-The pool must have the IDENTICAL shape to the diagram, rendered photorealistically:
-- Shape: EXACT match to diagram outline - trace it precisely
+POOL APPEARANCE:
+The pool must have the IDENTICAL shape to the diagram (second image), rendered photorealistically:
+- Shape: EXACT match to diagram outline - trace it precisely from the second image
 - Water: realistic depth, transparency, natural color (turquoise/blue), subtle surface reflections
 - Materials: realistic pool shell (concrete/fiberglass), coping/tile edges matching property style
 - Details: proper water level, realistic edge treatments, natural integration
@@ -420,7 +424,8 @@ The pool must have the IDENTICAL shape to the diagram, rendered photorealistical
 LIGHTING AND ATMOSPHERE:
 Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Water reflects the sky and surroundings realistically. Pool materials respond to light realistically—concrete/tile shows texture, water shows depth and transparency. Include atmospheric perspective with slight depth haze if the pool is distant.
 
-FINAL CHECK: Before completing, verify the pool shape matches the diagram EXACTLY. The outline, curves, corners, and proportions must be identical. Only the visual style should differ (diagram → photorealistic), NOT the shape itself.
+VERIFICATION:
+Before completing, verify: Does the pool shape match the diagram (second image) EXACTLY? The outline, curves, corners, and proportions must be identical. Only the visual style should differ (diagram → photorealistic), NOT the shape itself.
 
 The result is an authentic photograph showing how this SPECIFIC pool design (with its EXACT shape from the diagram) would actually appear when built on this property.`
 
@@ -441,6 +446,9 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
       role: 'user' as const,
       parts: [
         {
+          text: prompt,
+        },
+        {
           inlineData: {
             mimeType: uploadedImage.file.type || 'image/jpeg',
             data: imageBase64,
@@ -451,9 +459,6 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
             mimeType: 'image/png',
             data: poolImageBase64,
           },
-        },
-        {
-          text: prompt,
         },
       ],
     },
