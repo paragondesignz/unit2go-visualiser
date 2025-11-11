@@ -20,7 +20,7 @@ export async function generateVisualization(
   model: VisualizationModel,
   lightingPrompt?: string,
   position?: 'center' | 'left' | 'right'
-): Promise<{ imageUrl: string; prompt?: string }> {
+): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using FLUX.1 for image generation...')
     console.log(`Model type: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
@@ -36,7 +36,14 @@ export async function generateVisualization(
         model
       )
 
-      return { imageUrl, prompt: 'FLUX generation (prompt not available)' }
+      return { 
+        imageUrl, 
+        prompt: 'FLUX generation (prompt not available)',
+        modelSettings: {
+          model: 'FLUX.1',
+          provider: 'flux'
+        }
+      }
     } catch (error) {
       console.error('FLUX generation failed, falling back to Gemini:', error)
       // Fallback to Gemini if FLUX fails
