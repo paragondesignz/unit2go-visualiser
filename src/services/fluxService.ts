@@ -193,13 +193,13 @@ export async function generateWithFLUX(
       ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch'
       : 'distorted proportions, wrong scale, unrealistic placement'
 
-    // Optimized parameters for maximum shape adherence (pools)
+    // Recommended parameters for shape adherence (pools)
     const poolParams = {
-      reference_strength: 2.0, // Maximum (already at max)
-      strength: 0.15, // Even lower to preserve more of base image (was 0.30)
-      num_inference_steps: 45, // More refinement steps (was 35)
-      guidance_scale: 6.5, // Higher guidance for stricter prompt adherence (was 5.0)
-      controlnet_conditioning_scale: 1.1, // Stronger ControlNet influence (was 0.9)
+      reference_strength: 2.0, // Maximum for shape preservation
+      strength: 0.30, // Low to preserve base image while allowing compositing
+      num_inference_steps: 35, // Good balance of quality and speed
+      guidance_scale: 5.0, // Higher guidance for prompt adherence
+      controlnet_conditioning_scale: 0.9, // Standard ControlNet influence
     }
     
     const tinyHomeParams = {
