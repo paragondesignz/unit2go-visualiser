@@ -112,7 +112,7 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 1.0, // Higher temperature for natural photographic lighting variation
+    temperature: 0.5, // Lower temperature for more consistent lighting adjustments
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -286,7 +286,7 @@ The result is an authentic photograph—not a rendering—showing how this speci
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 1.0, // Higher temperature for natural photographic variation and realism
+    temperature: 0.5, // Lower temperature for more consistent and predictable results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -695,7 +695,7 @@ export async function processWithWireframeGuide(
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    temperature: 1.0, // Higher temperature for natural photographic variation
+    temperature: 0.5, // Lower temperature for more consistent positioning
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
