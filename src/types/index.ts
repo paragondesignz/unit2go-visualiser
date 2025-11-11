@@ -13,6 +13,31 @@ export interface TinyHomeModel {
   productUrl?: string
 }
 
+export interface PoolModel {
+  id: string
+  name: string
+  dimensions: {
+    length: number  // meters
+    width: number   // meters
+    depth: number   // meters
+  }
+  price: number
+  imageUrl: string
+  description: string
+  features: string[]
+  productUrl?: string
+}
+
+export type VisualizationModel = TinyHomeModel | PoolModel
+
+export function isTinyHomeModel(model: VisualizationModel): model is TinyHomeModel {
+  return 'height' in model.dimensions
+}
+
+export function isPoolModel(model: VisualizationModel): model is PoolModel {
+  return 'depth' in model.dimensions
+}
+
 export interface UploadedImage {
   file: File
   url: string

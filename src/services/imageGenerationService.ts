@@ -1,4 +1,4 @@
-import { UploadedImage, TinyHomeModel, ImageModelProvider } from '../types'
+import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel } from '../types'
 import { processWithGemini } from './geminiService'
 import { generateWithFLUX } from './fluxService'
 
@@ -17,33 +17,38 @@ export function getModelProvider(): ImageModelProvider {
  */
 export async function generateVisualization(
   uploadedImage: UploadedImage,
-  tinyHomeModel: TinyHomeModel,
+  model: VisualizationModel,
   lightingPrompt?: string,
-  tinyHomePosition?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right'
 ): Promise<string> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using FLUX.1 for image generation...')
+    // Note: FLUX currently only supports tiny homes, so we'll fall back to Gemini for pools
+    if (isPoolModel(model)) {
+      console.log('FLUX does not support pools, using Gemini instead')
+      return generateWithGemini(uploadedImage, model, lightingPrompt, position)
+    }
 
     try {
       const imageUrl = await generateWithFLUX(
         {
           propertyImage: uploadedImage.file,
-          tinyHomeImageUrl: tinyHomeModel.imageUrl,
+          tinyHomeImageUrl: model.imageUrl,
           lightingPrompt,
           controlnetStrength: 0.9,
         },
-        tinyHomeModel
+        model as any // Type assertion needed for FLUX compatibility
       )
 
       return imageUrl
     } catch (error) {
       console.error('FLUX generation failed, falling back to Gemini:', error)
       // Fallback to Gemini if FLUX fails
-      return generateWithGemini(uploadedImage, tinyHomeModel, lightingPrompt, tinyHomePosition)
+      return generateWithGemini(uploadedImage, model, lightingPrompt, position)
     }
   } else {
     console.log('Using Gemini 2.5 Flash Image for generation...')
-    return generateWithGemini(uploadedImage, tinyHomeModel, lightingPrompt, tinyHomePosition)
+    return generateWithGemini(uploadedImage, model, lightingPrompt, position)
   }
 }
 
@@ -52,20 +57,20 @@ export async function generateVisualization(
  */
 async function generateWithGemini(
   uploadedImage: UploadedImage,
-  tinyHomeModel: TinyHomeModel,
+  model: VisualizationModel,
   lightingPrompt?: string,
-  tinyHomePosition?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right'
 ): Promise<string> {
   // Use existing Gemini service with natural placement
   const result = await processWithGemini(
     uploadedImage,
-    tinyHomeModel,
+    model,
     'initial',
     undefined,
     undefined,
     lightingPrompt,
     undefined,
-    tinyHomePosition
+    position
   )
 
   return result.imageUrl

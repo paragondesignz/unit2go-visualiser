@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { UploadedImage, TinyHomeModel, Position, VisualizationResult } from '../types'
+import { UploadedImage, TinyHomeModel, PoolModel, Position, VisualizationResult, isPoolModel } from '../types'
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 
@@ -13,13 +13,13 @@ const ai = new GoogleGenAI({
 
 export async function processWithGemini(
   uploadedImage: UploadedImage,
-  tinyHomeModel: TinyHomeModel,
+  model: TinyHomeModel | PoolModel,
   mode: 'initial' | 'adjust',
   command?: string,
   currentPosition?: Position,
   lightingPrompt?: string,
   currentResultImage?: string,
-  tinyHomePosition?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right'
 ): Promise<VisualizationResult> {
 
   if (!API_KEY) {
@@ -27,15 +27,27 @@ export async function processWithGemini(
   }
 
   if (mode === 'initial') {
-    const generatedImage = await generateImageWithTinyHome(uploadedImage, tinyHomeModel, undefined, lightingPrompt, tinyHomePosition)
-
-    return {
-      imageUrl: generatedImage,
-      position: {
-        x: 50,
-        y: 50,
-        scale: 1,
-        rotation: 0
+    if (isPoolModel(model)) {
+      const generatedImage = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt, position)
+      return {
+        imageUrl: generatedImage,
+        position: {
+          x: 50,
+          y: 50,
+          scale: 1,
+          rotation: 0
+        }
+      }
+    } else {
+      const generatedImage = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position)
+      return {
+        imageUrl: generatedImage,
+        position: {
+          x: 50,
+          y: 50,
+          scale: 1,
+          rotation: 0
+        }
       }
     }
   } else {
@@ -56,16 +68,30 @@ export async function processWithGemini(
         rotation: 0
       })
 
-      const adjustedImage = await generateImageWithTinyHome(
-        uploadedImage,
-        tinyHomeModel,
-        commandToPrompt(command || '', tinyHomeModel, lightingPrompt),
-        lightingPrompt
-      )
-
-      return {
-        imageUrl: adjustedImage,
-        position: newPosition
+      if (isPoolModel(model)) {
+        const adjustedImage = await generateImageWithPool(
+          uploadedImage,
+          model,
+          commandToPrompt(command || '', model, lightingPrompt),
+          lightingPrompt,
+          position
+        )
+        return {
+          imageUrl: adjustedImage,
+          position: newPosition
+        }
+      } else {
+        const adjustedImage = await generateImageWithTinyHome(
+          uploadedImage,
+          model,
+          commandToPrompt(command || '', model, lightingPrompt),
+          lightingPrompt,
+          position
+        )
+        return {
+          imageUrl: adjustedImage,
+          position: newPosition
+        }
       }
     }
   }
@@ -320,6 +346,129 @@ The result is an authentic photograph—not a rendering—showing how this speci
   throw new Error(`No image generated. API Response: ${textResponse || 'No response text'}`)
 }
 
+async function generateImageWithPool(
+  uploadedImage: UploadedImage,
+  poolModel: PoolModel,
+  customPrompt?: string,
+  lightingPrompt?: string,
+  poolPosition: 'center' | 'left' | 'right' = 'center'
+): Promise<string> {
+  const imageBase64 = await fileToBase64(uploadedImage.file)
+  const poolImageBase64 = await fetchImageAsBase64(poolModel.imageUrl)
+  const aspectRatio = await detectAspectRatio(uploadedImage.file)
+
+  // Get pool dimensions
+  const { length, width, depth } = poolModel.dimensions
+
+  // Generate random camera specs for variation
+  const lenses = ['24-70mm f/2.8', '16-35mm f/4', '70-200mm f/2.8', '35mm f/1.4']
+  const isos = ['100', '200', '400']
+  const apertures = ['2.8', '4', '5.6', '8']
+  const randomLens = lenses[Math.floor(Math.random() * lenses.length)]
+  const randomISO = isos[Math.floor(Math.random() * isos.length)]
+  const randomAperture = apertures[Math.floor(Math.random() * apertures.length)]
+
+  // Position instructions based on user selection
+  const positionInstructions: Record<string, string> = {
+    center: 'Position the pool in the CENTER of the frame as the dominant focal point. Use center-weighted composition with the pool as the main subject.',
+    left: 'Position the pool on the LEFT side of the frame (left third), allowing more environmental context, scenery, and breathing room on the right side. This creates visual balance and shows more of the property setting.',
+    right: 'Position the pool on the RIGHT side of the frame (right third), allowing more environmental context, scenery, and breathing room on the left side. This creates visual balance and shows more of the property setting.'
+  }
+
+  // Create narrative, descriptive prompt that emphasizes converting diagram to photorealistic pool
+  const prompt = customPrompt || `This is a professional real estate photograph showing a swimming pool (${length}m × ${width}m × ${depth}m deep) integrated into an actual property.
+
+CRITICAL: CONVERT DIAGRAM TO PHOTOREALISTIC POOL
+The second image is a pool diagram/plan. You must convert this diagram into a fully realistic, photorealistic swimming pool—NOT a diagram overlay. Transform the diagram into an actual built pool with:
+- Realistic water appearance: proper transparency, depth perception, subtle reflections of sky and surroundings, natural water color (typically turquoise/blue)
+- Authentic pool materials: concrete or fiberglass shell, realistic tile or coping around the edges, proper pool decking (concrete, stone, or composite decking)
+- Natural integration: the pool must appear excavated into or built on the ground, with proper grading and landscaping around it
+- Realistic lighting: water surface shows natural reflections, pool interior shows depth with darker tones at the deep end, materials have realistic textures
+
+PHOTOGRAPHY SETUP:
+Shot with ${randomLens} lens at ISO ${randomISO}, f/${randomAperture}. Natural daylight with soft, realistic shadows. ${lightingPrompt ? lightingPrompt + '. ' : ''}The image captures authentic depth of field with the pool in sharp focus while background elements show subtle natural blur.
+
+SCENE COMPOSITION:
+${positionInstructions[poolPosition]} The pool is properly integrated into the property—sitting at ground level with natural landscaping, decking, or patio surrounding it. It's oriented to complement existing features like buildings, fences, or pathways. The composition uses the rule of thirds with natural leading lines drawing attention to the pool. Foreground shows property details, the pool anchors the middle distance, and the background provides environmental context.
+
+SCALE AND PROPORTION:
+Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance.
+
+POOL APPEARANCE:
+Convert the diagram's shape and layout into a realistic pool. The pool should have:
+- Realistic water: shows depth, transparency, natural color, subtle surface reflections
+- Proper materials: realistic pool shell (concrete/fiberglass), coping/tile edges, decking materials that match the property style
+- Natural details: pool equipment (skimmer, return jets) if visible, proper water level, realistic edge treatments
+- Integration: landscaping around the pool, proper ground level integration, natural shadows cast by pool edges
+
+LIGHTING AND ATMOSPHERE:
+Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Water reflects the sky and surroundings realistically. Pool materials respond to light realistically—concrete/tile shows texture, water shows depth and transparency. Include atmospheric perspective with slight depth haze if the pool is distant.
+
+The result is an authentic photograph—not a rendering or diagram overlay—showing how this specific pool design would actually appear when built on this property.`
+
+  console.log(`Detected aspect ratio: ${aspectRatio}`)
+
+  const config = {
+    temperature: 1.0, // Higher temperature for natural photographic variation and realism
+    responseModalities: ['Image'] as string[],
+    imageConfig: {
+      aspectRatio: aspectRatio,
+    },
+  }
+
+  const model = 'gemini-2.5-flash-image'
+
+  const contents = [
+    {
+      role: 'user' as const,
+      parts: [
+        {
+          inlineData: {
+            mimeType: uploadedImage.file.type || 'image/jpeg',
+            data: imageBase64,
+          },
+        },
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: poolImageBase64,
+          },
+        },
+        {
+          text: prompt,
+        },
+      ],
+    },
+  ]
+
+  console.log('Sending pool generation request to Gemini API with model:', model)
+
+  const response = await ai.models.generateContent({
+    model,
+    config,
+    contents,
+  })
+
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
+    throw new Error('No response from Gemini API')
+  }
+
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Found pool image in response!')
+    const { mimeType, data } = imagePart.inlineData
+    return `data:${mimeType};base64,${data}`
+  }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
+
+  throw new Error(`No pool image generated. API Response: ${textResponse || 'No response text'}`)
+}
+
 /**
  * Map ratio value to closest Gemini-supported aspect ratio string
  * Supported: "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"
@@ -426,21 +575,24 @@ async function fetchImageAsBase64(url: string): Promise<string> {
   })
 }
 
-function commandToPrompt(command: string, tinyHomeModel: TinyHomeModel, lightingPrompt?: string): string {
+function commandToPrompt(command: string, model: TinyHomeModel | PoolModel, lightingPrompt?: string): string {
   const lowerCommand = command.toLowerCase()
 
   if (lowerCommand.includes('change lighting only') || lowerCommand.includes('maintain current position')) {
-    return `Modify this image by adjusting only the lighting and atmospheric conditions according to these specifications: ${lightingPrompt}. Preserve the tiny home and all other elements in their exact current positions, maintaining the same composition and spatial relationships.`
+    return `Modify this image by adjusting only the lighting and atmospheric conditions according to these specifications: ${lightingPrompt}. Preserve the ${isPoolModel(model) ? 'pool' : 'tiny home'} and all other elements in their exact current positions, maintaining the same composition and spatial relationships.`
   }
 
-  let prompt = `Reposition the ${tinyHomeModel.name} tiny home in this scene by making the following adjustments: `
+  const modelType = isPoolModel(model) ? 'pool' : 'tiny home'
+  const modelName = model.name
+
+  let prompt = `Reposition the ${modelName} ${modelType} in this scene by making the following adjustments: `
 
   if (lowerCommand.includes('left')) prompt += 'move the structure to the left side of the scene, '
   if (lowerCommand.includes('right')) prompt += 'move the structure to the right side of the scene, '
   if (lowerCommand.includes('up') || lowerCommand.includes('back')) prompt += 'move the structure further back creating more distance from the camera viewpoint, '
   if (lowerCommand.includes('down') || lowerCommand.includes('forward')) prompt += 'move the structure closer to the camera viewpoint, '
 
-  prompt += 'while maintaining realistic proportions and scale. Preserve the property scene exactly as shown, changing only the position of the tiny home structure.'
+  prompt += 'while maintaining realistic proportions and scale. Preserve the property scene exactly as shown, changing only the position of the structure.'
 
   if (lightingPrompt) prompt += ` Adjust lighting and atmospheric conditions according to these specifications: ${lightingPrompt}.`
 
@@ -502,18 +654,19 @@ function adjustPositionByCommand(command: string, currentPosition: Position): Po
 
 export async function processWithWireframeGuide(
   uploadedImage: UploadedImage,
-  tinyHomeModel: TinyHomeModel,
+  model: TinyHomeModel | PoolModel,
   wireframeGuideDataUrl: string,
   lightingPrompt?: string
 ): Promise<string> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
-  const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
+  const modelImageBase64 = await fetchImageAsBase64(model.imageUrl)
   const wireframeBase64 = wireframeGuideDataUrl.includes('base64,')
     ? wireframeGuideDataUrl.split('base64,')[1]
     : wireframeGuideDataUrl
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  const prompt = `This is a real estate photograph showing the ${tinyHomeModel.name} placed on a property. Use the wireframe guide (third image) to position the tiny home exactly where indicated in the property photo (first image). Match the tiny home's appearance from the reference (second image) while ensuring it looks naturally integrated with realistic shadows, lighting, and scale. Orient it parallel to visible features like fences or pathways. The result should be an authentic photograph.${lightingPrompt ? ` Use these lighting conditions: ${lightingPrompt}.` : ''}`
+  const modelType = isPoolModel(model) ? 'pool' : 'tiny home'
+  const prompt = `This is a real estate photograph showing the ${model.name} ${modelType} placed on a property. Use the wireframe guide (third image) to position the ${modelType} exactly where indicated in the property photo (first image). Match the ${modelType}'s appearance from the reference (second image) while ensuring it looks naturally integrated with realistic shadows, lighting, and scale. ${isPoolModel(model) ? 'Convert the pool diagram into a photorealistic pool with realistic water, materials, and integration.' : 'Orient it parallel to visible features like fences or pathways.'} The result should be an authentic photograph.${lightingPrompt ? ` Use these lighting conditions: ${lightingPrompt}.` : ''}`
 
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
@@ -525,7 +678,7 @@ export async function processWithWireframeGuide(
     },
   }
 
-  const model = 'gemini-2.5-flash-image'
+  const modelName = 'gemini-2.5-flash-image'
 
   const contents = [
     {
@@ -540,7 +693,7 @@ export async function processWithWireframeGuide(
         {
           inlineData: {
             mimeType: 'image/png',
-            data: tinyHomeImageBase64,
+            data: modelImageBase64,
           },
         },
         {
@@ -556,10 +709,10 @@ export async function processWithWireframeGuide(
     },
   ]
 
-  console.log('Sending wireframe-guided request to Gemini API with model:', model)
+  console.log('Sending wireframe-guided request to Gemini API with model:', modelName)
 
   const response = await ai.models.generateContent({
-    model,
+    model: modelName,
     config,
     contents,
   })

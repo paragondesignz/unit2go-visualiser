@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
-import { UploadedImage, TinyHomeModel, Position } from '../types'
+import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel } from '../types'
 import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 import { generateVisualization, getModelProvider } from '../services/imageGenerationService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
-  selectedTinyHome: TinyHomeModel
+  selectedModel: VisualizationModel
   wireframeGuideImage?: string | null
-  tinyHomePosition?: 'center' | 'left' | 'right'
+  modelPosition?: 'center' | 'left' | 'right'
 }
 
-function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tinyHomePosition = 'center' }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPosition = 'center' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -33,14 +33,22 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   const tips = [
-    "The AI intelligently scales and places your tiny home based on surrounding objects",
+    isPoolModel(selectedModel)
+      ? "The AI intelligently converts the pool diagram into a photorealistic pool and scales it based on surrounding objects"
+      : "The AI intelligently scales and places your tiny home based on surrounding objects",
     "After generation, try Quick Enhancement buttons for instant additions like decks and landscaping",
     "Use conversational editing to customize any aspect of the scene with natural language",
-    "Try different lighting and times of day to see your tiny home in various conditions",
-    "Use the left/center/right position buttons to reposition your tiny home in the frame",
+    isPoolModel(selectedModel)
+      ? "Try different lighting and times of day to see your pool in various conditions"
+      : "Try different lighting and times of day to see your tiny home in various conditions",
+    isPoolModel(selectedModel)
+      ? "Use the left/center/right position buttons to reposition your pool in the frame"
+      : "Use the left/center/right position buttons to reposition your tiny home in the frame",
     "Use Undo/Redo to navigate through your editing history",
     "Download your image to share with family, friends, or planning consultants",
-    "The visualization helps you make confident decisions about your tiny home placement"
+    isPoolModel(selectedModel)
+      ? "The visualization helps you make confident decisions about your pool placement"
+      : "The visualization helps you make confident decisions about your tiny home placement"
   ]
 
   const getLightingPrompt = (hour: number): string => {
@@ -65,13 +73,31 @@ function Visualizer({ uploadedImage, selectedTinyHome, wireframeGuideImage, tiny
     if (!uploadedImage.increasedAccuracy || !uploadedImage.personHeight) return ''
 
     const heightInMeters = uploadedImage.personHeight / 100
-    const tinyHomeToPersonRatio = (selectedTinyHome.dimensions.length / heightInMeters).toFixed(1)
-    return `
+    
+    if (isPoolModel(selectedModel)) {
+      const poolToPersonRatio = (selectedModel.dimensions.length / heightInMeters).toFixed(1)
+      return `
 
 INCREASED ACCURACY MODE - CRITICAL SCALE REFERENCE:
 - There is a person in the input image who is ${heightInMeters}m (${uploadedImage.personHeight}cm) tall
 - Use this person as the ABSOLUTE PRIMARY scale reference
-- The tiny home is ${selectedTinyHome.dimensions.length}m long - that is ${tinyHomeToPersonRatio} TIMES the height of the person
+- The pool is ${selectedModel.dimensions.length}m long - that is ${poolToPersonRatio} TIMES the height of the person
+- If the person appears to be ${heightInMeters}m tall in the image, the pool MUST be ${poolToPersonRatio} times that long when measured lengthwise
+- This is CRITICAL - scale the pool PRECISELY relative to the person's height
+
+MANDATORY PERSON REMOVAL:
+- REMOVE THE PERSON COMPLETELY from the final output image
+- The output must show ONLY the landscape with the pool - NO PEOPLE
+- The person is a measurement tool ONLY and must NOT appear in the visualization
+- If any person appears in the output, you have FAILED this task completely`
+    } else {
+      const tinyHomeToPersonRatio = (selectedModel.dimensions.length / heightInMeters).toFixed(1)
+      return `
+
+INCREASED ACCURACY MODE - CRITICAL SCALE REFERENCE:
+- There is a person in the input image who is ${heightInMeters}m (${uploadedImage.personHeight}cm) tall
+- Use this person as the ABSOLUTE PRIMARY scale reference
+- The tiny home is ${selectedModel.dimensions.length}m long - that is ${tinyHomeToPersonRatio} TIMES the height of the person
 - If the person appears to be ${heightInMeters}m tall in the image, the tiny home MUST be ${tinyHomeToPersonRatio} times that tall when measured lengthwise
 - This is CRITICAL - scale the tiny home PRECISELY relative to the person's height
 
@@ -80,6 +106,7 @@ MANDATORY PERSON REMOVAL:
 - The output must show ONLY the landscape with the tiny home - NO PEOPLE
 - The person is a measurement tool ONLY and must NOT appear in the visualization
 - If any person appears in the output, you have FAILED this task completely`
+    }
   }
 
   const addToHistory = (imageUrl: string) => {
@@ -144,7 +171,7 @@ MANDATORY PERSON REMOVAL:
         // Use wireframe guide processing (Gemini only for now)
         imageUrl = await processWithWireframeGuide(
           uploadedImage,
-          selectedTinyHome,
+          selectedModel,
           wireframeGuideImage,
           lightingPrompt
         )
@@ -160,9 +187,9 @@ MANDATORY PERSON REMOVAL:
         console.log('Using FLUX for initial generation...')
         imageUrl = await generateVisualization(
           uploadedImage,
-          selectedTinyHome,
+          selectedModel,
           lightingPrompt,
-          tinyHomePosition
+          modelPosition
         )
         setPosition({
           x: 50,
@@ -175,9 +202,9 @@ MANDATORY PERSON REMOVAL:
         console.log('Using Gemini for initial generation...')
         imageUrl = await generateVisualization(
           uploadedImage,
-          selectedTinyHome,
+          selectedModel,
           lightingPrompt,
-          tinyHomePosition
+          modelPosition
         )
         setPosition({
           x: 50,
@@ -207,7 +234,7 @@ MANDATORY PERSON REMOVAL:
       const combinedPrompt = getLightingPrompt(timeToUse) + getAccuracyPrompt()
       const result = await processWithGemini(
         uploadedImage,
-        selectedTinyHome,
+        selectedModel,
         'adjust',
         'change lighting only - maintain current position',
         position,
@@ -224,17 +251,18 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
-  const handleRepositionTinyHome = async (position: 'left' | 'center' | 'right') => {
+  const handleRepositionModel = async (position: 'left' | 'center' | 'right') => {
     if (!resultImage) return
 
     setProcessing(true)
     setError(null)
 
     try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
       const positionPrompts = {
-        left: 'Reposition the tiny home to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.',
-        center: 'Reposition the tiny home toward the center of the frame as the dominant focal point, using center-weighted composition. The tiny home should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.',
-        right: 'Reposition the tiny home to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The tiny home should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.'
+        left: `Reposition the ${modelType} to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The ${modelType} should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.`,
+        center: `Reposition the ${modelType} toward the center of the frame as the dominant focal point, using center-weighted composition. The ${modelType} should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.`,
+        right: `Reposition the ${modelType} to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The ${modelType} should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.`
       }
 
       const editedImage = await conversationalEdit(resultImage, positionPrompts[position], {
@@ -245,7 +273,8 @@ MANDATORY PERSON REMOVAL:
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
-      setError('Failed to reposition tiny home. Please try again.')
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      setError(`Failed to reposition ${modelType}. Please try again.`)
       console.error(err)
     } finally {
       setProcessing(false)
@@ -543,7 +572,7 @@ MANDATORY PERSON REMOVAL:
               <div className="position-buttons">
                 <button
                   className="position-btn"
-                  onClick={() => handleRepositionTinyHome('left')}
+                  onClick={() => handleRepositionModel('left')}
                   disabled={processing || !resultImage}
                 >
                   <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
@@ -556,7 +585,7 @@ MANDATORY PERSON REMOVAL:
                 </button>
                 <button
                   className="position-btn"
-                  onClick={() => handleRepositionTinyHome('center')}
+                  onClick={() => handleRepositionModel('center')}
                   disabled={processing || !resultImage}
                 >
                   <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
@@ -570,7 +599,7 @@ MANDATORY PERSON REMOVAL:
                 </button>
                 <button
                   className="position-btn"
-                  onClick={() => handleRepositionTinyHome('right')}
+                  onClick={() => handleRepositionModel('right')}
                   disabled={processing || !resultImage}
                 >
                   <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
@@ -666,24 +695,30 @@ MANDATORY PERSON REMOVAL:
         </div>
 
         <div className="control-panel">
-          <h3>Your Tiny Home</h3>
+          <h3>{isPoolModel(selectedModel) ? 'Your Pool' : 'Your Tiny Home'}</h3>
           <div className="tiny-home-info">
-            <h4>{selectedTinyHome.name}</h4>
+            <h4>{selectedModel.name}</h4>
             <p className="info-row">
               <span className="info-label">Dimensions:</span>
-              <span>{selectedTinyHome.dimensions.length}m × {selectedTinyHome.dimensions.width}m</span>
+              <span>
+                {isTinyHomeModel(selectedModel)
+                  ? `${selectedModel.dimensions.length}m × ${selectedModel.dimensions.width}m`
+                  : `${selectedModel.dimensions.length}m × ${selectedModel.dimensions.width}m × ${selectedModel.dimensions.depth}m deep`}
+              </span>
             </p>
-            <p className="info-row">
-              <span className="info-label">Height:</span>
-              <span>{selectedTinyHome.dimensions.height}m</span>
-            </p>
+            {isTinyHomeModel(selectedModel) && (
+              <p className="info-row">
+                <span className="info-label">Height:</span>
+                <span>{selectedModel.dimensions.height}m</span>
+              </p>
+            )}
             <p className="info-row">
               <span className="info-label">Price:</span>
-              <span className="price">${selectedTinyHome.price.toLocaleString()}</span>
+              <span className="price">${selectedModel.price.toLocaleString()}</span>
             </p>
-            {selectedTinyHome.productUrl && (
+            {selectedModel.productUrl && (
               <a
-                href={selectedTinyHome.productUrl}
+                href={selectedModel.productUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="product-link-button"
