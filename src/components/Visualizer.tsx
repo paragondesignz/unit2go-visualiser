@@ -196,6 +196,7 @@ MANDATORY PERSON REMOVAL:
         )
         imageUrl = result.imageUrl
         prompt = result.prompt
+        setCurrentModelSettings(result.modelSettings || null)
         setPosition({
           x: 50,
           y: 50,
@@ -206,7 +207,6 @@ MANDATORY PERSON REMOVAL:
 
       addToHistory(imageUrl)
       setCurrentPrompt(prompt || null)
-      setCurrentModelSettings(result?.modelSettings || null)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to process image. Please try again.')
