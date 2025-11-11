@@ -1,4 +1,4 @@
-import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel } from '../types'
+import { UploadedImage, VisualizationModel, ImageModelProvider } from '../types'
 import { processWithGemini } from './geminiService'
 import { generateWithFLUX } from './fluxService'
 
@@ -23,12 +23,7 @@ export async function generateVisualization(
 ): Promise<string> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using FLUX.1 for image generation...')
-    // Note: FLUX currently only supports tiny homes, so we'll fall back to Gemini for pools
-    if (isPoolModel(model)) {
-      console.log('FLUX does not support pools, using Gemini instead')
-      return generateWithGemini(uploadedImage, model, lightingPrompt, position)
-    }
-
+    
     try {
       const imageUrl = await generateWithFLUX(
         {
@@ -37,7 +32,7 @@ export async function generateVisualization(
           lightingPrompt,
           controlnetStrength: 0.9,
         },
-        model as any // Type assertion needed for FLUX compatibility
+        model
       )
 
       return imageUrl

@@ -1,5 +1,5 @@
 import * as fal from '@fal-ai/serverless-client'
-import { FLUXGenerationOptions, TinyHomeModel, DepthMapData } from '../types'
+import { FLUXGenerationOptions, TinyHomeModel, PoolModel, VisualizationModel, DepthMapData, isPoolModel } from '../types'
 
 const FAL_API_KEY = import.meta.env.VITE_FAL_API_KEY || ''
 
@@ -55,9 +55,25 @@ async function fileToDataUrl(file: File): Promise<string> {
  * Natural placement, focus on integration elements
  */
 function buildFLUXPrompt(
-  _tinyHomeModel: TinyHomeModel, // Unused - kept for function signature compatibility
+  model: VisualizationModel,
   lightingPrompt?: string
 ): string {
+  if (isPoolModel(model)) {
+    return `Convert the pool diagram from the reference image into a photorealistic swimming pool and composite it naturally onto this property.
+
+CRITICAL: Preserve the EXACT shape from the reference diagram. The pool outline, curves, and proportions must match the reference image precisely.
+
+Preserve both the property photo and pool shape exactly. Only add these integration elements:
+- Natural contact shadows beneath the pool edges
+- Ground interaction where the pool meets terrain
+- Realistic water appearance (transparent, blue-turquoise, with depth and reflections)
+- Pool materials (concrete/fiberglass shell, coping/tile edges)
+- Lighting adjustments to match the property photo
+- Natural landscaping around the pool
+
+The pool should appear as if it was physically built on this property when the photo was taken.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+  }
+  
   return `Composite the tiny home from the reference image naturally onto this property where it looks most realistic given the terrain and available space.
 
 Preserve both the property photo and tiny home design exactly. Only add these integration elements:
@@ -74,7 +90,7 @@ The tiny home should appear as if it was physically present when the property ph
  */
 export async function generateWithFLUX(
   options: FLUXGenerationOptions,
-  tinyHomeModel: TinyHomeModel
+  model: VisualizationModel
 ): Promise<string> {
   try {
     if (!FAL_API_KEY) {
@@ -90,7 +106,7 @@ export async function generateWithFLUX(
 
     // Build the prompt
     const prompt = buildFLUXPrompt(
-      tinyHomeModel,
+      model,
       options.lightingPrompt
     )
 
@@ -101,9 +117,9 @@ export async function generateWithFLUX(
       input: {
         image_url: propertyImageDataUrl,
         prompt: prompt,
-        // Reference image: preserve tiny home design 100%
+        // Reference image: preserve design 100% (especially important for pool shape)
         reference_image_url: options.tinyHomeImageUrl,
-        reference_strength: 0.95, // Near-perfect preservation of reference design (range: -3 to 3, default 0.65)
+        reference_strength: isPoolModel(model) ? 1.2 : 0.95, // Higher strength for pools to preserve shape better
         // ControlNet depth: guide spatial positioning
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
