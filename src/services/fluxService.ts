@@ -119,14 +119,14 @@ export async function generateWithFLUX(
         prompt: prompt,
         // Reference image: preserve design 100% (especially important for pool shape)
         reference_image_url: options.tinyHomeImageUrl,
-        reference_strength: isPoolModel(model) ? 1.2 : 0.95, // Higher strength for pools to preserve shape better
+        reference_strength: isPoolModel(model) ? 1.8 : 0.95, // Higher strength (1.8) for pools to maximize shape preservation
         // ControlNet depth: guide spatial positioning
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
         // Low strength: minimal transformation, focus on compositing
-        strength: 0.30, // Very low = preserve base image, only composite tiny home (0.0 = no change, 1.0 = complete remake)
-        num_inference_steps: 28,
-        guidance_scale: 3.5, // Standard guidance for following prompt
+        strength: 0.25, // Very low = preserve base image, only composite (0.0 = no change, 1.0 = complete remake)
+        num_inference_steps: 35, // More steps for better quality and adherence
+        guidance_scale: isPoolModel(model) ? 6.0 : 3.5, // Higher guidance for pools to enforce shape preservation prompt
         seed: Math.floor(Math.random() * 1000000),
         enable_safety_checker: true,
       },
