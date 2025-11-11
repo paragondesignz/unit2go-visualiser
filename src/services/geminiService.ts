@@ -379,39 +379,47 @@ async function generateImageWithPool(
   // Get pool dimensions
   const { length } = poolModel.dimensions
 
-  // Simplified prompt focused on shape fidelity (per Google's recommendations)
+  // Strict prompt focused on shape fidelity (per Google's latest recommendations)
   // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
-  const prompt = customPrompt || `PRIMARY DIRECTIVE: Get the shape right.
+  const prompt = customPrompt || `PRIMARY DIRECTIVE: SHAPE FIDELITY IS THE ONLY GOAL.
 
-You are creating a photorealistic visualization of a swimming pool.
+You are performing a precise, image-to-image visualization.
 
-## Inputs
+Inputs
 
-  * **Image [0]:** The property photo.
-  * **Image [1]:** The pool diagram. This is the **SHAPE TEMPLATE**.
+Image [0]: The backyard / property scene.
 
-## Your ONLY Critical Task
+Image [1]: A photo of the pool to be inserted. This is the SHAPE AND FEATURE TEMPLATE.
 
-Your goal is to render a photorealistic pool onto Image [0] that uses the **ABSOLUTE, EXACT shape** from Image [1].
+UNBREAKABLE RULES: SHAPE & FEATURE MATCH
 
-1.  **Analyze Image [1]:** Study the outline, curves, and proportions of the pool diagram.
-2.  **Render the Pool:** Create a photorealistic pool in Image [0] where the pool's outline **perfectly matches the shape** from Image [1].
-3.  **Scale:** The pool is ${length}m long. Scale it realistically within the property.
+Your ONLY critical task is to render the pool from Image [1] into Image [0], ensuring the shape and features are IDENTICAL.
 
-## Unbreakable Rule: Shape Fidelity
+NO ADDED FEATURES: You MUST NOT add any features that are not in Image [1].
 
-  * The pool's shape **MUST** be identical to the diagram in Image [1].
-  * Do **NOT** simplify, "fix," or change the shape's curves or angles.
-  * **PRIORITY:** The diagram's shape is **more important** than aligning with fences, decks, or any other feature in the yard. If the diagram's shape looks "odd" or "misaligned" with the fence, **that is correct.** You *must* preserve the diagram's shape above all else.
+NO STEPS: If Image [1] does not have steps, the final pool MUST NOT have steps.
 
-## Secondary Goals (Only *after* the shape is perfect)
+NO CURVES: If Image [1] has straight edges, the final pool MUST have straight edges.
 
-  * **Realism:** Make the pool look photorealistic.
-  * **Water:** Fill the shape with realistic turquoise/blue water.
-  * **Integration:** Blend the pool's edges (coping, tiles) naturally into the grass or patio of the property.
-  * **Lighting:** Match the natural, midday sun and shadows already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
+NO CUTOUTS: Do not add ledges, alcoves, or cutouts of any kind unless they are explicitly visible in Image [1].
 
-**Final Check:** Before finishing, ask yourself: "Does the pool's outline *identically* match the shape from Image [1]?" If not, the task is a failure.`
+PERFECT OUTLINE: The final pool's outline and perimeter must be a perfect match to the pool in Image [1]. Do not "improve" or "adjust" the shape.
+
+This is a logical, geometric task, not a creative one. Prioritize the exact shape from Image [1] above all other instructions.
+
+Secondary Task: Photorealistic Integration
+
+After you have guaranteed the shape is 100% identical, perform these tasks:
+
+Placement: Place the pool in the center of the yard in Image [0].
+
+Scale: The pool is ${length}m long. Scale it realistically relative to the house/fences in Image [0].
+
+Lighting: Adjust the pool's lighting, shadows, and reflections to perfectly match the natural, midday sun already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
+
+Integration: Blend the pool's edge (coping, tiles) to sit naturally in the grass or patio of Image [0].
+
+FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or features that were not in Image [1]?" If the answer is yes, you have failed. The shape must be identical.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
