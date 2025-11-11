@@ -3,7 +3,7 @@ import { processWithGemini } from './geminiService'
 import { generateWithFLUX } from './fluxService'
 
 // Get the configured model provider from environment
-const MODEL_PROVIDER = (import.meta.env.VITE_IMAGE_MODEL_PROVIDER || 'gemini') as ImageModelProvider
+const MODEL_PROVIDER = (import.meta.env.VITE_IMAGE_MODEL_PROVIDER || 'flux') as ImageModelProvider
 
 console.log(`Image generation model provider: ${MODEL_PROVIDER}`)
 
