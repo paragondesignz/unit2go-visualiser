@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ImageUpload from '../components/ImageUpload'
 import Visualizer from '../components/Visualizer'
-import { UploadedImage, VisualizationModel, isTinyHomeModel, isPoolModel } from '../types'
+import { UploadedImage, VisualizationModel, isTinyHomeModel } from '../types'
 import { tinyHomeModels } from '../data/tinyHomeModels'
 import { poolModels } from '../data/poolModels'
 
@@ -43,7 +43,6 @@ function VisualizerPage() {
 
   const currentModels = modelType === 'tiny-home' ? tinyHomeModels : poolModels
   const modelTypeLabel = modelType === 'tiny-home' ? 'Tiny Home' : 'Pool'
-  const modelTypeLabelPlural = modelType === 'tiny-home' ? 'Tiny Homes' : 'Pools'
 
   return (
     <div className="visualizer-page">
