@@ -111,6 +111,7 @@ export async function generateWithFLUX(
     )
 
     console.log('Calling FLUX.1 image-to-image with ControlNet for compositing...')
+    console.log(`FLUX Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}, Reference Strength: ${isPoolModel(model) ? 2.0 : 0.95}, Strength: ${isPoolModel(model) ? 0.2 : 0.30}, Guidance: ${isPoolModel(model) ? 5.0 : 3.5}`)
 
     // Use FLUX image-to-image for compositing (preserving both images, only adding integration)
     const result = await fal.subscribe('fal-ai/flux-general/image-to-image', {
@@ -119,14 +120,14 @@ export async function generateWithFLUX(
         prompt: prompt,
         // Reference image: preserve design 100% (especially important for pool shape)
         reference_image_url: options.tinyHomeImageUrl,
-        reference_strength: isPoolModel(model) ? 1.2 : 0.95, // Higher strength for pools to preserve shape better
+        reference_strength: isPoolModel(model) ? 2.0 : 0.95, // Increased to 2.0 for pools (max safe value) to maximize shape preservation
         // ControlNet depth: guide spatial positioning
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
         // Low strength: minimal transformation, focus on compositing
-        strength: 0.30, // Very low = preserve base image, only composite tiny home (0.0 = no change, 1.0 = complete remake)
+        strength: isPoolModel(model) ? 0.2 : 0.30, // Even lower for pools (0.2) to preserve base image better
         num_inference_steps: 28,
-        guidance_scale: 3.5, // Standard guidance for following prompt
+        guidance_scale: isPoolModel(model) ? 5.0 : 3.5, // Higher guidance for pools to enforce shape preservation prompt
         seed: Math.floor(Math.random() * 1000000),
         enable_safety_checker: true,
       },

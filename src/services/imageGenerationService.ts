@@ -1,4 +1,4 @@
-import { UploadedImage, VisualizationModel, ImageModelProvider } from '../types'
+import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel } from '../types'
 import { processWithGemini } from './geminiService'
 import { generateWithFLUX } from './fluxService'
 
@@ -23,6 +23,7 @@ export async function generateVisualization(
 ): Promise<string> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using FLUX.1 for image generation...')
+    console.log(`Model type: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
     
     try {
       const imageUrl = await generateWithFLUX(
