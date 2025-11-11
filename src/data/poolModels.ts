@@ -42,6 +42,27 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'pool-3',
+    name: 'Pool Design 3',
+    dimensions: {
+      length: 9.0,   // meters - typical pool length
+      width: 4.5,    // meters - typical pool width
+      depth: 1.6     // meters - average depth
+    },
+    price: 48000,
+    imageUrl: '/pool-models/pool-3.png',
+    description: 'Stylish swimming pool design with modern features',
+    features: [
+      'Stylish pool design',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Customizable finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
