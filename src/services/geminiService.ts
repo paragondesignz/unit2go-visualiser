@@ -28,7 +28,7 @@ export async function processWithGemini(
 
   if (mode === 'initial') {
     if (isPoolModel(model)) {
-      const result = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt, position)
+      const result = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt)
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
@@ -82,8 +82,7 @@ export async function processWithGemini(
           uploadedImage,
           model,
           commandToPrompt(command || '', model, lightingPrompt),
-          lightingPrompt,
-          position
+          lightingPrompt
         )
       return {
         imageUrl: adjustedImage.imageUrl,
@@ -371,8 +370,7 @@ async function generateImageWithPool(
   uploadedImage: UploadedImage,
   poolModel: PoolModel,
   customPrompt?: string,
-  lightingPrompt?: string,
-  poolPosition: 'center' | 'left' | 'right' = 'center'
+  lightingPrompt?: string
 ): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const poolImageBase64 = await fetchImageAsBase64(poolModel.imageUrl)
