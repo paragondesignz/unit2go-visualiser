@@ -84,6 +84,27 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'kiwi-dream-2',
+    name: 'Kiwi Dream 2',
+    dimensions: {
+      length: 10.0,  // meters - typical pool length
+      width: 5.5,     // meters - typical pool width
+      depth: 1.8      // meters - average depth
+    },
+    price: 58000,
+    imageUrl: '/pool-models/kiwi-dream-2.png',
+    description: 'Premium Kiwi Dream 2 pool design with enhanced features',
+    features: [
+      'Premium pool design',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Customizable finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
