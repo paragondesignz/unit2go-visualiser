@@ -193,8 +193,29 @@ export async function generateWithFLUX(
       ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch'
       : 'distorted proportions, wrong scale, unrealistic placement'
 
+    // Optimized parameters for maximum shape adherence (pools)
+    const poolParams = {
+      reference_strength: 2.0, // Maximum (already at max)
+      strength: 0.15, // Even lower to preserve more of base image (was 0.30)
+      num_inference_steps: 45, // More refinement steps (was 35)
+      guidance_scale: 6.5, // Higher guidance for stricter prompt adherence (was 5.0)
+      controlnet_conditioning_scale: 1.1, // Stronger ControlNet influence (was 0.9)
+    }
+    
+    const tinyHomeParams = {
+      reference_strength: 0.95,
+      strength: 0.30,
+      num_inference_steps: 28,
+      guidance_scale: 3.5,
+      controlnet_conditioning_scale: 0.9,
+    }
+    
+    const params = isPoolModel(model) ? poolParams : tinyHomeParams
+
     console.log('Calling FLUX.1 image-to-image with ControlNet for compositing...')
-    console.log(`FLUX Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}, Control Type: ${controlType}, Reference Strength: ${isPoolModel(model) ? 2.0 : 0.95}, Strength: 0.30, Guidance: ${isPoolModel(model) ? 5.0 : 3.5}, Steps: ${isPoolModel(model) ? 35 : 28}`)
+    console.log(`FLUX Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}, Control Type: ${controlType}`)
+    console.log(`  Reference Strength: ${params.reference_strength}, Strength: ${params.strength}, Guidance: ${params.guidance_scale}`)
+    console.log(`  Steps: ${params.num_inference_steps}, ControlNet Scale: ${params.controlnet_conditioning_scale}`)
 
     // Use FLUX image-to-image for compositing (preserving both images, only adding integration)
     const result = await fal.subscribe('fal-ai/flux-general/image-to-image', {
@@ -204,14 +225,14 @@ export async function generateWithFLUX(
         negative_prompt: negativePrompt,
         // Reference image: preserve design 100% (especially important for pool shape)
         reference_image_url: options.tinyHomeImageUrl,
-        reference_strength: isPoolModel(model) ? 2.0 : 0.95, // Increased to 2.0 for pools (max safe value) to maximize shape preservation
+        reference_strength: params.reference_strength,
         // ControlNet: use edge map for pools (shape preservation), depth map for positioning
         control_image_url: controlImage,
-        controlnet_conditioning_scale: options.controlnetStrength || 0.9,
-        // Low strength: minimal transformation, focus on compositing
-        strength: 0.30, // Very low = preserve base image, only composite (0.0 = no change, 1.0 = complete remake)
-        num_inference_steps: isPoolModel(model) ? 35 : 28, // More steps for pools = better shape adherence
-        guidance_scale: isPoolModel(model) ? 5.0 : 3.5, // Higher guidance for pools to enforce shape preservation prompt
+        controlnet_conditioning_scale: params.controlnet_conditioning_scale,
+        // Ultra-low strength for pools: minimal transformation, maximum preservation
+        strength: params.strength, // Lower = preserve more of base image (0.0 = no change, 1.0 = complete remake)
+        num_inference_steps: params.num_inference_steps, // More steps = better shape adherence and refinement
+        guidance_scale: params.guidance_scale, // Higher = stricter prompt adherence
         seed: Math.floor(Math.random() * 1000000),
         enable_safety_checker: true,
       },
