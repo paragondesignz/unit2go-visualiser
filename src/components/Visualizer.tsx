@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel } from '../types'
 import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
-import { generateVisualization, getModelProvider } from '../services/imageGenerationService'
+import { generateVisualization } from '../services/imageGenerationService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
