@@ -416,7 +416,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         }}
       >
         <Canvas
-          camera={{ position: [0, 10, 0], fov: 75 }}
+          camera={{ position: [0, 8, 8], fov: 60 }}
           style={{ 
             background: 'transparent', 
             width: '100%', 
@@ -435,8 +435,8 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         >
           <ambientLight intensity={1.0} />
           <directionalLight position={[5, 10, 5]} intensity={1.5} />
-          {/* Top-down perspective camera */}
-          <PerspectiveCamera makeDefault position={[0, 10, 0]} rotation={[-Math.PI / 2, 0, 0]} fov={75} />
+          {/* Angled perspective camera - looking down at an angle */}
+          <PerspectiveCamera makeDefault position={[0, 8, 8]} fov={60} />
           <PoolBox 
             dimensions={dimensions} 
             position={position}
