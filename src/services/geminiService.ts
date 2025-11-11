@@ -378,8 +378,15 @@ async function generateImageWithPool(
   // Create narrative, descriptive prompt that emphasizes converting diagram to photorealistic pool
   const prompt = customPrompt || `This is a professional real estate photograph showing a swimming pool (${length}m × ${width}m × ${depth}m deep) integrated into an actual property.
 
+CRITICAL: PRESERVE EXACT SHAPE FROM DIAGRAM
+The second image is a pool diagram/plan showing the EXACT shape and layout. You MUST preserve the PRECISE shape, outline, and geometry from this diagram:
+- Match the EXACT outline/shape: if the diagram shows a rectangular pool, create a rectangular pool. If it shows curves, freeform shapes, or specific angles, replicate those EXACTLY
+- Maintain the same proportions: the length-to-width ratio, any curves, corners, or unique features must match the diagram precisely
+- Preserve the same orientation: if the diagram shows the pool at a specific angle or orientation, maintain that same orientation in the final image
+- Keep the same overall geometry: only convert the visual appearance (from diagram to photorealistic), NOT the shape itself
+
 CRITICAL: CONVERT DIAGRAM TO PHOTOREALISTIC POOL
-The second image is a pool diagram/plan. You must convert this diagram into a fully realistic, photorealistic swimming pool—NOT a diagram overlay. Transform the diagram into an actual built pool with:
+While preserving the exact shape, convert the diagram into a fully realistic, photorealistic swimming pool—NOT a diagram overlay. Transform ONLY the visual appearance:
 - Realistic water appearance: proper transparency, depth perception, subtle reflections of sky and surroundings, natural water color (typically turquoise/blue)
 - Authentic pool materials: concrete or fiberglass shell, realistic tile or coping around the edges, proper pool decking (concrete, stone, or composite decking)
 - Natural integration: the pool must appear excavated into or built on the ground, with proper grading and landscaping around it
@@ -392,10 +399,11 @@ SCENE COMPOSITION:
 ${positionInstructions[poolPosition]} The pool is properly integrated into the property—sitting at ground level with natural landscaping, decking, or patio surrounding it. It's oriented to complement existing features like buildings, fences, or pathways. The composition uses the rule of thirds with natural leading lines drawing attention to the pool. Foreground shows property details, the pool anchors the middle distance, and the background provides environmental context.
 
 SCALE AND PROPORTION:
-Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance.
+Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance. IMPORTANT: While scaling for realism, maintain the exact shape proportions from the diagram.
 
 POOL APPEARANCE:
-Convert the diagram's shape and layout into a realistic pool. The pool should have:
+Convert the diagram's EXACT shape into a realistic pool. The pool must have the SAME shape as shown in the diagram, but with photorealistic appearance:
+- Exact shape preservation: the outline, curves, corners, and overall geometry must match the diagram precisely
 - Realistic water: shows depth, transparency, natural color, subtle surface reflections
 - Proper materials: realistic pool shell (concrete/fiberglass), coping/tile edges, decking materials that match the property style
 - Natural details: pool equipment (skimmer, return jets) if visible, proper water level, realistic edge treatments
@@ -404,7 +412,7 @@ Convert the diagram's shape and layout into a realistic pool. The pool should ha
 LIGHTING AND ATMOSPHERE:
 Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Water reflects the sky and surroundings realistically. Pool materials respond to light realistically—concrete/tile shows texture, water shows depth and transparency. Include atmospheric perspective with slight depth haze if the pool is distant.
 
-The result is an authentic photograph—not a rendering or diagram overlay—showing how this specific pool design would actually appear when built on this property.`
+The result is an authentic photograph—not a rendering or diagram overlay—showing how this SPECIFIC pool design (with its exact shape from the diagram) would actually appear when built on this property.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
