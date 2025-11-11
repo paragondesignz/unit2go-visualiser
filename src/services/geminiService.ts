@@ -408,7 +408,17 @@ PHOTOGRAPHY SETUP:
 Shot with ${randomLens} lens at ISO ${randomISO}, f/${randomAperture}. Natural daylight with soft, realistic shadows. ${lightingPrompt ? lightingPrompt + '. ' : ''}The image captures authentic depth of field with the pool in sharp focus while background elements show subtle natural blur.
 
 SCENE COMPOSITION:
-${positionInstructions[poolPosition]} The pool is properly integrated into the property—sitting at ground level with natural landscaping, decking, or patio surrounding it. It's oriented to complement existing features like buildings, fences, or pathways. The composition uses the rule of thirds with natural leading lines drawing attention to the pool. Foreground shows property details, the pool anchors the middle distance, and the background provides environmental context.
+${positionInstructions[poolPosition]} The pool is properly integrated into the property—sitting at ground level with natural landscaping, decking, or patio surrounding it.
+
+ALIGNMENT WITH EXISTING STRUCTURES:
+- Align the pool's edges parallel to nearby fences, deck edges, patios, or building foundations
+- If there are visible fences, align the pool's longest edge parallel to the fence line
+- If there are decks or patios, align the pool to complement their orientation and edges
+- If there are pathways or driveways, orient the pool to respect their direction and layout
+- Match the pool's orientation to the dominant geometric lines in the property (buildings, property boundaries, etc.)
+- The pool should look intentionally placed, not randomly oriented—it should feel like it was designed to work with the existing property features
+
+The composition uses the rule of thirds with natural leading lines drawing attention to the pool. Foreground shows property details, the pool anchors the middle distance, and the background provides environmental context.
 
 SCALE AND PROPORTION:
 Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance. CRITICAL: When scaling, maintain the EXACT shape proportions from the diagram - do not distort or change the shape.
