@@ -20,7 +20,7 @@ export async function generateVisualization(
   model: VisualizationModel,
   lightingPrompt?: string,
   position?: 'center' | 'left' | 'right'
-): Promise<string> {
+): Promise<{ imageUrl: string; prompt?: string }> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using FLUX.1 for image generation...')
     console.log(`Model type: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
@@ -36,7 +36,7 @@ export async function generateVisualization(
         model
       )
 
-      return imageUrl
+      return { imageUrl, prompt: 'FLUX generation (prompt not available)' }
     } catch (error) {
       console.error('FLUX generation failed, falling back to Gemini:', error)
       // Fallback to Gemini if FLUX fails
@@ -56,7 +56,7 @@ async function generateWithGemini(
   model: VisualizationModel,
   lightingPrompt?: string,
   position?: 'center' | 'left' | 'right'
-): Promise<string> {
+): Promise<{ imageUrl: string; prompt?: string }> {
   // Use existing Gemini service with natural placement
   const result = await processWithGemini(
     uploadedImage,
@@ -69,5 +69,5 @@ async function generateWithGemini(
     position
   )
 
-  return result.imageUrl
+  return { imageUrl: result.imageUrl, prompt: result.prompt }
 }

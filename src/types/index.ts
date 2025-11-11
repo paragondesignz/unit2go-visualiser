@@ -55,6 +55,7 @@ export interface Position {
 
 export interface VisualizationResult {
   imageUrl: string
+  prompt?: string
   position: Position
 }
 

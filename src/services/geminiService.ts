@@ -28,9 +28,10 @@ export async function processWithGemini(
 
   if (mode === 'initial') {
     if (isPoolModel(model)) {
-      const generatedImage = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt, position)
+      const result = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt, position)
       return {
-        imageUrl: generatedImage,
+        imageUrl: result.imageUrl,
+        prompt: result.prompt,
         position: {
           x: 50,
           y: 50,
@@ -39,9 +40,10 @@ export async function processWithGemini(
         }
       }
     } else {
-      const generatedImage = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position)
+      const result = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position)
       return {
-        imageUrl: generatedImage,
+        imageUrl: result.imageUrl,
+        prompt: result.prompt,
         position: {
           x: 50,
           y: 50,
@@ -58,6 +60,7 @@ export async function processWithGemini(
 
       return {
         imageUrl: lightingAdjustedImage,
+        prompt: `Lighting adjustment: ${lightingPrompt}`,
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
       }
     } else {
@@ -76,23 +79,25 @@ export async function processWithGemini(
           lightingPrompt,
           position
         )
-        return {
-          imageUrl: adjustedImage,
-          position: newPosition
-        }
-      } else {
-        const adjustedImage = await generateImageWithTinyHome(
-          uploadedImage,
-          model,
-          commandToPrompt(command || '', model, lightingPrompt),
-          lightingPrompt,
-          position
-        )
-        return {
-          imageUrl: adjustedImage,
-          position: newPosition
-        }
+      return {
+        imageUrl: adjustedImage.imageUrl,
+        prompt: adjustedImage.prompt,
+        position: newPosition
       }
+    } else {
+      const adjustedImage = await generateImageWithTinyHome(
+        uploadedImage,
+        model,
+        commandToPrompt(command || '', model, lightingPrompt),
+        lightingPrompt,
+        position
+      )
+      return {
+        imageUrl: adjustedImage.imageUrl,
+        prompt: adjustedImage.prompt,
+        position: newPosition
+      }
+    }
     }
   }
 }
@@ -240,7 +245,7 @@ async function generateImageWithTinyHome(
   customPrompt?: string,
   lightingPrompt?: string,
   tinyHomePosition: 'center' | 'left' | 'right' = 'center'
-): Promise<string> {
+): Promise<{ imageUrl: string; prompt: string }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
@@ -335,7 +340,10 @@ The result is an authentic photograph—not a rendering—showing how this speci
   if (imagePart?.inlineData) {
     console.log('Found image in response!')
     const { mimeType, data } = imagePart.inlineData
-    return `data:${mimeType};base64,${data}`
+    return {
+      imageUrl: `data:${mimeType};base64,${data}`,
+      prompt: prompt
+    }
   }
 
   const textResponse = response.candidates[0].content.parts
@@ -352,7 +360,7 @@ async function generateImageWithPool(
   customPrompt?: string,
   lightingPrompt?: string,
   poolPosition: 'center' | 'left' | 'right' = 'center'
-): Promise<string> {
+): Promise<{ imageUrl: string; prompt: string }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const poolImageBase64 = await fetchImageAsBase64(poolModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
@@ -442,7 +450,7 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.5, // Lower temperature for consistent results while maintaining shape adherence
+    temperature: 0.3, // Lower temperature for more consistent results and better shape adherence
     topP: 0.1, // Low topP focuses on the most probable outputs, minimizing diversity
     responseModalities: ['Image'] as string[],
     imageConfig: {
@@ -492,7 +500,10 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
   if (imagePart?.inlineData) {
     console.log('Found pool image in response!')
     const { mimeType, data } = imagePart.inlineData
-    return `data:${mimeType};base64,${data}`
+    return {
+      imageUrl: `data:${mimeType};base64,${data}`,
+      prompt: prompt
+    }
   }
 
   const textResponse = response.candidates[0].content.parts

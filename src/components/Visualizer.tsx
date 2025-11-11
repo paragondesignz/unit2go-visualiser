@@ -20,6 +20,7 @@ function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPo
     rotation: 0
   })
   const [resultImage, setResultImage] = useState<string | null>(null)
+  const [currentPrompt, setCurrentPrompt] = useState<string | null>(null)
   const [showingOriginal, setShowingOriginal] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(12)
   const [tipIndex, setTipIndex] = useState(0)
@@ -31,6 +32,7 @@ function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPo
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [showPromptPanel, setShowPromptPanel] = useState(false)
 
   const tips = [
     isPoolModel(selectedModel)
@@ -166,6 +168,7 @@ MANDATORY PERSON REMOVAL:
       const modelProvider = getModelProvider()
 
       let imageUrl: string
+      let prompt: string | undefined
 
       if (wireframeGuideImage) {
         // Use wireframe guide processing (Gemini only for now)
@@ -175,6 +178,7 @@ MANDATORY PERSON REMOVAL:
           wireframeGuideImage,
           lightingPrompt
         )
+        prompt = 'Wireframe guide generation (prompt not available)'
         // Wireframe guide maintains user's exact positioning
         setPosition({
           x: 50,
@@ -182,30 +186,16 @@ MANDATORY PERSON REMOVAL:
           scale: 1,
           rotation: 0
         })
-      } else if (modelProvider === 'flux') {
-        // Use FLUX with unified service
-        console.log('Using FLUX for initial generation...')
-        imageUrl = await generateVisualization(
-          uploadedImage,
-          selectedModel,
-          lightingPrompt,
-          modelPosition
-        )
-        setPosition({
-          x: 50,
-          y: 50,
-          scale: 1,
-          rotation: 0
-        })
       } else {
-        // Use Gemini with unified service (natural placement)
-        console.log('Using Gemini for initial generation...')
-        imageUrl = await generateVisualization(
+        // Use unified service (Gemini or FLUX)
+        const result = await generateVisualization(
           uploadedImage,
           selectedModel,
           lightingPrompt,
           modelPosition
         )
+        imageUrl = result.imageUrl
+        prompt = result.prompt
         setPosition({
           x: 50,
           y: 50,
@@ -215,6 +205,7 @@ MANDATORY PERSON REMOVAL:
       }
 
       addToHistory(imageUrl)
+      setCurrentPrompt(prompt || null)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to process image. Please try again.')
@@ -242,6 +233,7 @@ MANDATORY PERSON REMOVAL:
         resultImage || undefined
       )
       addToHistory(result.imageUrl)
+      setCurrentPrompt(result.prompt || null)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to update lighting. Please try again.')
@@ -464,6 +456,43 @@ MANDATORY PERSON REMOVAL:
           <p className="image-disclaimer">
             Generated images are artistic representations for entertainment purposes only. Results may vary due to AI interpretation and may not be to exact scale. Not intended as a substitute for professional architectural or planning advice.
           </p>
+        )}
+
+        {/* Prompt Display Panel */}
+        {resultImage && currentPrompt && (
+          <div className="prompt-panel">
+            <button
+              className="prompt-panel-toggle"
+              onClick={() => setShowPromptPanel(!showPromptPanel)}
+            >
+              <span>{showPromptPanel ? 'Hide' : 'Show'} Prompt Used</span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                style={{ transform: showPromptPanel ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+              >
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {showPromptPanel && (
+              <div className="prompt-content">
+                <pre className="prompt-text">{currentPrompt}</pre>
+                <button
+                  className="copy-prompt-button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(currentPrompt)
+                    alert('Prompt copied to clipboard!')
+                  }}
+                >
+                  Copy Prompt
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Quick Action Buttons */}
