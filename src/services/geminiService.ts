@@ -417,7 +417,7 @@ The result is an authentic photograph—not a rendering or diagram overlay—sho
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 1.0, // Higher temperature for natural photographic variation and realism
+    temperature: 0.8, // Lower temperature for better adherence to reference shape while maintaining realism
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
