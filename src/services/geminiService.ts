@@ -379,86 +379,41 @@ async function generateImageWithPool(
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
   // Get pool dimensions
-  const { length, width, depth } = poolModel.dimensions
+  const { length } = poolModel.dimensions
 
-  // Generate random camera specs for variation
-  const lenses = ['24-70mm f/2.8', '16-35mm f/4', '70-200mm f/2.8', '35mm f/1.4']
-  const isos = ['100', '200', '400']
-  const apertures = ['2.8', '4', '5.6', '8']
-  const randomLens = lenses[Math.floor(Math.random() * lenses.length)]
-  const randomISO = isos[Math.floor(Math.random() * isos.length)]
-  const randomAperture = apertures[Math.floor(Math.random() * apertures.length)]
-
-  // Position instructions based on user selection
-  const positionInstructions: Record<string, string> = {
-    center: 'Position the pool in the CENTER of the frame as the dominant focal point. Use center-weighted composition with the pool as the main subject.',
-    left: 'Position the pool on the LEFT side of the frame (left third), allowing more environmental context, scenery, and breathing room on the right side. This creates visual balance and shows more of the property setting.',
-    right: 'Position the pool on the RIGHT side of the frame (right third), allowing more environmental context, scenery, and breathing room on the left side. This creates visual balance and shows more of the property setting.'
-  }
-
-  // Create narrative, descriptive prompt that emphasizes converting diagram to photorealistic pool
+  // Simplified prompt focused on shape fidelity (per Google's recommendations)
   // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
-  const prompt = customPrompt || `You are creating a photorealistic pool visualization. 
+  const prompt = customPrompt || `PRIMARY DIRECTIVE: Get the shape right.
 
-REFERENCE IMAGE ANALYSIS:
-The SECOND image (image [1]) is a pool diagram showing the EXACT shape you must replicate. Look at this diagram carefully:
-- Study its outline, curves, corners, and angles
-- Note the length-to-width ratio
-- Identify any unique features (rounded ends, steps, curves, etc.)
-- This is the SHAPE TEMPLATE you must follow EXACTLY
+You are creating a photorealistic visualization of a swimming pool.
 
-TASK: Convert diagram to photorealistic pool while preserving EXACT shape
-1. Take the EXACT outline/shape from the second image (the pool diagram)
-2. Trace that outline precisely - do not modify, simplify, or approximate
-3. Fill that EXACT shape with photorealistic water and materials
-4. Integrate it naturally into the first image (the property photo)
+## Inputs
 
-CRITICAL SHAPE RULES:
-- The pool's perimeter MUST match the diagram's perimeter exactly
-- Same curves, same corners, same angles - pixel-perfect shape match
-- Same length-to-width ratio
-- Same orientation/angle
-- DO NOT simplify complex curves
-- DO NOT round corners that aren't rounded in the diagram
-- DO NOT add features not in the diagram
-- ONLY change visual style (diagram → photorealistic), NOT the shape
+  * **Image [0]:** The property photo.
+  * **Image [1]:** The pool diagram. This is the **SHAPE TEMPLATE**.
 
-This is a professional real estate photograph showing a swimming pool (${length}m × ${width}m × ${depth}m deep) integrated into an actual property.
+## Your ONLY Critical Task
 
-PHOTOGRAPHY SETUP:
-Shot with ${randomLens} lens at ISO ${randomISO}, f/${randomAperture}. Natural daylight with soft, realistic shadows. ${lightingPrompt ? lightingPrompt + '. ' : ''}The image captures authentic depth of field with the pool in sharp focus while background elements show subtle natural blur.
+Your goal is to render a photorealistic pool onto Image [0] that uses the **ABSOLUTE, EXACT shape** from Image [1].
 
-SCENE COMPOSITION:
-${positionInstructions[poolPosition]} The pool is properly integrated into the property—sitting at ground level with natural landscaping, decking, or patio surrounding it.
+1.  **Analyze Image [1]:** Study the outline, curves, and proportions of the pool diagram.
+2.  **Render the Pool:** Create a photorealistic pool in Image [0] where the pool's outline **perfectly matches the shape** from Image [1].
+3.  **Scale:** The pool is ${length}m long. Scale it realistically within the property.
 
-ALIGNMENT WITH EXISTING STRUCTURES:
-- Align the pool's edges parallel to nearby fences, deck edges, patios, or building foundations
-- If there are visible fences, align the pool's longest edge parallel to the fence line
-- If there are decks or patios, align the pool to complement their orientation and edges
-- If there are pathways or driveways, orient the pool to respect their direction and layout
-- Match the pool's orientation to the dominant geometric lines in the property (buildings, property boundaries, etc.)
-- The pool should look intentionally placed, not randomly oriented—it should feel like it was designed to work with the existing property features
+## Unbreakable Rule: Shape Fidelity
 
-The composition uses the rule of thirds with natural leading lines drawing attention to the pool. Foreground shows property details, the pool anchors the middle distance, and the background provides environmental context.
+  * The pool's shape **MUST** be identical to the diagram in Image [1].
+  * Do **NOT** simplify, "fix," or change the shape's curves or angles.
+  * **PRIORITY:** The diagram's shape is **more important** than aligning with fences, decks, or any other feature in the yard. If the diagram's shape looks "odd" or "misaligned" with the fence, **that is correct.** You *must* preserve the diagram's shape above all else.
 
-SCALE AND PROPORTION:
-Match the pool's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall), outdoor furniture. The pool must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance. CRITICAL: When scaling, maintain the EXACT shape proportions from the diagram - do not distort or change the shape.
+## Secondary Goals (Only *after* the shape is perfect)
 
-POOL APPEARANCE:
-The pool must have the IDENTICAL shape to the diagram (second image), rendered photorealistically:
-- Shape: EXACT match to diagram outline - trace it precisely from the second image
-- Water: realistic depth, transparency, natural color (turquoise/blue), subtle surface reflections
-- Materials: realistic pool shell (concrete/fiberglass), coping/tile edges matching property style
-- Details: proper water level, realistic edge treatments, natural integration
-- Integration: landscaping around pool, proper ground level, natural shadows
+  * **Realism:** Make the pool look photorealistic.
+  * **Water:** Fill the shape with realistic turquoise/blue water.
+  * **Integration:** Blend the pool's edges (coping, tiles) naturally into the grass or patio of the property.
+  * **Lighting:** Match the natural, midday sun and shadows already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
 
-LIGHTING AND ATMOSPHERE:
-Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Water reflects the sky and surroundings realistically. Pool materials respond to light realistically—concrete/tile shows texture, water shows depth and transparency. Include atmospheric perspective with slight depth haze if the pool is distant.
-
-VERIFICATION:
-Before completing, verify: Does the pool shape match the diagram (second image) EXACTLY? The outline, curves, corners, and proportions must be identical. Only the visual style should differ (diagram → photorealistic), NOT the shape itself.
-
-The result is an authentic photograph showing how this SPECIFIC pool design (with its EXACT shape from the diagram) would actually appear when built on this property.`
+**Final Check:** Before finishing, ask yourself: "Does the pool's outline *identically* match the shape from Image [1]?" If not, the task is a failure.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
