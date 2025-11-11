@@ -165,7 +165,6 @@ MANDATORY PERSON REMOVAL:
 
     try {
       const lightingPrompt = getLightingPrompt(timeOfDay) + getAccuracyPrompt()
-      const modelProvider = getModelProvider()
 
       let imageUrl: string
       let prompt: string | undefined
