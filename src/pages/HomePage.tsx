@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import ARQRCode from '../components/ARQRCode'
 
 function HomePage() {
   const navigate = useNavigate()
@@ -52,6 +53,8 @@ function HomePage() {
           <p>Use Quick Enhancements and natural language editing to personalize your scene, then download to share</p>
         </div>
       </section>
+
+      <ARQRCode />
 
       <section className="info-section">
         <h2>Experience Your Future Home</h2>
