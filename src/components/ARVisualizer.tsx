@@ -28,26 +28,40 @@ function PoolBox({ dimensions, position }: {
   return (
     <group
       ref={groupRef}
-      position={[position.x, position.y, position.z]}
+      position={[position.x, dimensions.depth / 2, position.z]}
       rotation={[0, (position.rotation * Math.PI) / 180, 0]}
       scale={position.scale}
     >
+      {/* Main pool box - more visible */}
       <mesh>
         <boxGeometry args={[dimensions.length, dimensions.depth, dimensions.width]} />
         <meshStandardMaterial 
           color="#00a8e8" 
           transparent 
-          opacity={0.7}
+          opacity={0.8}
           side={THREE.DoubleSide}
+          metalness={0.3}
+          roughness={0.2}
         />
       </mesh>
+      {/* Wireframe outline for better visibility */}
       <mesh>
         <boxGeometry args={[dimensions.length, dimensions.depth, dimensions.width]} />
         <meshStandardMaterial 
           color="#0066cc" 
           transparent 
-          opacity={0.4}
+          opacity={0.6}
           wireframe={true}
+        />
+      </mesh>
+      {/* Top surface to show pool opening */}
+      <mesh position={[0, dimensions.depth / 2, 0]}>
+        <planeGeometry args={[dimensions.length, dimensions.width]} />
+        <meshStandardMaterial 
+          color="#00d4ff" 
+          transparent 
+          opacity={0.5}
+          side={THREE.DoubleSide}
         />
       </mesh>
     </group>
@@ -66,7 +80,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     y: 0,
     z: 0,
     rotation: 0,
-    scale: 1
+    scale: 2  // Start with larger scale so it's more visible
   })
 
   const [isCapturing, setIsCapturing] = useState(false)
@@ -248,23 +262,41 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       />
 
       {/* 3D Pool Overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: 'calc(100% - 200px)',
-        zIndex: 2,
-        pointerEvents: 'none'
-      }}>
+      <div 
+        id="ar-overlay"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: 'calc(100% - 200px)',
+          zIndex: 2,
+          pointerEvents: 'none',
+          backgroundColor: 'transparent',
+          overflow: 'hidden'
+        }}
+      >
         <Canvas
-          camera={{ position: [0, 5, 5], fov: 50 }}
-          style={{ background: 'transparent' }}
-          gl={{ alpha: true, antialias: true }}
+          camera={{ position: [0, 2, 6], fov: 75 }}
+          style={{ 
+            background: 'transparent', 
+            width: '100%', 
+            height: '100%',
+            display: 'block'
+          }}
+          gl={{ 
+            alpha: true, 
+            antialias: true,
+            preserveDrawingBuffer: true,
+            powerPreference: 'high-performance',
+            premultipliedAlpha: false
+          }}
+          dpr={[1, 2]}
+          frameloop="always"
         >
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[10, 10, 5]} intensity={1} />
-          <PerspectiveCamera makeDefault position={[0, 5, 5]} />
+          <ambientLight intensity={1.0} />
+          <directionalLight position={[5, 10, 5]} intensity={1.5} />
+          <PerspectiveCamera makeDefault position={[0, 2, 6]} fov={75} />
           <PoolBox 
             dimensions={dimensions} 
             position={position}
@@ -333,6 +365,21 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             style={{ flex: 1 }}
           />
           <span style={{ minWidth: '40px', fontSize: '14px' }}>{position.rotation}°</span>
+        </div>
+
+        {/* Scale Control */}
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <label style={{ minWidth: '80px', fontSize: '14px' }}>Scale:</label>
+          <input
+            type="range"
+            min="0.5"
+            max="3"
+            step="0.1"
+            value={position.scale}
+            onChange={(e) => setPosition({ ...position, scale: parseFloat(e.target.value) })}
+            style={{ flex: 1 }}
+          />
+          <span style={{ minWidth: '40px', fontSize: '14px' }}>{position.scale.toFixed(1)}x</span>
         </div>
 
         {/* Generate Button */}
