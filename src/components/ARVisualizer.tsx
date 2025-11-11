@@ -10,58 +10,70 @@ interface ARVisualizerProps {
   onResult?: (imageUrl: string) => void
 }
 
-// Procedural pool box component
+// Procedural pool box component - fixed to properly respond to position changes
 function PoolBox({ dimensions, position }: { 
   dimensions: ARPoolDimensions
   position: ARPoolPosition
 }) {
   const groupRef = useRef<THREE.Group>(null)
 
+  // Update position when props change - this is the single source of truth
   useEffect(() => {
     if (groupRef.current) {
-      groupRef.current.position.set(position.x, position.y, position.z)
+      // Position pool at ground level (y = depth/2 means bottom is at y=0)
+      groupRef.current.position.set(position.x, dimensions.depth / 2, position.z)
       groupRef.current.rotation.y = (position.rotation * Math.PI) / 180
       groupRef.current.scale.setScalar(position.scale)
     }
-  }, [position])
+  }, [position, dimensions.depth])
 
   return (
-    <group
-      ref={groupRef}
-      position={[position.x, dimensions.depth / 2, position.z]}
-      rotation={[0, (position.rotation * Math.PI) / 180, 0]}
-      scale={position.scale}
-    >
-      {/* Main pool box - more visible */}
+    <group ref={groupRef}>
+      {/* Pool walls - concrete/tile appearance */}
       <mesh>
         <boxGeometry args={[dimensions.length, dimensions.depth, dimensions.width]} />
         <meshStandardMaterial 
-          color="#00a8e8" 
+          color="#e0e0e0" 
           transparent 
-          opacity={0.8}
+          opacity={0.9}
           side={THREE.DoubleSide}
-          metalness={0.3}
-          roughness={0.2}
+          metalness={0.1}
+          roughness={0.8}
         />
       </mesh>
-      {/* Wireframe outline for better visibility */}
+      
+      {/* Water surface - top of pool */}
+      <mesh position={[0, dimensions.depth / 2, 0]}>
+        <planeGeometry args={[dimensions.length, dimensions.width]} />
+        <meshStandardMaterial 
+          color="#00b4d8" 
+          transparent 
+          opacity={0.7}
+          side={THREE.DoubleSide}
+          metalness={0.5}
+          roughness={0.1}
+        />
+      </mesh>
+      
+      {/* Water fill - inside the pool */}
+      <mesh position={[0, dimensions.depth / 4, 0]}>
+        <boxGeometry args={[dimensions.length * 0.98, dimensions.depth / 2, dimensions.width * 0.98]} />
+        <meshStandardMaterial 
+          color="#0077b6" 
+          transparent 
+          opacity={0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      
+      {/* Outline for visibility */}
       <mesh>
         <boxGeometry args={[dimensions.length, dimensions.depth, dimensions.width]} />
         <meshStandardMaterial 
           color="#0066cc" 
           transparent 
-          opacity={0.6}
-          wireframe={true}
-        />
-      </mesh>
-      {/* Top surface to show pool opening */}
-      <mesh position={[0, dimensions.depth / 2, 0]}>
-        <planeGeometry args={[dimensions.length, dimensions.width]} />
-        <meshStandardMaterial 
-          color="#00d4ff" 
-          transparent 
           opacity={0.5}
-          side={THREE.DoubleSide}
+          wireframe={true}
         />
       </mesh>
     </group>
@@ -80,7 +92,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     y: 0,
     z: 0,
     rotation: 0,
-    scale: 2  // Start with larger scale so it's more visible
+    scale: 1.5  // Better initial scale
   })
 
   const [isCapturing, setIsCapturing] = useState(false)
@@ -91,6 +103,10 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const lastTouchRef = useRef<{ x: number; y: number } | null>(null)
 
   // Initialize camera
   useEffect(() => {
@@ -126,6 +142,61 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     }
   }, [])
 
+  // Touch gesture handlers for positioning
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      isDraggingRef.current = true
+      const touch = e.touches[0]
+      dragStartRef.current = { x: touch.clientX, y: touch.clientY }
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY }
+    }
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isDraggingRef.current && e.touches.length === 1 && lastTouchRef.current) {
+      const touch = e.touches[0]
+      const deltaX = touch.clientX - lastTouchRef.current.x
+      const deltaY = touch.clientY - lastTouchRef.current.y
+      
+      // Convert screen movement to 3D position movement
+      // Scale factor: 0.01 means 100px movement = 1 unit in 3D space
+      setPosition(prev => ({
+        ...prev,
+        x: prev.x + deltaX * 0.01,
+        z: prev.z + deltaY * 0.01
+      }))
+      
+      lastTouchRef.current = { x: touch.clientX, y: touch.clientY }
+    } else if (e.touches.length === 2) {
+      // Pinch to zoom/scale
+      const touch1 = e.touches[0]
+      const touch2 = e.touches[1]
+      const distance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      )
+      
+      // Store initial distance on first two-finger touch
+      if (!lastTouchRef.current) {
+        lastTouchRef.current = { x: distance, y: 0 }
+        return
+      }
+      
+      const scaleDelta = (distance - lastTouchRef.current.x) * 0.01
+      setPosition(prev => ({
+        ...prev,
+        scale: Math.max(0.5, Math.min(3, prev.scale + scaleDelta))
+      }))
+      
+      lastTouchRef.current = { x: distance, y: 0 }
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback(() => {
+    isDraggingRef.current = false
+    lastTouchRef.current = null
+  }, [])
+
   // Generate mask image from 3D pool position
   const generateMaskImage = useCallback(async (): Promise<string> => {
     if (!videoRef.current || !canvasRef.current) {
@@ -147,7 +218,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
     // Calculate pool position in screen space
-    // This is a simplified projection - assumes pool is centered and scaled
     const centerX = canvas.width / 2 + (position.x * (canvas.width / 20))
     const centerY = canvas.height / 2 + (position.z * (canvas.height / 20))
     
@@ -168,7 +238,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
 
   // Capture camera image
   const captureCameraImage = useCallback(async (): Promise<string> => {
-    if (!videoRef.current || !canvasRef.current) {
+    if (!videoRef.current) {
       throw new Error('Video not ready')
     }
 
@@ -261,9 +331,13 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         style={{ display: 'none' }}
       />
 
-      {/* 3D Pool Overlay */}
+      {/* 3D Pool Overlay - with touch handlers */}
       <div 
+        ref={overlayRef}
         id="ar-overlay"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           position: 'absolute',
           top: 0,
@@ -271,13 +345,14 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
           width: '100%',
           height: 'calc(100% - 200px)',
           zIndex: 2,
-          pointerEvents: 'none',
+          pointerEvents: 'auto', // Enable touch events
           backgroundColor: 'transparent',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          touchAction: 'none' // Prevent default touch behaviors
         }}
       >
         <Canvas
-          camera={{ position: [0, 2, 6], fov: 75 }}
+          camera={{ position: [0, 4, 8], fov: 60 }}
           style={{ 
             background: 'transparent', 
             width: '100%', 
@@ -296,7 +371,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         >
           <ambientLight intensity={1.0} />
           <directionalLight position={[5, 10, 5]} intensity={1.5} />
-          <PerspectiveCamera makeDefault position={[0, 2, 6]} fov={75} />
+          <PerspectiveCamera makeDefault position={[0, 4, 8]} fov={60} />
           <PoolBox 
             dimensions={dimensions} 
             position={position}
@@ -322,6 +397,10 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             Initializing camera...
           </div>
         )}
+
+        <div style={{ fontSize: '12px', color: '#666', textAlign: 'center', marginBottom: '5px' }}>
+          Drag to move • Pinch to scale • Use sliders below
+        </div>
 
         {/* Dimension Controls */}
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
