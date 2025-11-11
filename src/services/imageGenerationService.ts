@@ -63,7 +63,7 @@ async function generateWithGemini(
   model: VisualizationModel,
   lightingPrompt?: string,
   position?: 'center' | 'left' | 'right'
-): Promise<{ imageUrl: string; prompt?: string }> {
+): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   // Use existing Gemini service with natural placement
   const result = await processWithGemini(
     uploadedImage,
@@ -76,5 +76,5 @@ async function generateWithGemini(
     position
   )
 
-  return { imageUrl: result.imageUrl, prompt: result.prompt }
+  return { imageUrl: result.imageUrl, prompt: result.prompt, modelSettings: result.modelSettings }
 }
