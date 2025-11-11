@@ -433,7 +433,7 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
 
   const config = {
     temperature: 0.2, // Very low temperature for maximum adherence to reference shape
-    topP: 0.7, // Lower topP focuses on more probable outputs, reducing diversity and improving shape adherence
+    topP: 0.5, // Lower topP focuses on most probable outputs, reducing diversity and improving shape adherence
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
