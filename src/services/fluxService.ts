@@ -1,5 +1,5 @@
 import * as fal from '@fal-ai/serverless-client'
-import { FLUXGenerationOptions, TinyHomeModel, PoolModel, VisualizationModel, DepthMapData, isPoolModel } from '../types'
+import { FLUXGenerationOptions, VisualizationModel, DepthMapData, isPoolModel } from '../types'
 
 const FAL_API_KEY = import.meta.env.VITE_FAL_API_KEY || ''
 
