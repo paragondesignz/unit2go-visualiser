@@ -432,8 +432,8 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.2, // Very low temperature for maximum adherence to reference shape
-    topP: 0.5, // Lower topP focuses on most probable outputs, reducing diversity and improving shape adherence
+    temperature: 0.1, // Extremely low temperature for maximum adherence to reference shape
+    topP: 0.1, // Extremely low topP focuses on only the most probable outputs, minimizing diversity
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
