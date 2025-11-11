@@ -1240,6 +1240,55 @@ body {
   padding: 1rem;
 }
 
+.model-settings {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.model-settings h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.setting-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.setting-value {
+  color: var(--text-primary);
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+}
+
+.prompt-section {
+  margin-bottom: 1rem;
+}
+
+.prompt-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
 .prompt-text {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);

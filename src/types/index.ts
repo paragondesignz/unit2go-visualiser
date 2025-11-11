@@ -56,6 +56,17 @@ export interface Position {
 export interface VisualizationResult {
   imageUrl: string
   prompt?: string
+  modelSettings?: {
+    model?: string
+    temperature?: number
+    topP?: number
+    topK?: number
+    guidanceScale?: number
+    numInferenceSteps?: number
+    strength?: number
+    referenceStrength?: number
+    controlnetConditioningScale?: number
+  }
   position: Position
 }
 

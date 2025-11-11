@@ -32,6 +32,7 @@ export async function processWithGemini(
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
+        modelSettings: result.modelSettings,
         position: {
           x: 50,
           y: 50,
@@ -44,6 +45,7 @@ export async function processWithGemini(
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
+        modelSettings: result.modelSettings,
         position: {
           x: 50,
           y: 50,
@@ -61,6 +63,11 @@ export async function processWithGemini(
       return {
         imageUrl: lightingAdjustedImage,
         prompt: `Lighting adjustment: ${lightingPrompt}`,
+        modelSettings: {
+          model: 'gemini-2.5-flash-image',
+          temperature: 1.0,
+          operation: 'lighting_edit'
+        },
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
       }
     } else {
@@ -82,6 +89,7 @@ export async function processWithGemini(
       return {
         imageUrl: adjustedImage.imageUrl,
         prompt: adjustedImage.prompt,
+        modelSettings: adjustedImage.modelSettings,
         position: newPosition
       }
     } else {
@@ -95,6 +103,7 @@ export async function processWithGemini(
       return {
         imageUrl: adjustedImage.imageUrl,
         prompt: adjustedImage.prompt,
+        modelSettings: adjustedImage.modelSettings,
         position: newPosition
       }
     }
@@ -245,7 +254,7 @@ async function generateImageWithTinyHome(
   customPrompt?: string,
   lightingPrompt?: string,
   tinyHomePosition: 'center' | 'left' | 'right' = 'center'
-): Promise<{ imageUrl: string; prompt: string }> {
+): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
@@ -342,7 +351,13 @@ The result is an authentic photograph—not a rendering—showing how this speci
     const { mimeType, data } = imagePart.inlineData
     return {
       imageUrl: `data:${mimeType};base64,${data}`,
-      prompt: prompt
+      prompt: prompt,
+      modelSettings: {
+        model: model,
+        temperature: config.temperature,
+        topP: config.topP,
+        aspectRatio: config.imageConfig.aspectRatio
+      }
     }
   }
 
@@ -360,7 +375,7 @@ async function generateImageWithPool(
   customPrompt?: string,
   lightingPrompt?: string,
   poolPosition: 'center' | 'left' | 'right' = 'center'
-): Promise<{ imageUrl: string; prompt: string }> {
+): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const poolImageBase64 = await fetchImageAsBase64(poolModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
@@ -502,7 +517,13 @@ The result is an authentic photograph showing how this SPECIFIC pool design (wit
     const { mimeType, data } = imagePart.inlineData
     return {
       imageUrl: `data:${mimeType};base64,${data}`,
-      prompt: prompt
+      prompt: prompt,
+      modelSettings: {
+        model: model,
+        temperature: config.temperature,
+        topP: config.topP,
+        aspectRatio: config.imageConfig.aspectRatio
+      }
     }
   }
 

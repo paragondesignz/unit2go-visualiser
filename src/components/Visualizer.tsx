@@ -21,6 +21,7 @@ function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPo
   })
   const [resultImage, setResultImage] = useState<string | null>(null)
   const [currentPrompt, setCurrentPrompt] = useState<string | null>(null)
+  const [currentModelSettings, setCurrentModelSettings] = useState<any>(null)
   const [showingOriginal, setShowingOriginal] = useState(false)
   const [timeOfDay, setTimeOfDay] = useState(12)
   const [tipIndex, setTipIndex] = useState(0)
@@ -205,6 +206,7 @@ MANDATORY PERSON REMOVAL:
 
       addToHistory(imageUrl)
       setCurrentPrompt(prompt || null)
+      setCurrentModelSettings(result?.modelSettings || null)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to process image. Please try again.')
@@ -233,6 +235,7 @@ MANDATORY PERSON REMOVAL:
       )
       addToHistory(result.imageUrl)
       setCurrentPrompt(result.prompt || null)
+      setCurrentModelSettings(result.modelSettings || null)
       setShowingOriginal(false)
     } catch (err) {
       setError('Failed to update lighting. Please try again.')
@@ -479,15 +482,82 @@ MANDATORY PERSON REMOVAL:
             </button>
             {showPromptPanel && (
               <div className="prompt-content">
-                <pre className="prompt-text">{currentPrompt}</pre>
+                {currentModelSettings && (
+                  <div className="model-settings">
+                    <h4>Model Settings</h4>
+                    <div className="settings-grid">
+                      {currentModelSettings.model && (
+                        <div className="setting-item">
+                          <span className="setting-label">Model:</span>
+                          <span className="setting-value">{currentModelSettings.model}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.temperature !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Temperature:</span>
+                          <span className="setting-value">{currentModelSettings.temperature}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.topP !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Top P:</span>
+                          <span className="setting-value">{currentModelSettings.topP}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.aspectRatio && (
+                        <div className="setting-item">
+                          <span className="setting-label">Aspect Ratio:</span>
+                          <span className="setting-value">{currentModelSettings.aspectRatio}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.guidanceScale !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Guidance Scale:</span>
+                          <span className="setting-value">{currentModelSettings.guidanceScale}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.numInferenceSteps !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Inference Steps:</span>
+                          <span className="setting-value">{currentModelSettings.numInferenceSteps}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.strength !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Strength:</span>
+                          <span className="setting-value">{currentModelSettings.strength}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.referenceStrength !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Reference Strength:</span>
+                          <span className="setting-value">{currentModelSettings.referenceStrength}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.controlnetConditioningScale !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">ControlNet Scale:</span>
+                          <span className="setting-value">{currentModelSettings.controlnetConditioningScale}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="prompt-section">
+                  <h4>Prompt</h4>
+                  <pre className="prompt-text">{currentPrompt}</pre>
+                </div>
                 <button
                   className="copy-prompt-button"
                   onClick={() => {
-                    navigator.clipboard.writeText(currentPrompt)
-                    alert('Prompt copied to clipboard!')
+                    const textToCopy = currentModelSettings 
+                      ? `Model Settings:\n${JSON.stringify(currentModelSettings, null, 2)}\n\nPrompt:\n${currentPrompt}`
+                      : currentPrompt || ''
+                    navigator.clipboard.writeText(textToCopy)
+                    alert('Prompt and settings copied to clipboard!')
                   }}
                 >
-                  Copy Prompt
+                  Copy Prompt & Settings
                 </button>
               </div>
             )}
