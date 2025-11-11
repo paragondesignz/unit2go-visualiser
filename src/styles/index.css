@@ -1205,6 +1205,73 @@ body {
   font-style: italic;
 }
 
+/* Prompt Display Panel */
+.prompt-panel {
+  margin: 1.5rem auto;
+  max-width: 1200px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.prompt-panel-toggle {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--bg-tertiary);
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: background 0.2s;
+}
+
+.prompt-panel-toggle:hover {
+  background: var(--border-color);
+}
+
+.prompt-content {
+  padding: 1rem;
+}
+
+.prompt-text {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 0.75rem;
+}
+
+.copy-prompt-button {
+  padding: 0.5rem 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.copy-prompt-button:hover {
+  background: var(--primary-dark);
+}
+
 /* Quick Actions Section */
 .quick-actions-section {
   background: var(--bg-card);
