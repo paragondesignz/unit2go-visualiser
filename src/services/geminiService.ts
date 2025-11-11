@@ -65,8 +65,7 @@ export async function processWithGemini(
         prompt: `Lighting adjustment: ${lightingPrompt}`,
         modelSettings: {
           model: 'gemini-2.5-flash-image',
-          temperature: 1.0,
-          operation: 'lighting_edit'
+          temperature: 1.0
         },
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
       }
