@@ -111,7 +111,7 @@ export async function generateWithFLUX(
     )
 
     console.log('Calling FLUX.1 image-to-image with ControlNet for compositing...')
-    console.log(`FLUX Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}, Reference Strength: ${isPoolModel(model) ? 2.0 : 0.95}, Strength: ${isPoolModel(model) ? 0.2 : 0.30}, Guidance: ${isPoolModel(model) ? 5.0 : 3.5}`)
+    console.log(`FLUX Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}, Reference Strength: ${isPoolModel(model) ? 2.0 : 0.95}, Strength: 0.30, Guidance: ${isPoolModel(model) ? 5.0 : 3.5}`)
 
     // Use FLUX image-to-image for compositing (preserving both images, only adding integration)
     const result = await fal.subscribe('fal-ai/flux-general/image-to-image', {
@@ -125,7 +125,7 @@ export async function generateWithFLUX(
         control_image_url: depthMap.imageUrl,
         controlnet_conditioning_scale: options.controlnetStrength || 0.9,
         // Low strength: minimal transformation, focus on compositing
-        strength: isPoolModel(model) ? 0.2 : 0.30, // Even lower for pools (0.2) to preserve base image better
+        strength: 0.30, // Very low = preserve base image, only composite (0.0 = no change, 1.0 = complete remake)
         num_inference_steps: 28,
         guidance_scale: isPoolModel(model) ? 5.0 : 3.5, // Higher guidance for pools to enforce shape preservation prompt
         seed: Math.floor(Math.random() * 1000000),
