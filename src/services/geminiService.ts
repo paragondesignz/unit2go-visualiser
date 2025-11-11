@@ -354,7 +354,6 @@ The result is an authentic photograph—not a rendering—showing how this speci
       modelSettings: {
         model: model,
         temperature: config.temperature,
-        topP: config.topP,
         aspectRatio: config.imageConfig.aspectRatio
       }
     }
