@@ -17,7 +17,7 @@ function PoolBox({ dimensions, position }: {
 }) {
   const groupRef = useRef<THREE.Group>(null)
 
-  // Update position when props change - this is the single source of truth
+  // Update position when props change - use useFrame for immediate updates
   useEffect(() => {
     if (groupRef.current) {
       // Position pool at ground level (y = depth/2 means bottom is at y=0)
@@ -25,7 +25,7 @@ function PoolBox({ dimensions, position }: {
       groupRef.current.rotation.y = (position.rotation * Math.PI) / 180
       groupRef.current.scale.setScalar(position.scale)
     }
-  }, [position, dimensions.depth])
+  }, [position.x, position.z, position.rotation, position.scale, dimensions.depth])
 
   return (
     <group ref={groupRef}>
@@ -92,13 +92,14 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     y: 0,
     z: 0,
     rotation: 0,
-    scale: 1.5  // Better initial scale
+    scale: 1.5
   })
 
   const [isCapturing, setIsCapturing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cameraReady, setCameraReady] = useState(false)
+  const [snapshotImage, setSnapshotImage] = useState<string | null>(null)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -114,7 +115,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'environment', // Use back camera
+            facingMode: 'environment',
             width: { ideal: 1920 },
             height: { ideal: 1080 }
           }
@@ -134,7 +135,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
 
     initCamera()
 
-    // Cleanup
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop())
@@ -149,6 +149,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       const touch = e.touches[0]
       dragStartRef.current = { x: touch.clientX, y: touch.clientY }
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY }
+      e.preventDefault()
     }
   }, [])
 
@@ -159,14 +160,14 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       const deltaY = touch.clientY - lastTouchRef.current.y
       
       // Convert screen movement to 3D position movement
-      // Scale factor: 0.01 means 100px movement = 1 unit in 3D space
       setPosition(prev => ({
         ...prev,
-        x: prev.x + deltaX * 0.01,
-        z: prev.z + deltaY * 0.01
+        x: prev.x + deltaX * 0.02, // Increased sensitivity
+        z: prev.z + deltaY * 0.02
       }))
       
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY }
+      e.preventDefault()
     } else if (e.touches.length === 2) {
       // Pinch to zoom/scale
       const touch1 = e.touches[0]
@@ -176,7 +177,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         touch2.clientY - touch1.clientY
       )
       
-      // Store initial distance on first two-finger touch
       if (!lastTouchRef.current) {
         lastTouchRef.current = { x: distance, y: 0 }
         return
@@ -189,6 +189,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       }))
       
       lastTouchRef.current = { x: distance, y: 0 }
+      e.preventDefault()
     }
   }, [])
 
@@ -209,11 +210,9 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     
     if (!ctx) throw new Error('Could not get canvas context')
     
-    // Set canvas size to match video
     canvas.width = video.videoWidth || 1920
     canvas.height = video.videoHeight || 1080
     
-    // Fill with black background
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
@@ -221,11 +220,9 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     const centerX = canvas.width / 2 + (position.x * (canvas.width / 20))
     const centerY = canvas.height / 2 + (position.z * (canvas.height / 20))
     
-    // Scale pool size based on dimensions and canvas size
     const poolWidth = (dimensions.length / 10) * canvas.width * position.scale * 0.3
     const poolHeight = (dimensions.width / 10) * canvas.width * position.scale * 0.3
     
-    // Draw white pool shape
     ctx.save()
     ctx.translate(centerX, centerY)
     ctx.rotate((position.rotation * Math.PI) / 180)
@@ -248,11 +245,9 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     
     if (!ctx) throw new Error('Could not get canvas context')
     
-    // Set canvas size to match video
     canvas.width = video.videoWidth || 1920
     canvas.height = video.videoHeight || 1080
     
-    // Draw video frame to canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
     
     return canvas.toDataURL('image/jpeg', 0.9)
@@ -271,6 +266,9 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       // Capture base image from video
       const baseImage = await captureCameraImage()
       
+      // Show snapshot immediately
+      setSnapshotImage(baseImage)
+      
       // Generate mask
       const maskImage = await generateMaskImage()
       
@@ -287,24 +285,90 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
 
       // Generate visualization
       setIsGenerating(true)
+      setIsCapturing(false) // Switch to generating state
+      
       const result = await generateARVisualization(captureData)
       
       if (result.success && result.imageUrl) {
         if (onResult) {
           onResult(result.imageUrl)
         }
+        setSnapshotImage(null) // Clear snapshot when result arrives
       } else {
         setError(result.error || 'Failed to generate visualization')
-        setIsCapturing(false)
         setIsGenerating(false)
+        setSnapshotImage(null)
       }
     } catch (err) {
       console.error('Capture error:', err)
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
       setIsCapturing(false)
       setIsGenerating(false)
+      setSnapshotImage(null)
     }
   }, [cameraReady, dimensions, position, captureCameraImage, generateMaskImage, onCapture, onResult])
+
+  // Show snapshot and loading overlay if capturing or generating
+  if (snapshotImage || isGenerating) {
+    return (
+      <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
+        {/* Snapshot Image */}
+        {snapshotImage && (
+          <img
+            src={snapshotImage}
+            alt="Captured scene"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 1
+            }}
+          />
+        )}
+
+        {/* Loading Overlay */}
+        {isGenerating && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2,
+            color: 'white'
+          }}>
+            <div style={{
+              width: '50px',
+              height: '50px',
+              border: '4px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '4px solid white',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              marginBottom: '20px'
+            }} />
+            <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>Generating Visualization</h2>
+            <p style={{ fontSize: '16px', opacity: 0.9 }}>This may take 30-60 seconds...</p>
+          </div>
+        )}
+
+        {/* Add CSS animation for spinner */}
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
 
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative', overflow: 'hidden' }}>
@@ -343,16 +407,16 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
           top: 0,
           left: 0,
           width: '100%',
-          height: 'calc(100% - 200px)',
+          height: 'calc(100% - 220px)',
           zIndex: 2,
-          pointerEvents: 'auto', // Enable touch events
+          pointerEvents: 'auto',
           backgroundColor: 'transparent',
           overflow: 'hidden',
-          touchAction: 'none' // Prevent default touch behaviors
+          touchAction: 'none'
         }}
       >
         <Canvas
-          camera={{ position: [0, 4, 8], fov: 60 }}
+          camera={{ position: [0, 10, 0], fov: 75 }}
           style={{ 
             background: 'transparent', 
             width: '100%', 
@@ -371,7 +435,8 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         >
           <ambientLight intensity={1.0} />
           <directionalLight position={[5, 10, 5]} intensity={1.5} />
-          <PerspectiveCamera makeDefault position={[0, 4, 8]} fov={60} />
+          {/* Top-down perspective camera */}
+          <PerspectiveCamera makeDefault position={[0, 10, 0]} rotation={[-Math.PI / 2, 0, 0]} fov={75} />
           <PoolBox 
             dimensions={dimensions} 
             position={position}
@@ -385,12 +450,14 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         bottom: 0,
         left: 0,
         right: 0,
-        padding: '20px',
+        padding: '15px',
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '15px',
-        zIndex: 3
+        gap: '12px',
+        zIndex: 3,
+        maxHeight: '220px',
+        overflowY: 'auto'
       }}>
         {!cameraReady && (
           <div style={{ color: '#666', textAlign: 'center', padding: '10px' }}>
@@ -398,13 +465,13 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
           </div>
         )}
 
-        <div style={{ fontSize: '12px', color: '#666', textAlign: 'center', marginBottom: '5px' }}>
+        <div style={{ fontSize: '11px', color: '#666', textAlign: 'center', marginBottom: '5px' }}>
           Drag to move • Pinch to scale • Use sliders below
         </div>
 
         {/* Dimension Controls */}
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <label style={{ minWidth: '80px', fontSize: '14px' }}>Length (m):</label>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Length:</label>
           <input
             type="range"
             min="4"
@@ -414,11 +481,11 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             onChange={(e) => setDimensions({ ...dimensions, length: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '40px', fontSize: '14px' }}>{dimensions.length}m</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{dimensions.length}m</span>
         </div>
         
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <label style={{ minWidth: '80px', fontSize: '14px' }}>Width (m):</label>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Width:</label>
           <input
             type="range"
             min="3"
@@ -428,12 +495,42 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             onChange={(e) => setDimensions({ ...dimensions, width: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '40px', fontSize: '14px' }}>{dimensions.width}m</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{dimensions.width}m</span>
+        </div>
+
+        {/* Forward/Back Control (Z position) */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Forward/Back:</label>
+          <input
+            type="range"
+            min="-5"
+            max="5"
+            step="0.1"
+            value={position.z}
+            onChange={(e) => setPosition({ ...position, z: parseFloat(e.target.value) })}
+            style={{ flex: 1 }}
+          />
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.z.toFixed(1)}</span>
+        </div>
+
+        {/* Left/Right Control (X position) */}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Left/Right:</label>
+          <input
+            type="range"
+            min="-5"
+            max="5"
+            step="0.1"
+            value={position.x}
+            onChange={(e) => setPosition({ ...position, x: parseFloat(e.target.value) })}
+            style={{ flex: 1 }}
+          />
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.x.toFixed(1)}</span>
         </div>
 
         {/* Rotation Control */}
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <label style={{ minWidth: '80px', fontSize: '14px' }}>Rotation:</label>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Rotation:</label>
           <input
             type="range"
             min="0"
@@ -443,12 +540,12 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             onChange={(e) => setPosition({ ...position, rotation: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '40px', fontSize: '14px' }}>{position.rotation}°</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.rotation}°</span>
         </div>
 
         {/* Scale Control */}
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <label style={{ minWidth: '80px', fontSize: '14px' }}>Scale:</label>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ minWidth: '70px', fontSize: '13px' }}>Scale:</label>
           <input
             type="range"
             min="0.5"
@@ -458,7 +555,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             onChange={(e) => setPosition({ ...position, scale: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '40px', fontSize: '14px' }}>{position.scale.toFixed(1)}x</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.scale.toFixed(1)}x</span>
         </div>
 
         {/* Generate Button */}
@@ -473,14 +570,15 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
             color: 'white',
             border: 'none',
             borderRadius: '8px',
-            cursor: (isCapturing || isGenerating || !cameraReady) ? 'not-allowed' : 'pointer'
+            cursor: (isCapturing || isGenerating || !cameraReady) ? 'not-allowed' : 'pointer',
+            marginTop: '5px'
           }}
         >
           {isGenerating ? 'Generating...' : isCapturing ? 'Capturing...' : 'Capture & Generate'}
         </button>
 
         {error && (
-          <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffebee', borderRadius: '4px', fontSize: '14px' }}>
+          <div style={{ color: 'red', padding: '10px', backgroundColor: '#ffebee', borderRadius: '4px', fontSize: '13px' }}>
             {error}
           </div>
         )}
