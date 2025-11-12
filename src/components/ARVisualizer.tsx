@@ -92,7 +92,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     y: 0,
     z: -2, // Start pool closer to camera (negative Z = forward)
     rotation: 0,
-    scale: 1.2 // Better initial scale for standing perspective
+    scale: 0.6 // Much smaller initial scale
   })
 
   const [isCapturing, setIsCapturing] = useState(false)
@@ -224,7 +224,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     lastTouchRef.current = null
   }, [])
 
-  // Generate mask image from 3D pool position
+  // Generate mask image from 3D pool position - properly projected to 2D
   const generateMaskImage = useCallback(async (): Promise<string> => {
     if (!videoRef.current || !canvasRef.current) {
       throw new Error('Video or canvas not available')
@@ -239,22 +239,67 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     canvas.width = video.videoWidth || 1920
     canvas.height = video.videoHeight || 1080
     
+    // Fill with black background
     ctx.fillStyle = '#000000'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     
-    // Calculate pool position in screen space
-    const centerX = canvas.width / 2 + (position.x * (canvas.width / 20))
-    const centerY = canvas.height / 2 + (position.z * (canvas.height / 20))
+    // Camera parameters (matching the 3D scene)
+    const cameraHeight = 1.8 // Eye level in meters
+    const cameraDistance = 3 // Camera Z position
+    const fov = 70 * (Math.PI / 180) // Field of view in radians
     
-    const poolWidth = (dimensions.length / 10) * canvas.width * position.scale * 0.3
-    const poolHeight = (dimensions.width / 10) * canvas.width * position.scale * 0.3
+    // Project 3D pool position to 2D screen coordinates
+    // Camera is at [0, 1.8, 3] in world space, looking down negative Z axis
+    // Pool is at [position.x, depth/2, position.z] in world space
+    // We want to project the ground-level footprint (y=0)
+    const poolX3D = position.x
+    const poolZ3D = position.z // World Z position
+    const poolY3D = 0 // Ground level (pool footprint)
     
+    // Camera parameters
+    const cameraPitch = -0.3 // Camera rotation downward (looking down)
+    
+    // Transform pool position relative to camera
+    // Camera is at [0, 1.8, 3], pool at [x, 0, z]
+    const relativeX = poolX3D - 0 // Camera X is 0
+    const relativeY = poolY3D - cameraHeight // Height relative to camera (ground is -1.8m below)
+    const relativeZ = cameraDistance - poolZ3D // Distance from camera (camera at z=3, pool at z=position.z, so distance = 3 - position.z)
+    
+    // Apply camera rotation (pitch of -0.3 radians = looking down)
+    const cosPitch = Math.cos(cameraPitch)
+    const sinPitch = Math.sin(cameraPitch)
+    const rotatedY = relativeY * cosPitch - relativeZ * sinPitch
+    const rotatedZ = relativeY * sinPitch + relativeZ * cosPitch
+    
+    // Perspective projection to screen space
+    const focalLength = canvas.height / (2 * Math.tan(fov / 2))
+    const screenX = (relativeX / rotatedZ) * focalLength + canvas.width / 2
+    const screenY = (-rotatedY / rotatedZ) * focalLength + canvas.height / 2
+    
+    // Calculate pool size in screen space based on actual dimensions and distance
+    // Pool dimensions in meters, scaled by position.scale
+    const poolLengthMeters = dimensions.length * position.scale
+    const poolWidthMeters = dimensions.width * position.scale
+    
+    // Project size to screen (size appears smaller with distance)
+    const poolWidthPixels = (poolLengthMeters / rotatedZ) * focalLength
+    const poolHeightPixels = (poolWidthMeters / rotatedZ) * focalLength
+    
+    // Draw white pool shape at projected position
     ctx.save()
-    ctx.translate(centerX, centerY)
+    ctx.translate(screenX, screenY)
     ctx.rotate((position.rotation * Math.PI) / 180)
     ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(-poolWidth / 2, -poolHeight / 2, poolWidth, poolHeight)
+    ctx.fillRect(-poolWidthPixels / 2, -poolHeightPixels / 2, poolWidthPixels, poolHeightPixels)
     ctx.restore()
+    
+    console.log('Mask generated:', {
+      pool3D: { x: poolX3D, z: poolZ3D },
+      screenPos: { x: screenX, y: screenY },
+      poolSize: { width: poolWidthPixels, height: poolHeightPixels },
+      dimensions: dimensions,
+      scale: position.scale
+    })
     
     return canvas.toDataURL('image/png')
   }, [dimensions, position])
