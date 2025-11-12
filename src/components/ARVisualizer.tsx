@@ -90,9 +90,9 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const [position, setPosition] = useState<ARPoolPosition>({
     x: 0,
     y: 0,
-    z: 0,
+    z: -2, // Start pool closer to camera (negative Z = forward)
     rotation: 0,
-    scale: 1.5
+    scale: 1.2 // Better initial scale for standing perspective
   })
 
   const [isCapturing, setIsCapturing] = useState(false)
@@ -100,7 +100,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const [error, setError] = useState<string | null>(null)
   const [cameraReady, setCameraReady] = useState(false)
   const [snapshotImage, setSnapshotImage] = useState<string | null>(null)
-  const [cameraAngle, setCameraAngle] = useState({ x: 0, y: 0, z: 0 })
   const [arMode, setArMode] = useState<'manual' | 'webxr'>('manual')
   
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -110,7 +109,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const isDraggingRef = useRef(false)
   const dragStartRef = useRef({ x: 0, y: 0 })
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null)
-  const analysisCanvasRef = useRef<HTMLCanvasElement>(null)
 
   // Check for WebXR support
   useEffect(() => {
@@ -135,106 +133,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
     checkWebXR()
   }, [])
 
-  // Device orientation handler for perspective detection (fallback)
-  useEffect(() => {
-    if (arMode === 'webxr') return // Skip if using WebXR
-
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (event.beta !== null && event.gamma !== null) {
-        const tiltX = (event.beta || 0) * (Math.PI / 180)
-        const tiltY = (event.gamma || 0) * (Math.PI / 180)
-        
-        setCameraAngle({
-          x: tiltX,
-          y: tiltY,
-          z: 0
-        })
-      }
-    }
-
-    // Request permission for device orientation (iOS 13+)
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-      (DeviceOrientationEvent as any).requestPermission()
-        .then((response: string) => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation as EventListener)
-          }
-        })
-        .catch(() => {
-          console.warn('Device orientation permission denied')
-        })
-    } else {
-      window.addEventListener('deviceorientation', handleOrientation as EventListener)
-    }
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation as EventListener)
-    }
-  }, [arMode])
-
-  // Analyze video for horizon/ground plane detection
-  useEffect(() => {
-    if (!videoRef.current || !cameraReady) return
-
-    const analyzeFrame = () => {
-      if (!videoRef.current || !analysisCanvasRef.current) return
-
-      const video = videoRef.current
-      const canvas = analysisCanvasRef.current
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })
-      
-      if (!ctx || video.videoWidth === 0 || video.videoHeight === 0) return
-
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      ctx.drawImage(video, 0, 0)
-
-      // Simple edge detection to find horizon line
-      // Look for horizontal edges in the middle third of the image
-      const imageData = ctx.getImageData(0, canvas.height / 3, canvas.width, canvas.height / 3)
-      const data = imageData.data
-      
-      let maxHorizontalEdge = 0
-      let horizonY = canvas.height / 2
-
-      // Sample horizontal lines and detect edges
-      for (let y = 0; y < imageData.height; y += 5) {
-        let edgeStrength = 0
-        for (let x = 1; x < imageData.width - 1; x++) {
-          const idx = (y * imageData.width + x) * 4
-          const prevIdx = (y * imageData.width + (x - 1)) * 4
-          
-          // Calculate horizontal gradient
-          const gradient = Math.abs(
-            (data[idx] + data[idx + 1] + data[idx + 2]) / 3 -
-            (data[prevIdx] + data[prevIdx + 1] + data[prevIdx + 2]) / 3
-          )
-          edgeStrength += gradient
-        }
-        
-        if (edgeStrength > maxHorizontalEdge) {
-          maxHorizontalEdge = edgeStrength
-          horizonY = canvas.height / 3 + y
-        }
-      }
-
-      // Convert horizon position to camera tilt
-      // Horizon at top = looking down, horizon at bottom = looking up
-      const normalizedHorizon = (horizonY / canvas.height) - 0.5 // -0.5 to 0.5
-      const tiltFromHorizon = normalizedHorizon * Math.PI / 3 // Max 30 degrees
-
-      // Combine with device orientation if available
-      setCameraAngle(prev => ({
-        x: prev.x !== 0 ? prev.x : tiltFromHorizon,
-        y: prev.y,
-        z: prev.z
-      }))
-    }
-
-    const interval = setInterval(analyzeFrame, 500) // Analyze every 500ms
-
-    return () => clearInterval(interval)
-  }, [cameraReady])
 
   // Initialize camera
   useEffect(() => {
@@ -287,10 +185,11 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
       const deltaY = touch.clientY - lastTouchRef.current.y
       
       // Convert screen movement to 3D position movement
+      // In standing perspective: horizontal drag = left/right, vertical drag = forward/back
       setPosition(prev => ({
         ...prev,
-        x: prev.x + deltaX * 0.02, // Increased sensitivity
-        z: prev.z + deltaY * 0.02
+        x: prev.x + deltaX * 0.015, // Left/right movement
+        z: prev.z - deltaY * 0.015  // Forward/back (inverted: drag down = forward)
       }))
       
       lastTouchRef.current = { x: touch.clientX, y: touch.clientY }
@@ -522,12 +421,6 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         style={{ display: 'none' }}
       />
 
-      {/* Hidden canvas for perspective analysis */}
-      <canvas
-        ref={analysisCanvasRef}
-        style={{ display: 'none' }}
-      />
-
       {/* 3D Pool Overlay - with touch handlers */}
       <div 
         ref={overlayRef}
@@ -549,7 +442,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         }}
       >
         <Canvas
-          camera={{ position: [0, 8, 8], fov: 60 }}
+          camera={{ position: [0, 1.8, 3], fov: 70 }}
           style={{ 
             background: 'transparent', 
             width: '100%', 
@@ -568,20 +461,12 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         >
           <ambientLight intensity={1.0} />
           <directionalLight position={[5, 10, 5]} intensity={1.5} />
-          {/* Auto-detected perspective camera */}
+          {/* Realistic standing perspective camera - eye level looking down */}
           <PerspectiveCamera 
             makeDefault 
-            position={[
-              0 + cameraAngle.y * 2, // Slight horizontal offset based on tilt
-              8 + Math.cos(cameraAngle.x) * 4, // Height adjusts based on tilt
-              8 + Math.sin(cameraAngle.x) * 4  // Distance adjusts based on tilt
-            ]} 
-            rotation={[
-              -Math.PI / 4 - cameraAngle.x * 0.5, // Pitch based on device tilt
-              cameraAngle.y * 0.3, // Yaw based on device tilt
-              0
-            ]}
-            fov={60} 
+            position={[0, 1.8, 3]} // Eye level (~1.8m) looking forward
+            rotation={[-0.3, 0, 0]} // Slight downward angle (looking down at ground)
+            fov={70} // Wider FOV for more natural view
           />
           <PoolBox 
             dimensions={dimensions} 
@@ -654,34 +539,37 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
           <span style={{ minWidth: '35px', fontSize: '13px' }}>{dimensions.width}m</span>
         </div>
 
-        {/* Forward/Back Control (Z position) */}
+        {/* Position Controls - More intuitive for standing perspective */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <label style={{ minWidth: '70px', fontSize: '13px' }}>Forward/Back:</label>
           <input
             type="range"
-            min="-5"
-            max="5"
+            min="-4"
+            max="2"
             step="0.1"
             value={position.z}
             onChange={(e) => setPosition({ ...position, z: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.z.toFixed(1)}</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>
+            {position.z > 0 ? `${position.z.toFixed(1)}m back` : `${Math.abs(position.z).toFixed(1)}m forward`}
+          </span>
         </div>
 
-        {/* Left/Right Control (X position) */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <label style={{ minWidth: '70px', fontSize: '13px' }}>Left/Right:</label>
           <input
             type="range"
-            min="-5"
-            max="5"
+            min="-3"
+            max="3"
             step="0.1"
             value={position.x}
             onChange={(e) => setPosition({ ...position, x: parseFloat(e.target.value) })}
             style={{ flex: 1 }}
           />
-          <span style={{ minWidth: '35px', fontSize: '13px' }}>{position.x.toFixed(1)}</span>
+          <span style={{ minWidth: '35px', fontSize: '13px' }}>
+            {position.x === 0 ? 'Center' : position.x > 0 ? `${position.x.toFixed(1)}m right` : `${Math.abs(position.x).toFixed(1)}m left`}
+          </span>
         </div>
 
         {/* Rotation Control */}
