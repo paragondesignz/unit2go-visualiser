@@ -312,21 +312,19 @@ export async function generateWithQwenIntegrateProduct(
     const prompt = buildQwenIntegrationPrompt(model, options.lightingPrompt)
 
     // Enhanced negative prompts to prevent unwanted modifications
-    // Focus on product adherence and natural integration
-    // Note: Removed "wrong perspective" from pools negative prompt to allow perspective correction
-    // Added feature preservation emphasis
+    // Focus on natural integration - emphasize preventing floating/superimposed appearance
     const negativePrompt = isPoolModel(model)
-      ? 'missing features, simplified design, removed details, incomplete pool, missing steps, missing ledges, missing curves, missing architectural elements, distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, artificial shadows, poor integration, floating pool, unnatural placement, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors, unnatural shadows, floating objects, disconnected from ground'
+      ? 'floating pool, superimposed, sitting on top of ground, no shadows, no ground interaction, no excavation, floating above grass, artificial edges, cut and paste appearance, no terrain interaction, missing shadows, unrealistic placement, disconnected from ground, floating objects, wrong perspective, missing features, simplified design, removed details, incomplete pool, distorted shape, wrong proportions, modified outline, simplified curves, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors'
       : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
-    // Optimized parameters for balanced product adherence and natural perspective correction
-    // Balanced lora_scale for pools preserves features while allowing perspective correction
+    // Optimized parameters for natural integration with shape preservation
+    // Lower lora_scale for pools allows natural integration while maintaining shape
     // Higher lora_scale for tiny homes maintains architectural integrity
-    // Increased guidance_scale ensures feature preservation
+    // Balanced guidance_scale for natural integration
     const params = {
-      lora_scale: isPoolModel(model) ? 1.35 : 1.5, // Increased for pools (1.35) to preserve features while allowing perspective correction, maintained for tiny homes (1.5)
-      guidance_scale: 3.2, // Increased to ensure feature preservation and prompt adherence
-      num_inference_steps: 16, // Slightly increased for better feature detail
+      lora_scale: isPoolModel(model) ? 1.25 : 1.5, // Reduced for pools (1.25) to allow natural integration while preserving shape, maintained for tiny homes (1.5)
+      guidance_scale: 3.0, // Balanced for natural integration and prompt adherence
+      num_inference_steps: 15, // Good balance for natural appearance
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
@@ -402,28 +400,28 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    return `Seamlessly integrate the swimming pool from the product image into the property background with natural perspective correction and complete feature preservation.
+    return `Seamlessly integrate the swimming pool from the product image into the property background. The pool must appear naturally built into the ground, not floating or superimposed.
 
-CRITICAL FEATURE PRESERVATION:
-- Preserve ALL pool features from the product image: steps, ledges, curves, angles, cutouts, and architectural details
-- Maintain the EXACT shape, proportions, and design characteristics from the product image
-- Keep every architectural feature, curve, corner, and detail recognizable and consistent
-- Do NOT simplify, remove, or omit any features shown in the product image
-- Ensure all design elements are present and accurately represented
+CRITICAL NATURAL INTEGRATION:
+- The pool must be EXCAVATED into the ground with realistic terrain interaction - grass and soil should appear cut away around the pool edges
+- Create realistic shadows cast by the pool onto the surrounding ground, matching the property's lighting direction
+- Automatically correct perspective to match the property's camera angle and viewpoint - adjust the pool's orientation to align with the ground plane
+- Position the pool naturally within the property, respecting terrain contours and existing features
+- The pool must appear sunken into the ground, not sitting on top of it - show proper ground contact and excavation
+- Match the property's natural lighting conditions with accurate shadows, highlights, and ambient light
+- Ensure the pool blends naturally with the landscape - no floating appearance or artificial edges
 
-PERSPECTIVE & POSITIONING:
-- Automatically correct perspective to match the property's camera angle and viewpoint
-- Adjust the pool's orientation and angle to align naturally with the property's perspective
-- Position the pool naturally within the property, respecting terrain and existing features
-- Ensure the pool appears naturally built into the property, not floating or artificially placed
-- Create realistic ground interaction where the pool meets the terrain with proper excavation appearance
+SHAPE & FEATURE PRESERVATION:
+- Preserve the pool's overall shape, proportions, and key features from the product image (steps, ledges, curves, angles, cutouts)
+- Maintain recognizable design characteristics while allowing natural perspective adjustment
+- Keep architectural features consistent with the product image, adjusted for perspective
 
-NATURAL INTEGRATION:
-- Match the property's natural lighting conditions with accurate shadows and reflections
-- Maintain photorealistic water appearance with proper depth, transparency, and reflections
+PHOTOREALISTIC APPEARANCE:
+- Maintain photorealistic water appearance with proper depth, transparency, and reflections matching the sky
 - Match pool materials and style to the property's aesthetic and surroundings
+- Create realistic ground interaction with proper excavation appearance, disturbed soil, and natural landscaping
 
-The result should look like a professional photograph of this exact pool with all its features physically constructed on this property, with correct perspective alignment and natural integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The result must look like a professional photograph of this pool physically excavated and constructed on this property, with natural ground integration, correct perspective, and realistic shadows.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
