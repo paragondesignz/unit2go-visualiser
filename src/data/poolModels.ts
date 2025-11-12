@@ -65,6 +65,27 @@ export const poolModels: PoolModel[] = [
     productUrl: 'https://unit2go.co.nz'
   },
   {
+    id: 'pool-4',
+    name: 'Pool Design 4',
+    dimensions: {
+      length: 9.5,   // meters - typical pool length
+      width: 4.8,    // meters - typical pool width
+      depth: 1.7     // meters - average depth
+    },
+    price: 50000,
+    imageUrl: '/pool-models/pool-4.png',
+    description: 'Contemporary swimming pool design with elegant features',
+    features: [
+      'Contemporary pool design',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Customizable finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
+  },
+  {
     id: 'kiwi-dream',
     name: 'Kiwi Dream',
     dimensions: {
