@@ -311,29 +311,34 @@ export async function generateWithQwenIntegrateProduct(
     // Build integration prompt
     const prompt = buildQwenIntegrationPrompt(model, options.lightingPrompt)
 
-    // Negative prompt to prevent unwanted modifications
+    // Enhanced negative prompts to prevent unwanted modifications
+    // Focus on product adherence and natural integration
     const negativePrompt = isPoolModel(model)
-      ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, artificial shadows, poor integration'
-      : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective'
+      ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, artificial shadows, poor integration, floating pool, unnatural placement, wrong perspective, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors, unnatural shadows, floating objects, disconnected from ground'
+      : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
-    // Optimized parameters for product adherence
-    // Higher lora_scale = stronger product adherence
-    // Higher guidance_scale = better prompt following
-    // More steps = better quality and adherence
+    // Optimized parameters for maximum product adherence and natural positioning
+    // Higher lora_scale = stronger product adherence (maximized for both)
+    // Higher guidance_scale = better prompt following (increased for stronger adherence)
+    // More steps = better quality and adherence (increased for maximum quality)
     const params = {
-      lora_scale: isPoolModel(model) ? 1.4 : 1.3, // Higher for pools (shape critical)
-      guidance_scale: 2.5, // Balanced for prompt adherence
-      num_inference_steps: 12, // More steps for better quality
+      lora_scale: isPoolModel(model) ? 1.6 : 1.5, // Maximum adherence: pools 1.6, tiny homes 1.5
+      guidance_scale: 3.5, // Increased for stronger prompt adherence and product preservation
+      num_inference_steps: 18, // Increased for maximum quality and adherence
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
+      acceleration: 'regular' as const, // Explicitly set for consistency
+      seed: Math.floor(Math.random() * 1000000), // For reproducibility during testing
     }
 
-    console.log('Calling Qwen Integrate Product model...')
+    console.log('Calling Qwen Integrate Product model with optimized settings...')
     console.log(`Qwen Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
-    console.log(`  LoRA Scale: ${params.lora_scale} (product adherence strength)`)
-    console.log(`  Guidance Scale: ${params.guidance_scale}`)
-    console.log(`  Inference Steps: ${params.num_inference_steps}`)
+    console.log(`  LoRA Scale: ${params.lora_scale} (MAXIMUM product adherence strength)`)
+    console.log(`  Guidance Scale: ${params.guidance_scale} (strong prompt adherence)`)
+    console.log(`  Inference Steps: ${params.num_inference_steps} (maximum quality)`)
+    console.log(`  Acceleration: ${params.acceleration}`)
+    console.log(`  Seed: ${params.seed}`)
 
     // The model expects image_urls as an array: [background_image, product_image]
     // Order matters: background first, then product to integrate
@@ -348,6 +353,8 @@ export async function generateWithQwenIntegrateProduct(
         enable_safety_checker: params.enable_safety_checker,
         output_format: params.output_format,
         num_images: params.num_images,
+        acceleration: params.acceleration,
+        seed: params.seed,
       },
       logs: true,
       onQueueUpdate: (update: any) => {
@@ -393,32 +400,44 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    return `Seamlessly integrate the swimming pool from the product image into the property background. 
+    return `Seamlessly integrate the swimming pool from the product image into the property background with maximum product adherence and natural positioning.
 
-CRITICAL REQUIREMENTS:
-- Preserve the exact pool shape, dimensions, and features from the product image
+CRITICAL PRODUCT ADHERENCE:
+- Preserve the EXACT pool shape, dimensions, curves, angles, and all features from the product image
+- Do NOT modify, simplify, or adjust any part of the pool's outline or design
+- Maintain precise proportions and geometric accuracy
+- Keep all architectural features exactly as shown in the product image
+
+NATURAL POSITIONING & INTEGRATION:
+- Position the pool naturally within the property, respecting terrain and existing features
+- Create realistic ground interaction where the pool meets the terrain with proper excavation appearance
+- Ensure the pool appears naturally built into the property, not floating or artificially placed
+- Match the property's natural lighting conditions with accurate shadows and reflections
 - Automatically correct perspective to match the property's camera angle
-- Adjust lighting and shadows to match the property's natural lighting conditions
-- Create realistic ground interaction where the pool meets the terrain
-- Ensure the pool appears naturally built into the property
-- Maintain photorealistic water appearance with proper depth and reflections
-- Match pool materials and style to the property's aesthetic
+- Maintain photorealistic water appearance with proper depth, transparency, and reflections
+- Match pool materials and style to the property's aesthetic and surroundings
 
-The pool should look as if it was physically constructed on this property when the photo was taken, with perfect perspective alignment and natural lighting integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The result should look like a professional photograph of this exact pool physically constructed on this property, with perfect product adherence and natural integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
-  return `Seamlessly integrate the tiny home from the product image into the property background.
+  return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
 
-CRITICAL REQUIREMENTS:
-- Preserve the exact tiny home design, dimensions, and architectural features from the product image
+CRITICAL PRODUCT ADHERENCE:
+- Preserve the EXACT tiny home design, dimensions, architectural features, and proportions from the product image
+- Do NOT modify, simplify, or adjust any part of the structure's design or appearance
+- Maintain precise architectural details, window placement, materials, and colors exactly as shown
+- Keep all structural elements, proportions, and design features identical to the product image
+
+NATURAL POSITIONING & INTEGRATION:
+- Position the tiny home naturally within the property, respecting terrain, pathways, and existing features
+- Create realistic foundation and ground interaction with proper contact shadows and terrain adaptation
+- Ensure the tiny home appears naturally placed on the property, not floating or artificially positioned
+- Match the property's natural lighting conditions with accurate shadows, highlights, and ambient light
 - Automatically correct perspective to match the property's camera angle
-- Adjust lighting and shadows to match the property's natural lighting conditions
-- Create realistic foundation and ground interaction
-- Ensure the tiny home appears naturally placed on the property
-- Match window reflections to the sky and environment
-- Maintain architectural integrity and proportions
+- Match window reflections to the sky and environment for photorealistic appearance
+- Maintain architectural integrity while ensuring natural integration with surroundings
 
-The tiny home should look as if it was physically placed on this property when the photo was taken, with perfect perspective alignment and natural lighting integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The result should look like a professional photograph of this exact tiny home physically placed on this property, with perfect product adherence and natural integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
 }
 
 /**
