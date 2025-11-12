@@ -317,14 +317,14 @@ export async function generateWithQwenIntegrateProduct(
       ? 'floating pool, superimposed, sitting on top of ground, no shadows, no ground interaction, no excavation, floating above grass, artificial edges, cut and paste appearance, no terrain interaction, missing shadows, unrealistic placement, disconnected from ground, floating objects, wrong perspective, missing features, simplified design, removed details, incomplete pool, distorted shape, wrong proportions, modified outline, simplified curves, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors'
       : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
-    // Optimized parameters for natural integration with shape preservation
-    // Research indicates: lower guidance_scale allows more natural integration (less strict prompt adherence)
-    // Slightly higher lora_scale maintains shape while allowing integration
-    // More inference steps improve quality and integration
+    // Optimized parameters based on API documentation defaults
+    // API defaults: guidance_scale=1, num_inference_steps=6, lora_scale=1
+    // Lower guidance_scale (closer to default 1) allows model's automatic perspective/lighting correction
+    // Model is designed to "automatically correct perspective, lighting and shadows for natural integration"
     const params = {
-      lora_scale: isPoolModel(model) ? 1.1 : 1.5, // Slightly above default (1.1) for pools to maintain shape while allowing integration, maintained for tiny homes (1.5)
-      guidance_scale: isPoolModel(model) ? 1.5 : 2.5, // Much lower for pools (1.5) to allow natural integration and perspective correction, standard for tiny homes
-      num_inference_steps: isPoolModel(model) ? 10 : 12, // More steps for pools (10) to improve integration quality, standard for tiny homes
+      lora_scale: isPoolModel(model) ? 1.0 : 1.5, // Default (1.0) for pools to allow natural integration, maintained for tiny homes (1.5)
+      guidance_scale: isPoolModel(model) ? 1.2 : 2.5, // Close to default (1.0) for pools to allow automatic correction, standard for tiny homes
+      num_inference_steps: isPoolModel(model) ? 8 : 12, // Slightly above default (6) for pools, standard for tiny homes
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
@@ -400,28 +400,11 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    return `Seamlessly integrate the swimming pool from the product image into the property background. The pool must appear naturally built into the ground, not floating or superimposed.
+    // Simplified prompt - model automatically handles perspective, lighting, and shadows per API docs
+    // Let the model do its job while guiding it on key requirements
+    return `Blend and integrate the swimming pool into the background with correct perspective and lighting. 
 
-CRITICAL NATURAL INTEGRATION:
-- The pool must be EXCAVATED into the ground with realistic terrain interaction - grass and soil should appear cut away around the pool edges
-- Create realistic shadows cast by the pool onto the surrounding ground, matching the property's lighting direction
-- Automatically correct perspective to match the property's camera angle and viewpoint - adjust the pool's orientation to align with the ground plane
-- Position the pool naturally within the property, respecting terrain contours and existing features
-- The pool must appear sunken into the ground, not sitting on top of it - show proper ground contact and excavation
-- Match the property's natural lighting conditions with accurate shadows, highlights, and ambient light
-- Ensure the pool blends naturally with the landscape - no floating appearance or artificial edges
-
-SHAPE & FEATURE PRESERVATION:
-- Preserve the pool's overall shape, proportions, and key features from the product image (steps, ledges, curves, angles, cutouts)
-- Maintain recognizable design characteristics while allowing natural perspective adjustment
-- Keep architectural features consistent with the product image, adjusted for perspective
-
-PHOTOREALISTIC APPEARANCE:
-- Maintain photorealistic water appearance with proper depth, transparency, and reflections matching the sky
-- Match pool materials and style to the property's aesthetic and surroundings
-- Create realistic ground interaction with proper excavation appearance, disturbed soil, and natural landscaping
-
-The result must look like a professional photograph of this pool physically excavated and constructed on this property, with natural ground integration, correct perspective, and realistic shadows.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The pool must appear naturally excavated into the ground with realistic shadows and terrain interaction. Preserve the pool's shape and features (steps, ledges, curves) from the product image while allowing natural perspective correction.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.

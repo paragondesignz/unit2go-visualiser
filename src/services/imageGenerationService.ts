@@ -44,9 +44,9 @@ export async function generateVisualization(
         modelSettings: {
           model: 'qwen-image-edit-plus-lora-gallery/integrate-product',
           provider: 'fal-ai',
-          lora_scale: isPoolModel(model) ? 1.1 : 1.5,
-          guidance_scale: isPoolModel(model) ? 1.5 : 2.5,
-          num_inference_steps: isPoolModel(model) ? 10 : 12,
+          lora_scale: isPoolModel(model) ? 1.0 : 1.5,
+          guidance_scale: isPoolModel(model) ? 1.2 : 2.5,
+          num_inference_steps: isPoolModel(model) ? 8 : 12,
           acceleration: 'regular',
         }
       }
