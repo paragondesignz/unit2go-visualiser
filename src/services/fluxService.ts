@@ -318,13 +318,13 @@ export async function generateWithQwenIntegrateProduct(
       : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
     // Optimized parameters for natural integration with shape preservation
-    // Lower lora_scale for pools allows natural integration while maintaining shape
-    // Higher lora_scale for tiny homes maintains architectural integrity
-    // Balanced guidance_scale for natural integration
+    // Research indicates: lower guidance_scale allows more natural integration (less strict prompt adherence)
+    // Slightly higher lora_scale maintains shape while allowing integration
+    // More inference steps improve quality and integration
     const params = {
-      lora_scale: isPoolModel(model) ? 1.25 : 1.5, // Reduced for pools (1.25) to allow natural integration while preserving shape, maintained for tiny homes (1.5)
-      guidance_scale: 3.0, // Balanced for natural integration and prompt adherence
-      num_inference_steps: 15, // Good balance for natural appearance
+      lora_scale: isPoolModel(model) ? 1.1 : 1.5, // Slightly above default (1.1) for pools to maintain shape while allowing integration, maintained for tiny homes (1.5)
+      guidance_scale: isPoolModel(model) ? 1.5 : 2.5, // Much lower for pools (1.5) to allow natural integration and perspective correction, standard for tiny homes
+      num_inference_steps: isPoolModel(model) ? 10 : 12, // More steps for pools (10) to improve integration quality, standard for tiny homes
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
