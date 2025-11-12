@@ -1,6 +1,6 @@
 import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel } from '../types'
 import { processWithGemini } from './geminiService'
-import { generateWithFLUX } from './fluxService'
+import { generateWithFLUX, generateWithQwenIntegrateProduct } from './fluxService'
 
 // Get the configured model provider from environment
 const MODEL_PROVIDER = (import.meta.env.VITE_IMAGE_MODEL_PROVIDER || 'gemini') as ImageModelProvider
@@ -22,11 +22,13 @@ export async function generateVisualization(
   position?: 'center' | 'left' | 'right'
 ): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   if (MODEL_PROVIDER === 'flux') {
-    console.log('Using FLUX.1 for image generation...')
+    console.log('Using Qwen Integrate Product model for enhanced product adherence...')
     console.log(`Model type: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
     
     try {
-      const imageUrl = await generateWithFLUX(
+      // Use Qwen Integrate Product model for superior product adherence
+      // This model automatically handles perspective and lighting correction
+      const imageUrl = await generateWithQwenIntegrateProduct(
         {
           propertyImage: uploadedImage.file,
           tinyHomeImageUrl: model.imageUrl,
@@ -38,16 +40,42 @@ export async function generateVisualization(
 
       return { 
         imageUrl, 
-        prompt: 'FLUX generation (prompt not available)',
+        prompt: 'Qwen Integrate Product generation (prompt optimized for product adherence)',
         modelSettings: {
-          model: 'FLUX.1',
-          provider: 'flux'
+          model: 'qwen-image-edit-plus-lora-gallery/integrate-product',
+          provider: 'fal-ai',
+          lora_scale: isPoolModel(model) ? 1.4 : 1.3,
+          guidance_scale: 2.5,
+          num_inference_steps: 12,
         }
       }
     } catch (error) {
-      console.error('FLUX generation failed, falling back to Gemini:', error)
-      // Fallback to Gemini if FLUX fails
-      return generateWithGemini(uploadedImage, model, lightingPrompt, position)
+      console.error('Qwen Integrate Product generation failed, falling back to FLUX:', error)
+      // Fallback to FLUX if Qwen fails
+      try {
+        const imageUrl = await generateWithFLUX(
+          {
+            propertyImage: uploadedImage.file,
+            tinyHomeImageUrl: model.imageUrl,
+            lightingPrompt,
+            controlnetStrength: 0.9,
+          },
+          model
+        )
+
+        return { 
+          imageUrl, 
+          prompt: 'FLUX generation (fallback)',
+          modelSettings: {
+            model: 'FLUX.1',
+            provider: 'flux'
+          }
+        }
+      } catch (fluxError) {
+        console.error('FLUX generation also failed, falling back to Gemini:', fluxError)
+        // Final fallback to Gemini
+        return generateWithGemini(uploadedImage, model, lightingPrompt, position)
+      }
     }
   } else {
     console.log('Using Gemini 2.5 Flash Image for generation...')
