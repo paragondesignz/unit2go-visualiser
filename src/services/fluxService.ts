@@ -313,18 +313,19 @@ export async function generateWithQwenIntegrateProduct(
 
     // Enhanced negative prompts to prevent unwanted modifications
     // Focus on product adherence and natural integration
+    // Note: Removed "wrong perspective" from pools negative prompt to allow perspective correction
     const negativePrompt = isPoolModel(model)
-      ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, artificial shadows, poor integration, floating pool, unnatural placement, wrong perspective, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors, unnatural shadows, floating objects, disconnected from ground'
+      ? 'distorted shape, wrong proportions, modified outline, simplified curves, rounded corners, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, artificial shadows, poor integration, floating pool, unnatural placement, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors, unnatural shadows, floating objects, disconnected from ground'
       : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
-    // Optimized parameters for maximum product adherence and natural positioning
-    // Higher lora_scale = stronger product adherence (maximized for both)
-    // Higher guidance_scale = better prompt following (increased for stronger adherence)
-    // More steps = better quality and adherence (increased for maximum quality)
+    // Optimized parameters for balanced product adherence and natural perspective correction
+    // Lower lora_scale for pools allows model to correct perspective naturally while maintaining shape
+    // Higher lora_scale for tiny homes maintains architectural integrity
+    // Balanced guidance_scale for natural integration
     const params = {
-      lora_scale: isPoolModel(model) ? 1.6 : 1.5, // Maximum adherence: pools 1.6, tiny homes 1.5
-      guidance_scale: 3.5, // Increased for stronger prompt adherence and product preservation
-      num_inference_steps: 18, // Increased for maximum quality and adherence
+      lora_scale: isPoolModel(model) ? 1.2 : 1.5, // Reduced for pools (1.2) to allow perspective correction, maintained for tiny homes (1.5)
+      guidance_scale: 3.0, // Balanced for natural integration and prompt adherence
+      num_inference_steps: 15, // Good balance of quality and natural appearance
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
@@ -334,9 +335,9 @@ export async function generateWithQwenIntegrateProduct(
 
     console.log('Calling Qwen Integrate Product model with optimized settings...')
     console.log(`Qwen Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
-    console.log(`  LoRA Scale: ${params.lora_scale} (MAXIMUM product adherence strength)`)
-    console.log(`  Guidance Scale: ${params.guidance_scale} (strong prompt adherence)`)
-    console.log(`  Inference Steps: ${params.num_inference_steps} (maximum quality)`)
+    console.log(`  LoRA Scale: ${params.lora_scale} (${isPoolModel(model) ? 'balanced for natural perspective correction' : 'strong product adherence'})`)
+    console.log(`  Guidance Scale: ${params.guidance_scale} (balanced for natural integration)`)
+    console.log(`  Inference Steps: ${params.num_inference_steps} (quality balance)`)
     console.log(`  Acceleration: ${params.acceleration}`)
     console.log(`  Seed: ${params.seed}`)
 
@@ -400,24 +401,26 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    return `Seamlessly integrate the swimming pool from the product image into the property background with maximum product adherence and natural positioning.
+    return `Seamlessly integrate the swimming pool from the product image into the property background with natural perspective correction and positioning.
 
-CRITICAL PRODUCT ADHERENCE:
-- Preserve the EXACT pool shape, dimensions, curves, angles, and all features from the product image
-- Do NOT modify, simplify, or adjust any part of the pool's outline or design
-- Maintain precise proportions and geometric accuracy
-- Keep all architectural features exactly as shown in the product image
-
-NATURAL POSITIONING & INTEGRATION:
+CRITICAL PERSPECTIVE & POSITIONING:
+- Automatically correct perspective to match the property's camera angle and viewpoint
+- Adjust the pool's orientation and angle to align naturally with the property's perspective
 - Position the pool naturally within the property, respecting terrain and existing features
-- Create realistic ground interaction where the pool meets the terrain with proper excavation appearance
 - Ensure the pool appears naturally built into the property, not floating or artificially placed
+- Create realistic ground interaction where the pool meets the terrain with proper excavation appearance
+
+PRODUCT ADHERENCE:
+- Preserve the pool's overall shape, proportions, and key features from the product image
+- Maintain the pool's design characteristics while allowing perspective adjustment
+- Keep architectural features recognizable and consistent with the product image
+
+NATURAL INTEGRATION:
 - Match the property's natural lighting conditions with accurate shadows and reflections
-- Automatically correct perspective to match the property's camera angle
 - Maintain photorealistic water appearance with proper depth, transparency, and reflections
 - Match pool materials and style to the property's aesthetic and surroundings
 
-The result should look like a professional photograph of this exact pool physically constructed on this property, with perfect product adherence and natural integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+The result should look like a professional photograph of this pool physically constructed on this property, with correct perspective alignment and natural integration.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
