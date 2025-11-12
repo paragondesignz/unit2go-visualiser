@@ -391,8 +391,9 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    // Use API default prompt format
-    return `Blend and integrate the product into the background${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+    // More specific prompt while keeping default parameters
+    // Model needs to know what product we're integrating
+    return `Blend and integrate the swimming pool into the background with correct perspective and lighting${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
