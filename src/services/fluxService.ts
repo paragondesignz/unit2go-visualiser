@@ -314,24 +314,26 @@ export async function generateWithQwenIntegrateProduct(
     // Use API default negative prompt
     const negativePrompt = ' '
 
-    // Use default Qwen model settings per API documentation
-    // Defaults: guidance_scale=1, num_inference_steps=6, lora_scale=1
+    // Adjusted settings for natural integration and transformation
+    // Lower lora_scale allows more transformation/blending
+    // Higher guidance_scale ensures prompt is followed
+    // More inference steps improve blending quality
     const params = {
-      lora_scale: 1.0, // Default value
-      guidance_scale: 1.0, // Default value
-      num_inference_steps: 6, // Default value
+      lora_scale: isPoolModel(model) ? 0.7 : 1.0, // Lower for pools (0.7) to allow transformation, default for tiny homes
+      guidance_scale: isPoolModel(model) ? 2.0 : 1.0, // Higher for pools (2.0) to ensure transformation prompt is followed, default for tiny homes
+      num_inference_steps: isPoolModel(model) ? 10 : 6, // More steps for pools (10) for better blending, default for tiny homes
       enable_safety_checker: true, // Default value
       output_format: 'png' as const, // Default value
       num_images: 1, // Default value
       acceleration: 'regular' as const, // Default value
     }
 
-    console.log('Calling Qwen Integrate Product model with default settings...')
+    console.log('Calling Qwen Integrate Product model...')
     console.log(`Qwen Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
-    console.log(`  LoRA Scale: ${params.lora_scale} (default)`)
-    console.log(`  Guidance Scale: ${params.guidance_scale} (default)`)
-    console.log(`  Inference Steps: ${params.num_inference_steps} (default)`)
-    console.log(`  Acceleration: ${params.acceleration} (default)`)
+    console.log(`  LoRA Scale: ${params.lora_scale} (${isPoolModel(model) ? 'lowered for transformation' : 'default'})`)
+    console.log(`  Guidance Scale: ${params.guidance_scale} (${isPoolModel(model) ? 'increased for prompt adherence' : 'default'})`)
+    console.log(`  Inference Steps: ${params.num_inference_steps} (${isPoolModel(model) ? 'increased for blending' : 'default'})`)
+    console.log(`  Acceleration: ${params.acceleration}`)
 
     // The model expects image_urls as an array: [background_image, product_image]
     const result = await fal.subscribe('fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product', {
@@ -391,9 +393,10 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    // More specific prompt while keeping default parameters
-    // Model needs to know what product we're integrating
-    return `Blend and integrate the swimming pool into the background with correct perspective and lighting${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+    // Explicit prompt for transformation and blending
+    return `Transform and blend the swimming pool from the product image into the background property image. 
+
+Automatically correct the pool's perspective to match the background's camera angle and ground plane. Transform the pool's orientation, scale, and proportions to align naturally with the background. The pool must appear naturally excavated into the ground with realistic shadows, terrain interaction, and seamless blending - not just overlaid on top.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
