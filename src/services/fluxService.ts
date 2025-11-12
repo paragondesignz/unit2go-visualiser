@@ -317,14 +317,14 @@ export async function generateWithQwenIntegrateProduct(
       ? 'floating pool, superimposed, sitting on top of ground, no shadows, no ground interaction, no excavation, floating above grass, artificial edges, cut and paste appearance, no terrain interaction, missing shadows, unrealistic placement, disconnected from ground, floating objects, wrong perspective, missing features, simplified design, removed details, incomplete pool, distorted shape, wrong proportions, modified outline, simplified curves, changed angles, different shape, incorrect dimensions, shape mismatch, unrealistic lighting, mismatched materials, unrealistic water, fake appearance, CGI look, oversaturated colors'
       : 'distorted proportions, wrong scale, unrealistic placement, poor lighting integration, artificial shadows, unrealistic perspective, floating structure, disconnected foundation, mismatched architectural style, unnatural materials, fake appearance, CGI look, oversaturated colors, wrong scale relative to surroundings, unnatural shadows, unrealistic reflections, poor ground interaction'
 
-    // Optimized parameters based on API documentation defaults
-    // API defaults: guidance_scale=1, num_inference_steps=6, lora_scale=1
-    // Lower guidance_scale (closer to default 1) allows model's automatic perspective/lighting correction
-    // Model is designed to "automatically correct perspective, lighting and shadows for natural integration"
+    // Optimized parameters for natural blending and perspective correction
+    // For pools: lower lora_scale allows more transformation/blending
+    // Lower guidance_scale allows model's automatic perspective/lighting correction
+    // More inference steps improve blending quality
     const params = {
-      lora_scale: isPoolModel(model) ? 1.0 : 1.5, // Default (1.0) for pools to allow natural integration, maintained for tiny homes (1.5)
-      guidance_scale: isPoolModel(model) ? 1.2 : 2.5, // Close to default (1.0) for pools to allow automatic correction, standard for tiny homes
-      num_inference_steps: isPoolModel(model) ? 8 : 12, // Slightly above default (6) for pools, standard for tiny homes
+      lora_scale: isPoolModel(model) ? 0.8 : 1.5, // Lower for pools (0.8) to allow blending and transformation, maintained for tiny homes (1.5)
+      guidance_scale: isPoolModel(model) ? 1.0 : 2.5, // Exact default (1.0) for pools to maximize automatic correction, standard for tiny homes
+      num_inference_steps: isPoolModel(model) ? 12 : 12, // More steps (12) for pools to improve blending quality, standard for tiny homes
       enable_safety_checker: true,
       output_format: 'png' as const,
       num_images: 1,
@@ -400,11 +400,27 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    // Simplified prompt - model automatically handles perspective, lighting, and shadows per API docs
-    // Let the model do its job while guiding it on key requirements
-    return `Blend and integrate the swimming pool into the background with correct perspective and lighting. 
+    // Explicit prompt for perspective correction and blending
+    // Model needs clear instructions to transform and blend, not just place as-is
+    return `Transform and blend the swimming pool from the product image into the background property image. 
 
-The pool must appear naturally excavated into the ground with realistic shadows and terrain interaction. Preserve the pool's shape and features (steps, ledges, curves) from the product image while allowing natural perspective correction.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+CRITICAL TRANSFORMATION REQUIREMENTS:
+- Automatically correct the pool's perspective to match the background's camera angle and viewpoint
+- Transform the pool's orientation, angle, and scale to align naturally with the ground plane
+- Blend the pool seamlessly into the background - it must appear naturally integrated, not superimposed
+- Adjust the pool's dimensions and proportions to match the perspective of the background scene
+
+NATURAL INTEGRATION:
+- The pool must be excavated into the ground with realistic terrain interaction
+- Create proper shadows cast by the pool matching the background's lighting direction
+- Blend the pool edges naturally with the surrounding terrain and grass
+- Match lighting, shadows, and atmospheric conditions to the background
+
+SHAPE PRESERVATION:
+- Maintain the pool's overall design shape and key features (steps, ledges, curves) while allowing perspective transformation
+- Keep architectural features recognizable but adjusted for the new perspective
+
+The result must show the pool naturally blended and transformed into the background with correct perspective, not placed exactly as-is from the product image.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
