@@ -101,6 +101,7 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const [cameraReady, setCameraReady] = useState(false)
   const [snapshotImage, setSnapshotImage] = useState<string | null>(null)
   const [cameraAngle, setCameraAngle] = useState({ x: 0, y: 0, z: 0 })
+  const [arMode, setArMode] = useState<'manual' | 'webxr'>('manual')
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -111,19 +112,38 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
   const lastTouchRef = useRef<{ x: number; y: number } | null>(null)
   const analysisCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Device orientation handler for perspective detection
+  // Check for WebXR support
   useEffect(() => {
+    const checkWebXR = async () => {
+      if ('xr' in navigator) {
+        try {
+          // Check if AR is supported
+          const isSupported = await (navigator as any).xr.isSessionSupported('immersive-ar')
+          if (isSupported) {
+            setArMode('webxr')
+            console.log('WebXR AR is supported!')
+          } else {
+            console.log('WebXR AR not supported, using manual mode')
+          }
+        } catch (err) {
+          console.log('WebXR check failed, using manual mode:', err)
+        }
+      } else {
+        console.log('WebXR not available, using manual mode')
+      }
+    }
+    checkWebXR()
+  }, [])
+
+  // Device orientation handler for perspective detection (fallback)
+  useEffect(() => {
+    if (arMode === 'webxr') return // Skip if using WebXR
+
     const handleOrientation = (event: DeviceOrientationEvent) => {
       if (event.beta !== null && event.gamma !== null) {
-        // beta: front-to-back tilt (-180 to 180)
-        // gamma: left-to-right tilt (-90 to 90)
-        // Convert to camera angles
-        const tiltX = (event.beta || 0) * (Math.PI / 180) // Convert to radians
+        const tiltX = (event.beta || 0) * (Math.PI / 180)
         const tiltY = (event.gamma || 0) * (Math.PI / 180)
         
-        // Normalize angles for camera positioning
-        // When phone is held normally (beta ~ 0), camera should look down at angle
-        // When phone tilts forward (beta > 0), camera should look more straight ahead
         setCameraAngle({
           x: tiltX,
           y: tiltY,
@@ -144,14 +164,13 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
           console.warn('Device orientation permission denied')
         })
     } else {
-      // Android and older iOS
       window.addEventListener('deviceorientation', handleOrientation as EventListener)
     }
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation as EventListener)
     }
-  }, [])
+  }, [arMode])
 
   // Analyze video for horizon/ground plane detection
   useEffect(() => {
@@ -593,7 +612,17 @@ function ARVisualizer({ onCapture, onResult }: ARVisualizerProps) {
         )}
 
         <div style={{ fontSize: '11px', color: '#666', textAlign: 'center', marginBottom: '5px' }}>
-          Drag to move • Pinch to scale • Use sliders below
+          {arMode === 'webxr' ? (
+            'WebXR AR Mode Active • Drag to move • Pinch to scale'
+          ) : (
+            <>
+              Manual Mode • Drag to move • Pinch to scale • Use sliders below
+              <br />
+              <span style={{ fontSize: '10px', color: '#999' }}>
+                Note: True AR tracking requires WebXR (Chrome/Edge on Android) or native app
+              </span>
+            </>
+          )}
         </div>
 
         {/* Dimension Controls */}
