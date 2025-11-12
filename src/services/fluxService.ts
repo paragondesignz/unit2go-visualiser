@@ -315,13 +315,13 @@ export async function generateWithQwenIntegrateProduct(
     const negativePrompt = ' '
 
     // Adjusted settings for natural integration and transformation
-    // Lower lora_scale allows more transformation/blending
+    // Lower lora_scale allows more transformation/blending, but not too low or product won't appear
     // Higher guidance_scale ensures prompt is followed
-    // More inference steps improve blending quality
+    // Moderate inference steps for balance
     const params = {
-      lora_scale: isPoolModel(model) ? 0.7 : 1.0, // Lower for pools (0.7) to allow transformation, default for tiny homes
-      guidance_scale: isPoolModel(model) ? 2.0 : 1.0, // Higher for pools (2.0) to ensure transformation prompt is followed, default for tiny homes
-      num_inference_steps: isPoolModel(model) ? 10 : 6, // More steps for pools (10) for better blending, default for tiny homes
+      lora_scale: isPoolModel(model) ? 0.85 : 1.0, // Slightly lower for pools (0.85) to allow transformation while maintaining product recognition, default for tiny homes
+      guidance_scale: isPoolModel(model) ? 1.5 : 1.0, // Moderate increase for pools (1.5) to ensure prompt is followed, default for tiny homes
+      num_inference_steps: isPoolModel(model) ? 8 : 6, // Moderate increase for pools (8) for better blending, default for tiny homes
       enable_safety_checker: true, // Default value
       output_format: 'png' as const, // Default value
       num_images: 1, // Default value
