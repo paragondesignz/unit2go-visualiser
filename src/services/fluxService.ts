@@ -314,31 +314,31 @@ export async function generateWithQwenIntegrateProduct(
     // Use API default negative prompt
     const negativePrompt = ' '
 
-    // Adjusted settings for natural integration and transformation
-    // Lower lora_scale allows more transformation/blending, but not too low or product won't appear
-    // Higher guidance_scale ensures prompt is followed
-    // Moderate inference steps for balance
+    // Use exact API defaults per documentation
+    // API defaults: guidance_scale=1, num_inference_steps=6, lora_scale=1
     const params = {
-      lora_scale: isPoolModel(model) ? 0.85 : 1.0, // Slightly lower for pools (0.85) to allow transformation while maintaining product recognition, default for tiny homes
-      guidance_scale: isPoolModel(model) ? 1.5 : 1.0, // Moderate increase for pools (1.5) to ensure prompt is followed, default for tiny homes
-      num_inference_steps: isPoolModel(model) ? 8 : 6, // Moderate increase for pools (8) for better blending, default for tiny homes
+      lora_scale: 1.0, // Default value
+      guidance_scale: 1.0, // Default value  
+      num_inference_steps: 6, // Default value
       enable_safety_checker: true, // Default value
       output_format: 'png' as const, // Default value
       num_images: 1, // Default value
       acceleration: 'regular' as const, // Default value
     }
 
-    console.log('Calling Qwen Integrate Product model...')
+    console.log('Calling Qwen Integrate Product model with API defaults...')
     console.log(`Qwen Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
-    console.log(`  LoRA Scale: ${params.lora_scale} (${isPoolModel(model) ? 'lowered for transformation' : 'default'})`)
-    console.log(`  Guidance Scale: ${params.guidance_scale} (${isPoolModel(model) ? 'increased for prompt adherence' : 'default'})`)
-    console.log(`  Inference Steps: ${params.num_inference_steps} (${isPoolModel(model) ? 'increased for blending' : 'default'})`)
-    console.log(`  Acceleration: ${params.acceleration}`)
+    console.log(`  LoRA Scale: ${params.lora_scale} (default)`)
+    console.log(`  Guidance Scale: ${params.guidance_scale} (default)`)
+    console.log(`  Inference Steps: ${params.num_inference_steps} (default)`)
+    console.log(`  Acceleration: ${params.acceleration} (default)`)
+    console.log(`  Image Order: [product, background]`)
 
-    // The model expects image_urls as an array: [background_image, product_image]
+    // Try reversing image order - API docs example shows single image, but accepts array
+    // Testing: product first, then background (may be the expected order)
     const result = await fal.subscribe('fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product', {
       input: {
-        image_urls: [propertyImageDataUrl, productImageDataUrl],
+        image_urls: [productImageDataUrl, propertyImageDataUrl],
         prompt: prompt,
         negative_prompt: negativePrompt,
         lora_scale: params.lora_scale,
@@ -393,10 +393,9 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    // Explicit prompt for transformation and blending
-    return `Transform and blend the swimming pool from the product image into the background property image. 
-
-Automatically correct the pool's perspective to match the background's camera angle and ground plane. Transform the pool's orientation, scale, and proportions to align naturally with the background. The pool must appear naturally excavated into the ground with realistic shadows, terrain interaction, and seamless blending - not just overlaid on top.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+    // Use exact API default prompt format per documentation
+    // API default: "Blend and integrate the product into the background with correct perspective and lighting"
+    return `Blend and integrate the product into the background with correct perspective and lighting${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
