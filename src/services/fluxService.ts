@@ -94,6 +94,15 @@ async function fileToDataUrl(file: File): Promise<string> {
   })
 }
 
+async function getImageDimensions(dataUrl: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve({ width: img.width, height: img.height })
+    img.onerror = reject
+    img.src = dataUrl
+  })
+}
+
 /**
  * Build compositing-focused prompt for FLUX
  * Natural placement, focus on integration elements
@@ -311,34 +320,44 @@ export async function generateWithQwenIntegrateProduct(
     // Build integration prompt
     const prompt = buildQwenIntegrationPrompt(model, options.lightingPrompt)
 
-    // Use API default negative prompt
-    const negativePrompt = ' '
+    // Determine image dimensions so the API can match the background size
+    const propertyImageSize = await getImageDimensions(propertyImageDataUrl)
 
-    // Use exact API defaults per documentation
-    // API defaults: guidance_scale=1, num_inference_steps=6, lora_scale=1
-    const params = {
-      lora_scale: 1.0, // Default value
-      guidance_scale: 1.0, // Default value  
-      num_inference_steps: 6, // Default value
-      enable_safety_checker: true, // Default value
-      output_format: 'png' as const, // Default value
-      num_images: 1, // Default value
-      acceleration: 'regular' as const, // Default value
-    }
+    const negativePrompt = isPoolModel(model)
+      ? 'floating pool, overlay, collage, sticker, no blending, no ground contact, unrealistic shadows, incorrect perspective'
+      : ' '
 
-    console.log('Calling Qwen Integrate Product model with API defaults...')
+    const params = isPoolModel(model)
+      ? {
+          lora_scale: 1.0,
+          guidance_scale: 2.0,
+          num_inference_steps: 12,
+          enable_safety_checker: true,
+          output_format: 'png' as const,
+          num_images: 1,
+          acceleration: 'regular' as const,
+        }
+      : {
+          lora_scale: 1.0,
+          guidance_scale: 1.0,
+          num_inference_steps: 6,
+          enable_safety_checker: true,
+          output_format: 'png' as const,
+          num_images: 1,
+          acceleration: 'regular' as const,
+        }
+
+    console.log('Calling Qwen Integrate Product model...')
     console.log(`Qwen Parameters - Model: ${isPoolModel(model) ? 'POOL' : 'Tiny Home'}`)
-    console.log(`  LoRA Scale: ${params.lora_scale} (default)`)
-    console.log(`  Guidance Scale: ${params.guidance_scale} (default)`)
-    console.log(`  Inference Steps: ${params.num_inference_steps} (default)`)
-    console.log(`  Acceleration: ${params.acceleration} (default)`)
-    console.log(`  Image Order: [product, background]`)
+    console.log(`  LoRA Scale: ${params.lora_scale}`)
+    console.log(`  Guidance Scale: ${params.guidance_scale}`)
+    console.log(`  Inference Steps: ${params.num_inference_steps}`)
+    console.log(`  Acceleration: ${params.acceleration}`)
+    console.log('  Image Order: [background, product]')
 
-    // Try reversing image order - API docs example shows single image, but accepts array
-    // Testing: product first, then background (may be the expected order)
     const result = await fal.subscribe('fal-ai/qwen-image-edit-plus-lora-gallery/integrate-product', {
       input: {
-        image_urls: [productImageDataUrl, propertyImageDataUrl],
+        image_urls: [propertyImageDataUrl, productImageDataUrl],
         prompt: prompt,
         negative_prompt: negativePrompt,
         lora_scale: params.lora_scale,
@@ -348,6 +367,7 @@ export async function generateWithQwenIntegrateProduct(
         output_format: params.output_format,
         num_images: params.num_images,
         acceleration: params.acceleration,
+        image_size: propertyImageSize,
       },
       logs: true,
       onQueueUpdate: (update: any) => {
@@ -393,9 +413,9 @@ function buildQwenIntegrationPrompt(
   lightingPrompt?: string
 ): string {
   if (isPoolModel(model)) {
-    // Use exact API default prompt format per documentation
-    // API default: "Blend and integrate the product into the background with correct perspective and lighting"
-    return `Blend and integrate the product into the background with correct perspective and lighting${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+    return `Image [0] is the property background photo. Image [1] is the swimming pool product reference.
+
+Integrate Image [1] seamlessly into Image [0]. Match the pool's perspective, scale, and rotation to the ground plane in Image [0], excavate it naturally into the lawn, and create realistic shadows, water reflections, and contact edges. The pool must look physically built into the property, not floating or pasted on top.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
