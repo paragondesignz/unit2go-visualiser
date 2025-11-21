@@ -68,7 +68,7 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
     useMultiReferenceAccuracy: true, // Prepare for future multi-reference support
 
     // Lighting preservation settings (preserve user's lighting on first generation)
-    preserveOriginalLighting: timeOfDay === null && !customLighting, // Preserve if no time/custom lighting selected
+    preserveOriginalLighting: !resultImage, // Preserve original lighting on first generation
     lightingPreservationMode: 'adaptive' as const // Adaptive preservation mode
   }
 
