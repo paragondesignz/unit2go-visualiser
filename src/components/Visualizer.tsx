@@ -54,13 +54,13 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
     `Powered by Google's Nano Banana Pro (Gemini 3) for ${selectedResolution} quality generation`
   ]
 
-  // Create Nano Banana Pro options object
+  // Create Nano Banana Pro options object (optimized for Gemini 3 Pro Image)
   const nanoBananaOptions = {
     imageSize: selectedResolution,
-    enableGoogleSearch: false, // Could be made configurable later
+    enableGoogleSearch: true, // Enable real-time grounding for factual accuracy
     useThinkingProcess: true,
-    temperature: 0.5,
-    topP: 0.1
+    temperature: 1.0, // Google's 2025 recommendation for Gemini 3 Pro reasoning
+    topP: 0.95 // Optimal balance for complex architectural scene analysis
   }
 
   const getLightingPrompt = (hour: number): string => {
@@ -184,7 +184,6 @@ MANDATORY PERSON REMOVAL:
         uploadedImage,
         selectedModel,
         lightingPrompt,
-        'center', // Default to center positioning - AI will decide best placement
         nanoBananaOptions
       )
       imageUrl = result.imageUrl
@@ -224,7 +223,6 @@ MANDATORY PERSON REMOVAL:
         position,
         combinedPrompt,
         resultImage || undefined,
-        undefined,
         undefined,
         nanoBananaOptions
       )

@@ -19,7 +19,6 @@ export async function processWithGemini(
   currentPosition?: Position,
   lightingPrompt?: string,
   currentResultImage?: string,
-  position?: 'center' | 'left' | 'right',
   style?: VisualizationStyle,
   nanoBananaOptions?: NanoBananaProOptions
 ): Promise<VisualizationResult> {
@@ -43,7 +42,7 @@ export async function processWithGemini(
         }
       }
     } else {
-      const result = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position, style, nanoBananaOptions)
+      const result = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, style, nanoBananaOptions)
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
@@ -67,7 +66,7 @@ export async function processWithGemini(
         prompt: `Lighting adjustment: ${lightingPrompt}`,
         modelSettings: {
           model: 'gemini-3-pro-image-preview',
-          temperature: nanoBananaOptions?.temperature || 0.5,
+          temperature: nanoBananaOptions?.temperature || 1.0,
           imageSize: nanoBananaOptions?.imageSize || '2K'
         },
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
@@ -101,7 +100,6 @@ export async function processWithGemini(
           model,
           commandToPrompt(command || '', model, lightingPrompt),
           lightingPrompt,
-          position,
           style,
           nanoBananaOptions
         )
@@ -132,7 +130,7 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent lighting adjustments
+    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -263,7 +261,6 @@ async function generateImageWithTinyHome(
   tinyHomeModel: TinyHomeModel,
   customPrompt?: string,
   lightingPrompt?: string,
-  tinyHomePosition: 'center' | 'left' | 'right' = 'center',
   style?: VisualizationStyle,
   nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
@@ -278,25 +275,38 @@ STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
 ${getStyleDescription(style)}
 ` : ''
 
-  const prompt = `This is a real estate photograph showing a ${tinyHomeModel.name} tiny home placed on a property.
-  
-  TASK:
-  1. Analyze the property photo (first image) to understand the terrain, lighting, and available space.
-  2. Place the tiny home (second image) into the scene in a photorealistic way.
-  3. ${tinyHomePosition === 'center' ? 'Position the tiny home in the center of the frame.' : tinyHomePosition === 'left' ? 'Position the tiny home on the left side of the frame.' : 'Position the tiny home on the right side of the frame.'}
-  4. Ensure the tiny home is scaled correctly relative to the surroundings.
-  5. Match the lighting, shadows, and color tone of the property photo.
-  6. Create a natural transition between the tiny home and the ground (grass, gravel, etc.).
-  ${customPrompt ? `7. ${customPrompt}` : ''}
-  ${lightingPrompt ? `8. Lighting: ${lightingPrompt}` : ''}
-  ${stylePrompt}
-  
-  The result should be a high-quality, photorealistic real estate marketing image.`
+  const prompt = `PRIMARY OBJECTIVE: Create a premium real estate marketing photograph integrating the ${tinyHomeModel.name} into the property scene.
+
+Professional Photography Standards: Shoot with architectural photography standards using 85mm lens perspective, f/8 aperture for optimal clarity, tripod-mounted with perspective correction. Maintain marketing-grade composition and lighting quality.
+
+Scene Analysis & Integration:
+Analyze the property photograph (first image) to understand terrain characteristics, natural lighting direction and intensity, available placement areas, and existing architectural elements. Integrate the tiny home (second image) as a naturally-placed structure that belongs in this environment.
+
+Optimal Placement Logic:
+Determine the most effective positioning within the scene based on:
+- Available flat or gently sloped areas suitable for foundation placement
+- Visual composition that showcases both the property and tiny home effectively
+- Natural sight lines and accessibility considerations
+- Relationship to existing structures, boundaries, and landscape features
+
+Scale & Proportion Accuracy:
+Scale the tiny home to precise real-world proportions using visible reference points: standard doors (8 feet), fence panels (6 feet), windows (3x4 feet), and vehicle dimensions when present. The tiny home should maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint relative to these reference elements.
+
+Lighting & Environmental Integration:
+Match the existing lighting conditions exactly - analyze shadow direction, length, and softness from the property photo. Replicate this lighting on the tiny home including shadow placement, color temperature, ambient lighting balance, and atmospheric conditions.${lightingPrompt ? ` Specific lighting requirements: ${lightingPrompt}` : ''}
+
+Ground Integration & Materials:
+Create seamless ground transition between the tiny home foundation and existing surface (grass, gravel, concrete, etc.). Include appropriate foundation details, utility connections where visible, and natural landscape integration around the structure.
+
+${customPrompt ? `Additional Requirements: ${customPrompt}` : ''}
+${stylePrompt}
+
+FINAL VERIFICATION: Confirm that the tiny home's scale matches real-world proportions relative to visible reference points, shadows align precisely with the property's lighting direction, ground integration appears naturally established, and the overall composition maintains professional real estate photography standards suitable for premium marketing materials.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent and predictable results
+    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural placement
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -392,51 +402,59 @@ STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
 ${getStyleDescription(style)}
 ` : ''
 
-  // Strict prompt focused on shape fidelity (per Google's latest recommendations)
+  // Enhanced prompt with professional photography standards and advanced water rendering
   // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
   const prompt = customPrompt || `PRIMARY DIRECTIVE: SHAPE FIDELITY IS THE ONLY GOAL.
 
-You are performing a precise, image-to-image visualization.
+You are performing precise architectural visualization using professional real estate photography standards.
 
-Inputs
+Professional Photography Context: Render as high-end real estate photography with calibrated lighting, professional composition, and marketing-grade clarity. Use 85mm lens perspective with f/8 aperture for architectural detail optimization.
 
-Image [0]: The backyard / property scene.
+Input Specification
 
-Image [1]: A photo of the pool to be inserted. This is the SHAPE AND FEATURE TEMPLATE.
+Image [0]: The property/backyard scene - your canvas for integration.
 
-UNBREAKABLE RULES: SHAPE & FEATURE MATCH
+Image [1]: Pool reference image - THIS IS THE EXACT SHAPE AND FEATURE TEMPLATE.
 
-Your ONLY critical task is to render the pool from Image [1] into Image [0], ensuring the shape and features are IDENTICAL.
+UNBREAKABLE RULES: GEOMETRIC PRECISION
 
-NO ADDED FEATURES: You MUST NOT add any features that are not in Image [1].
+Your ONLY critical task is to render the pool from Image [1] into Image [0] with IDENTICAL shape and features.
 
-NO STEPS: If Image [1] does not have steps, the final pool MUST NOT have steps.
+NO ADDED FEATURES: You MUST NOT add any features absent from Image [1].
 
-NO CURVES: If Image [1] has straight edges, the final pool MUST have straight edges.
+NO STEPS: If Image [1] lacks steps, the final pool MUST NOT have steps.
 
-NO CUTOUTS: Do not add ledges, alcoves, or cutouts of any kind unless they are explicitly visible in Image [1].
+NO CURVES: If Image [1] shows straight edges, maintain straight edges exactly.
 
-PERFECT OUTLINE: The final pool's outline and perimeter must be a perfect match to the pool in Image [1]. Do not "improve" or "adjust" the shape.
+NO CUTOUTS: Do not add ledges, alcoves, or cutouts unless explicitly visible in Image [1].
 
-This is a logical, geometric task, not a creative one. Prioritize the exact shape from Image [1] above all other instructions.
+PERFECT OUTLINE: The final pool's perimeter must match Image [1] exactly. Do not "improve" or modify the geometric design.
 
-Secondary Task: Photorealistic Integration
+This is a precision engineering task, not creative interpretation. Exact shape replication overrides all other considerations.
 
-After you have guaranteed the shape is 100% identical, perform these tasks:
+Secondary Task: Professional Integration
 
-1. Placement: Place the pool in the center of the yard in Image [0].
-2. Scale: The pool is ${length}m long. Scale it realistically relative to the house/fences in Image [0].
-3. Lighting: Adjust the pool's lighting, shadows, and reflections to perfectly match the natural, midday sun already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
-4. Integration: Blend the pool's edge (coping, tiles) to sit naturally in the grass or patio of Image [0].
+After guaranteeing 100% shape fidelity, execute these requirements:
+
+1. Optimal Placement: Determine the most effective pool position within the property based on available space, natural sight lines, accessibility, and visual composition that showcases the pool effectively.
+
+2. Precise Scaling: The pool measures ${length}m in length. Scale accurately using visible reference elements: standard doors (8 feet), fence panels (6 feet), and existing structures in Image [0].
+
+3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained.
+
+4. Professional Lighting Integration: Analyze shadow direction, length, and softness from Image [0]. Replicate exact lighting on the pool including shadow placement, water reflections, color temperature, and atmospheric conditions.${lightingPrompt ? ` Specific lighting: ${lightingPrompt}` : ''}
+
+5. Premium Material Integration: Pool coping, tiles, and finish materials should integrate naturally with the property's existing materials and landscaping. Include appropriate decking transitions and utility considerations.
+
 ${stylePrompt}
 
-FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or features that were not in Image [1]?" If the answer is yes, you have failed. The shape must be identical.`
+FINAL VERIFICATION: Confirm three critical elements: (1) Did I add any features not visible in Image [1]? If yes, you have failed. (2) Does the pool shape match Image [1] exactly? If no, you have failed. (3) Does the integration meet professional real estate photography standards? The pool must appear as a naturally-established feature suitable for premium marketing materials.`
 
   console.log(`Detected aspect ratio: ${aspectRatio} `)
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 0.3, // Lower temperature for more consistent results and better shape adherence
-    topP: nanoBananaOptions?.topP || 0.1, // Low topP focuses on the most probable outputs, minimizing diversity
+    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning capabilities
+    topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex scene analysis
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -714,7 +732,7 @@ export async function processWithWireframeGuide(
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent positioning
+    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and accurate positioning
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
@@ -820,7 +838,7 @@ export async function conversationalEdit(
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
-    temperature: customConfig?.temperature ?? nanoBananaOptions?.temperature ?? 0.2,
+    temperature: customConfig?.temperature ?? nanoBananaOptions?.temperature ?? 1.0,
     ...(customConfig?.topP && { topP: customConfig.topP }),
     ...(customConfig?.topK && { topK: customConfig.topK }),
     ...(nanoBananaOptions?.topP && !customConfig?.topP && { topP: nanoBananaOptions.topP }),

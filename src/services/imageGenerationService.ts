@@ -19,7 +19,6 @@ export async function generateVisualization(
   uploadedImage: UploadedImage,
   model: VisualizationModel,
   lightingPrompt?: string,
-  position?: 'center' | 'left' | 'right',
   nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   if (MODEL_PROVIDER === 'flux') {
@@ -76,12 +75,12 @@ export async function generateVisualization(
       } catch (fluxError) {
         console.error('FLUX generation also failed, falling back to Gemini:', fluxError)
         // Final fallback to Gemini
-        return generateWithGemini(uploadedImage, model, lightingPrompt, position, nanoBananaOptions)
+        return generateWithGemini(uploadedImage, model, lightingPrompt, nanoBananaOptions)
       }
     }
   } else {
     console.log('Using Nano Banana Pro (Gemini 3 Pro Image) for generation...')
-    return generateWithGemini(uploadedImage, model, lightingPrompt, position, nanoBananaOptions)
+    return generateWithGemini(uploadedImage, model, lightingPrompt, nanoBananaOptions)
   }
 }
 
@@ -92,7 +91,6 @@ async function generateWithGemini(
   uploadedImage: UploadedImage,
   model: VisualizationModel,
   lightingPrompt?: string,
-  position?: 'center' | 'left' | 'right',
   nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   // Use existing Gemini service with natural placement
@@ -104,7 +102,6 @@ async function generateWithGemini(
     undefined,
     lightingPrompt,
     undefined,
-    position,
     undefined,
     nanoBananaOptions
   )

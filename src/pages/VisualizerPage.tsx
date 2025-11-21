@@ -15,7 +15,7 @@ function VisualizerPage() {
   const [selectedModel, setSelectedModel] = useState<VisualizationModel>(tinyHomeModels[0])
   const [maskDataUrl, setMaskDataUrl] = useState<string>('')
   const [isCleaning, setIsCleaning] = useState(false)
-  const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('2K')
+  const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('4K')
 
   const handleImageUpload = async (image: UploadedImage) => {
     setUploadedImage(image)
