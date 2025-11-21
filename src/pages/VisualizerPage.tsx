@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import ImageUpload from '../components/ImageUpload'
 import Visualizer from '../components/Visualizer'
-import InpaintingCanvas from '../components/InpaintingCanvas'
 import { UploadedImage, VisualizationModel, isTinyHomeModel, ImageResolution } from '../types'
 import { tinyHomeModels } from '../data/tinyHomeModels'
 import { poolModels } from '../data/poolModels'
@@ -10,56 +9,23 @@ type ModelType = 'tiny-home' | 'pool'
 
 function VisualizerPage() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
-  const [currentStep, setCurrentStep] = useState<'upload' | 'cleanup' | 'select' | 'visualize'>('upload')
+  const [currentStep, setCurrentStep] = useState<'upload' | 'select' | 'visualize'>('upload')
   const [modelType, setModelType] = useState<ModelType>('tiny-home')
   const [selectedModel, setSelectedModel] = useState<VisualizationModel>(tinyHomeModels[0])
-  const [maskDataUrl, setMaskDataUrl] = useState<string>('')
-  const [isCleaning, setIsCleaning] = useState(false)
   const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('4K')
 
   const handleImageUpload = async (image: UploadedImage) => {
     setUploadedImage(image)
-    setCurrentStep('cleanup')
-  }
-
-  const handleCleanupComplete = async () => {
-    if (!uploadedImage || !maskDataUrl) {
-      setCurrentStep('select')
-      return
-    }
-
-    setIsCleaning(true)
-    try {
-      const { removeObjectFromImage } = await import('../services/inpaintingService')
-      const cleanedImageUrl = await removeObjectFromImage(uploadedImage.url, maskDataUrl)
-
-      // Update the uploaded image with the cleaned version
-      setUploadedImage({
-        ...uploadedImage,
-        url: cleanedImageUrl,
-        preview: cleanedImageUrl,
-        file: await (await fetch(cleanedImageUrl)).blob() as File // Convert back to file if needed, or just use URL
-      })
-      setMaskDataUrl('') // Reset mask
-    } catch (error) {
-      console.error('Cleanup failed:', error)
-      alert('Failed to clean up image. Please try again.')
-    } finally {
-      setIsCleaning(false)
-      setCurrentStep('select')
-    }
-  }
-
-  const handleSkipCleanup = () => {
     setCurrentStep('select')
   }
+
 
 
   const handleBack = () => {
     if (currentStep === 'select') {
       setUploadedImage(null)
       setCurrentStep('upload')
-    } else {
+    } else if (currentStep === 'visualize') {
       setCurrentStep('select')
     }
   }
@@ -89,16 +55,12 @@ function VisualizerPage() {
               <span className="step-number">1</span>
               <span className="step-label">Upload Photo</span>
             </div>
-            <div className={`step ${currentStep === 'cleanup' ? 'active' : ''}`}>
-              <span className="step-number">2</span>
-              <span className="step-label">Clean Up</span>
-            </div>
             <div className={`step ${currentStep === 'select' ? 'active' : ''}`}>
-              <span className="step-number">3</span>
+              <span className="step-number">2</span>
               <span className="step-label">Select Model</span>
             </div>
             <div className={`step ${currentStep === 'visualize' ? 'active' : ''}`}>
-              <span className="step-number">4</span>
+              <span className="step-number">3</span>
               <span className="step-label">Visualize</span>
             </div>
           </div>
@@ -112,50 +74,6 @@ function VisualizerPage() {
           </div>
         )}
 
-        {currentStep === 'cleanup' && uploadedImage && (
-          <div className="cleanup-section" style={{ textAlign: 'center', padding: '2rem' }}>
-            <h2>Magic Eraser</h2>
-            <p>Highlight any objects you want to remove from the scene (e.g., trash cans, old sheds).</p>
-
-            <div style={{ margin: '2rem auto', maxWidth: '800px' }}>
-              {/* Dynamic import to avoid circular deps or load issues if component not ready */}
-              {/* We will use a simple lazy load or just direct usage if imported at top */}
-              <InpaintingCanvas
-                imageUrl={uploadedImage.preview}
-                onMaskGenerated={setMaskDataUrl}
-                isProcessing={isCleaning}
-              />
-            </div>
-
-            <div className="actions" style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
-              <button
-                className="secondary-button"
-                onClick={handleSkipCleanup}
-                disabled={isCleaning}
-                style={{ padding: '1rem 2rem', fontSize: '1.1rem', cursor: 'pointer' }}
-              >
-                Skip / Keep Original
-              </button>
-              <button
-                className="primary-button"
-                onClick={handleCleanupComplete}
-                disabled={isCleaning || !maskDataUrl}
-                style={{
-                  padding: '1rem 2rem',
-                  fontSize: '1.1rem',
-                  background: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: (isCleaning || !maskDataUrl) ? 'not-allowed' : 'pointer',
-                  opacity: (isCleaning || !maskDataUrl) ? 0.7 : 1
-                }}
-              >
-                {isCleaning ? 'Removing Object...' : 'Erase & Continue'}
-              </button>
-            </div>
-          </div>
-        )}
 
         {currentStep === 'select' && uploadedImage && (
           <div className="select-section">

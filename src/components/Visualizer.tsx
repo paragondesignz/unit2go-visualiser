@@ -38,7 +38,7 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
     isPoolModel(selectedModel)
       ? "The AI intelligently converts the pool diagram into a photorealistic pool and scales it based on surrounding objects"
       : "The AI intelligently scales and places your tiny home based on surrounding objects",
-    "After generation, try Quick Enhancement buttons for instant additions like decks and landscaping",
+    "After generation, try Quick Enhancement buttons for instant product-appropriate additions",
     "Use conversational editing to customize any aspect of the scene with natural language",
     isPoolModel(selectedModel)
       ? "Try different lighting and times of day to see your pool in various conditions"
@@ -578,39 +578,76 @@ MANDATORY PERSON REMOVAL:
           </div>
         )}
 
-        {/* Quick Action Buttons */}
+        {/* Product-Appropriate Quick Action Buttons */}
         {resultImage && (
           <div className="quick-actions-section">
             <h3>Quick Enhancements</h3>
             <div className="quick-actions-grid">
-              <button
-                className="quick-action-button"
-                onClick={() => handleQuickEdit('add a deck out the front of the tiny home unit')}
-                disabled={processing}
-              >
-                Add Deck
-              </button>
-              <button
-                className="quick-action-button"
-                onClick={() => handleQuickEdit('add outdoor furniture')}
-                disabled={processing}
-              >
-                Add Outdoor Furniture
-              </button>
-              <button
-                className="quick-action-button"
-                onClick={() => handleQuickEdit('add pot plants and shrubs')}
-                disabled={processing}
-              >
-                Add Plants & Shrubs
-              </button>
-              <button
-                className="quick-action-button"
-                onClick={() => handleQuickEdit('add landscaping features')}
-                disabled={processing}
-              >
-                Add Landscaping
-              </button>
+              {isPoolModel(selectedModel) ? (
+                // Pool-specific enhancements
+                <>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add pool decking and patio area around the pool')}
+                    disabled={processing}
+                  >
+                    Add Pool Decking
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add pool furniture: lounge chairs, umbrella, and outdoor dining set')}
+                    disabled={processing}
+                  >
+                    Add Pool Furniture
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add tropical pool landscaping with palms and decorative plants')}
+                    disabled={processing}
+                  >
+                    Add Pool Landscaping
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add pool equipment and filtration system screening with landscaping')}
+                    disabled={processing}
+                  >
+                    Add Equipment Screening
+                  </button>
+                </>
+              ) : (
+                // Tiny home-specific enhancements
+                <>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add a deck or patio area in front of the tiny home entrance')}
+                    disabled={processing}
+                  >
+                    Add Entry Deck
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add outdoor furniture: seating area, table, and storage solutions')}
+                    disabled={processing}
+                  >
+                    Add Outdoor Living
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add foundation landscaping and garden areas around the tiny home')}
+                    disabled={processing}
+                  >
+                    Add Foundation Plants
+                  </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('add driveway access and parking area for the tiny home')}
+                    disabled={processing}
+                  >
+                    Add Access & Parking
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -643,11 +680,25 @@ MANDATORY PERSON REMOVAL:
             <div className="edit-examples">
               <strong>Try these custom edits:</strong>
               <ul>
-                <li>"make the sky more dramatic with clouds"</li>
-                <li>"add a gravel driveway leading to the tiny home"</li>
-                <li>"change the grass to native New Zealand plants"</li>
-                <li>"add a pergola beside the tiny home"</li>
-                <li>"add window boxes with flowers"</li>
+                {isPoolModel(selectedModel) ? (
+                  // Pool-specific examples
+                  <>
+                    <li>"add pool lighting for evening ambiance"</li>
+                    <li>"change the pool coping to natural stone"</li>
+                    <li>"add a pool house or changing area"</li>
+                    <li>"make the sky more dramatic with clouds"</li>
+                    <li>"add a privacy fence around the pool area"</li>
+                  </>
+                ) : (
+                  // Tiny home-specific examples
+                  <>
+                    <li>"make the sky more dramatic with clouds"</li>
+                    <li>"add a gravel driveway leading to the tiny home"</li>
+                    <li>"change the grass to native New Zealand plants"</li>
+                    <li>"add a pergola beside the tiny home"</li>
+                    <li>"add window boxes with flowers"</li>
+                  </>
+                )}
               </ul>
             </div>
           </div>

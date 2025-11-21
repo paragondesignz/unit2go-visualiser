@@ -321,17 +321,27 @@ ${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
 - Apply multi-step verification for architectural compliance
 - Implement advanced architectural recognition algorithms
 
-` : ''}Scene Analysis & Integration:
-Analyze the property photograph (Image [0]) to understand terrain characteristics, natural lighting direction and intensity, available placement areas, and existing architectural elements. Integrate the tiny home as a naturally-placed structure that belongs in this environment.
+` : ''}ADVANCED SCENE ANALYSIS & INTEGRATION:
 
-Optimal Placement Logic:
-Determine the most effective positioning within the scene based on:
-- Available flat or gently sloped areas suitable for foundation placement
-- Visual composition that showcases both the property and tiny home effectively
-- Natural sight lines and accessibility considerations
-- Relationship to existing structures, boundaries, and landscape features
+1. SPATIAL DEPTH ANALYSIS FOR TINY HOMES:
+   Use Gemini 3 Pro's advanced spatial reasoning to analyze the property's 3D environment:
+   - Detect depth planes and perspective lines to understand the terrain's spatial structure
+   - Identify fence lines, building edges, and terrain contours for optimal alignment
+   - Analyze existing structures (sheds, garages, utilities) to maintain spatial harmony
+   - Understand property boundaries and setback requirements for realistic placement
+   - Assess access points and pathways for natural integration with property flow
+   - Determine sight lines from main house to create harmonious living spaces
 
-Scale & Proportion Accuracy:
+2. INTELLIGENT PLACEMENT OPTIMIZATION:
+   Position the tiny home using spatial intelligence and practical considerations:
+   - Select flat or gently sloped areas suitable for foundation and utilities
+   - Ensure visual composition showcases both property and tiny home effectively
+   - Align with existing structures and boundaries using spatial reference points
+   - Create natural sight lines and accessibility for realistic living scenarios
+   - Consider privacy, wind patterns, and sun exposure for practical placement
+   - Integrate with existing landscaping and hardscaping features
+
+3. Scale & Proportion Accuracy:
 Scale the tiny home to precise real-world proportions using visible reference points: standard doors (8 feet), fence panels (6 feet), windows (3x4 feet), and vehicle dimensions when present. The tiny home should maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint relative to these reference elements.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Tiny home should measure ${(tinyHomeModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}`
 
     // Enhanced lighting logic with preservation mode
@@ -353,8 +363,17 @@ Match the existing lighting conditions exactly - analyze shadow direction, lengt
 
     basePrompt += `
 
-Ground Integration & Materials:
-Create seamless ground transition between the tiny home foundation and existing surface (grass, gravel, concrete, etc.). Include appropriate foundation details, utility connections where visible, and natural landscape integration around the structure.
+4. COMPREHENSIVE LANDSCAPING & SITE INTEGRATION:
+   Create a complete outdoor living environment that makes the tiny home appear naturally established:
+   - Analyze existing vegetation and terrain to determine complementary landscaping approach
+   - Add appropriate foundation landscaping (native plants, decorative gravel, pathway materials)
+   - Create seamless transitions between tiny home and existing yard features
+   - Include practical elements: utilities screening, pathway connections, outdoor living spaces
+   - Add complementary outdoor features: small deck/patio, garden areas, storage solutions
+   - Integrate parking area or driveway access that flows naturally with property layout
+   - Include privacy landscaping where appropriate (hedges, screens, strategic plantings)
+   - Add functional elements: outdoor lighting, mailbox placement, utility connections
+   - Ensure all additions suit the property's existing style and maintenance requirements
 
 ${customPrompt ? `Additional Requirements: ${customPrompt}` : ''}
 ${stylePrompt}`
@@ -540,7 +559,14 @@ ${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
 
 After guaranteeing 100% shape fidelity, execute these requirements:
 
-1. Optimal Placement: Determine the most effective pool position within the property based on available space, natural sight lines, accessibility, and visual composition that showcases the pool effectively.
+1. SPATIAL DEPTH ANALYSIS & OPTIMAL PLACEMENT:
+   Use Gemini 3 Pro's advanced spatial reasoning to analyze the scene's 3D structure:
+   - Detect depth planes and perspective lines to understand the yard's spatial layout
+   - Identify fence lines, building edges, and terrain contours as spatial reference points
+   - Analyze existing hardscaping (paths, patios, retaining walls) for alignment opportunities
+   - Determine optimal pool position using spatial intelligence rather than simple placement
+   - Ensure the pool aligns with the property's natural flow and existing structures
+   - Position pool to complement sight lines from house windows and outdoor spaces
 
 2. Precise Scaling: The pool measures ${length}m in length. Scale accurately using visible reference elements: standard doors (8 feet), fence panels (6 feet), and existing structures in Image [0].${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
@@ -564,7 +590,16 @@ After guaranteeing 100% shape fidelity, execute these requirements:
 
     basePrompt += `
 
-5. Premium Material Integration: Pool coping, tiles, and finish materials should integrate naturally with the property's existing materials and landscaping. Include appropriate decking transitions and utility considerations.
+5. PROFESSIONAL LANDSCAPING INTEGRATION:
+   Create a cohesive outdoor environment that makes the pool appear naturally established:
+   - Analyze existing yard vegetation (trees, shrubs, lawn) to determine appropriate landscaping style
+   - Add complementary pool-appropriate landscaping that suits the climate and yard aesthetic
+   - Include strategic plantings around pool perimeter (tropical palms for modern pools, native plants for natural settings)
+   - Integrate pool coping and decking materials that harmonize with existing hardscaping
+   - Add practical elements: pool equipment screening with landscaping, pathway connections
+   - Ensure landscaping provides privacy screening where appropriate
+   - Include outdoor furniture positioning that creates natural gathering spaces
+   - Add lighting elements (subtle landscape lighting) that enhance evening ambiance
 
 ${stylePrompt}`
 
