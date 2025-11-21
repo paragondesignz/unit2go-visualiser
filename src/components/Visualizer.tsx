@@ -54,13 +54,22 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
     `Powered by Google's Nano Banana Pro (Gemini 3) for ${selectedResolution} quality generation`
   ]
 
-  // Create Nano Banana Pro options object (optimized for Gemini 3 Pro Image)
+  // Enhanced Nano Banana Pro options for 100% accuracy and lighting preservation
   const nanoBananaOptions = {
     imageSize: selectedResolution,
     enableGoogleSearch: true, // Enable real-time grounding for factual accuracy
     useThinkingProcess: true,
     temperature: 1.0, // Google's 2025 recommendation for Gemini 3 Pro reasoning
-    topP: 0.95 // Optimal balance for complex architectural scene analysis
+    topP: 0.95, // Optimal balance for complex architectural scene analysis
+
+    // Enhanced accuracy features for 100% product fidelity
+    accuracyMode: 'maximum' as const, // Use 'maximum' accuracy by default for best results
+    enableGeometricVerification: true, // Enable step-by-step verification
+    useMultiReferenceAccuracy: true, // Prepare for future multi-reference support
+
+    // Lighting preservation settings (preserve user's lighting on first generation)
+    preserveOriginalLighting: timeOfDay === null && !customLighting, // Preserve if no time/custom lighting selected
+    lightingPreservationMode: 'adaptive' as const // Adaptive preservation mode
   }
 
   const getLightingPrompt = (hour: number): string => {

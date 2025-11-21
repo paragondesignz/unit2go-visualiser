@@ -110,4 +110,11 @@ export interface NanoBananaProOptions {
   temperature?: number
   topP?: number
   topK?: number
+  // Enhanced accuracy features for 100% product fidelity
+  useMultiReferenceAccuracy?: boolean    // Use multiple reference images for better accuracy
+  enableGeometricVerification?: boolean  // Add step-by-step geometric analysis
+  preserveOriginalLighting?: boolean     // Preserve user's image lighting for first generation
+  accuracyMode?: 'standard' | 'maximum' | 'ultra' // Accuracy level control
+  // Advanced lighting control
+  lightingPreservationMode?: 'strict' | 'adaptive' | 'off' // How strictly to preserve lighting
 }

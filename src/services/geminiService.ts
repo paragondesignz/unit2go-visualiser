@@ -275,12 +275,54 @@ STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
 ${getStyleDescription(style)}
 ` : ''
 
-  const prompt = `PRIMARY OBJECTIVE: Create a premium real estate marketing photograph integrating the ${tinyHomeModel.name} into the property scene.
+  // Enhanced prompt for 100% tiny home accuracy
+  const getEnhancedTinyHomePrompt = () => {
+    const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+    const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
+    const preserveLighting = nanoBananaOptions?.preserveOriginalLighting && !lightingPrompt
 
-Professional Photography Standards: Shoot with architectural photography standards using 85mm lens perspective, f/8 aperture for optimal clarity, tripod-mounted with perspective correction. Maintain marketing-grade composition and lighting quality.
+    let basePrompt = `PRIMARY OBJECTIVE: ACHIEVE 100% PRODUCT ACCURACY FOR ${tinyHomeModel.name} INTEGRATION.
 
-Scene Analysis & Integration:
-Analyze the property photograph (first image) to understand terrain characteristics, natural lighting direction and intensity, available placement areas, and existing architectural elements. Integrate the tiny home (second image) as a naturally-placed structure that belongs in this environment.
+You are performing ultra-precise architectural visualization using Google Nano Banana Pro's advanced capabilities for professional real estate photography.
+
+${useThinking ? `STEP 1: ARCHITECTURAL ANALYSIS (Use thinking process)
+Before generating the image, analyze the tiny home reference image [1] and document:
+- Exact architectural features (windows, doors, roof type, siding)
+- Proportions and scale relationships
+- Unique design elements (dormers, porches, chimneys)
+- Color scheme and material finishes
+- Foundation/base structure details
+Document these elements for perfect replication.
+
+` : ''}Professional Photography Standards: Shoot with architectural photography standards using 85mm lens perspective, f/8 aperture for optimal clarity, tripod-mounted with perspective correction. Maintain marketing-grade composition and lighting quality.
+
+Input Specification
+
+Image [0]: The property scene - your canvas for integration.
+
+Image [1]: Tiny home reference image - THIS IS THE EXACT ARCHITECTURAL TEMPLATE.
+
+UNBREAKABLE RULES: ARCHITECTURAL PRECISION (100% ACCURACY REQUIRED)
+
+Your CRITICAL task is to render the tiny home from Image [1] into Image [0] with IDENTICAL architectural features and proportions.
+
+MANDATORY ARCHITECTURAL CONSTRAINTS:
+- EXACT FEATURES: Every window, door, roofline, and detail from Image [1] must be replicated perfectly
+- NO ADDED FEATURES: Do not add windows, dormers, porches, or details not visible in Image [1]
+- PERFECT PROPORTIONS: Length, width, and height ratios must match Image [1] precisely
+- ACCURATE MATERIALS: Siding, roofing, trim colors must match the reference exactly
+- IDENTICAL STYLE: Architectural style (modern, rustic, traditional) must be preserved
+
+This is precision architectural replication, not creative interpretation. Feature accuracy overrides ALL other considerations.
+
+${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
+- Generate at maximum resolution (4K) for architectural detail verification
+- Use Google Search grounding for factual tiny home specifications
+- Apply multi-step verification for architectural compliance
+- Implement advanced architectural recognition algorithms
+
+` : ''}Scene Analysis & Integration:
+Analyze the property photograph (Image [0]) to understand terrain characteristics, natural lighting direction and intensity, available placement areas, and existing architectural elements. Integrate the tiny home as a naturally-placed structure that belongs in this environment.
 
 Optimal Placement Logic:
 Determine the most effective positioning within the scene based on:
@@ -290,31 +332,76 @@ Determine the most effective positioning within the scene based on:
 - Relationship to existing structures, boundaries, and landscape features
 
 Scale & Proportion Accuracy:
-Scale the tiny home to precise real-world proportions using visible reference points: standard doors (8 feet), fence panels (6 feet), windows (3x4 feet), and vehicle dimensions when present. The tiny home should maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint relative to these reference elements.
+Scale the tiny home to precise real-world proportions using visible reference points: standard doors (8 feet), fence panels (6 feet), windows (3x4 feet), and vehicle dimensions when present. The tiny home should maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint relative to these reference elements.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Tiny home should measure ${(tinyHomeModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}`
+
+    // Enhanced lighting logic with preservation mode
+    if (preserveLighting) {
+      basePrompt += `
+
+LIGHTING PRESERVATION MODE: Analyze and PRESERVE the exact lighting conditions from Image [0]:
+   - Shadow direction, length, and softness must remain identical
+   - Color temperature and atmospheric conditions must be maintained exactly
+   - Tiny home integration must appear as if it was photographed under the same lighting
+   - Material reflections and surface lighting must match the preserved lighting environment
+   - NO changes to overall scene lighting or atmosphere`
+    } else {
+      basePrompt += `
 
 Lighting & Environmental Integration:
-Match the existing lighting conditions exactly - analyze shadow direction, length, and softness from the property photo. Replicate this lighting on the tiny home including shadow placement, color temperature, ambient lighting balance, and atmospheric conditions.${lightingPrompt ? ` Specific lighting requirements: ${lightingPrompt}` : ''}
+Match the existing lighting conditions exactly - analyze shadow direction, length, and softness from the property photo. Replicate this lighting on the tiny home including shadow placement, color temperature, ambient lighting balance, and atmospheric conditions.${lightingPrompt ? ` Specific lighting requirements: ${lightingPrompt}` : ''}`
+    }
+
+    basePrompt += `
 
 Ground Integration & Materials:
 Create seamless ground transition between the tiny home foundation and existing surface (grass, gravel, concrete, etc.). Include appropriate foundation details, utility connections where visible, and natural landscape integration around the structure.
 
 ${customPrompt ? `Additional Requirements: ${customPrompt}` : ''}
-${stylePrompt}
+${stylePrompt}`
 
-FINAL VERIFICATION: Confirm that the tiny home's scale matches real-world proportions relative to visible reference points, shadows align precisely with the property's lighting direction, ground integration appears naturally established, and the overall composition maintains professional real estate photography standards suitable for premium marketing materials.`
+    if (nanoBananaOptions?.enableGeometricVerification) {
+      basePrompt += `
+
+FINAL ARCHITECTURAL VERIFICATION CHECKLIST:
+1. Does the tiny home architecture match Image [1] exactly? (Must be YES)
+2. Are all windows, doors, and features identical to reference? (Must be YES)
+3. Do the proportions and scale match the reference precisely? (Must be YES)
+4. Are materials and colors accurate to the reference? (Must be YES)
+If any answer is incorrect, the generation has FAILED and must be corrected.`
+    } else {
+      basePrompt += `
+
+FINAL VERIFICATION: Confirm that the tiny home's architectural features match Image [1] exactly, scale matches real-world proportions relative to visible reference points, shadows align precisely with the property's lighting direction, ground integration appears naturally established, and the overall composition maintains professional real estate photography standards suitable for premium marketing materials.`
+    }
+
+    return basePrompt
+  }
+
+  const prompt = customPrompt || getEnhancedTinyHomePrompt()
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
+  console.log(`Tiny home accuracy mode: ${nanoBananaOptions?.accuracyMode || 'standard'}`)
+
+  // Enhanced configuration for maximum tiny home accuracy
+  const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+  const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
+  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
+                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  const useThinking = nanoBananaOptions?.useThinkingProcess ||
+                     (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural placement
+    topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex architectural analysis
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
-      imageSize: nanoBananaOptions?.imageSize || '2K',
+      imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
     },
-    ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
+    // Enhanced accuracy settings
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
   }
 
   const model = 'gemini-3-pro-image-preview'
@@ -402,13 +489,26 @@ STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
 ${getStyleDescription(style)}
 ` : ''
 
-  // Enhanced prompt with professional photography standards and advanced water rendering
+  // Enhanced prompt for 100% accuracy with Nano Banana Pro capabilities
   // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
-  const prompt = customPrompt || `PRIMARY DIRECTIVE: SHAPE FIDELITY IS THE ONLY GOAL.
+  const getEnhancedPoolPrompt = () => {
+    const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+    const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
+    const preserveLighting = nanoBananaOptions?.preserveOriginalLighting && !lightingPrompt
 
-You are performing precise architectural visualization using professional real estate photography standards.
+    let basePrompt = `PRIMARY DIRECTIVE: ACHIEVE 100% PRODUCT ACCURACY AND SHAPE FIDELITY.
 
-Professional Photography Context: Render as high-end real estate photography with calibrated lighting, professional composition, and marketing-grade clarity. Use 85mm lens perspective with f/8 aperture for architectural detail optimization.
+You are performing ultra-precise architectural visualization using Google Nano Banana Pro's advanced capabilities for professional real estate photography.
+
+${useThinking ? `STEP 1: GEOMETRIC ANALYSIS (Use thinking process)
+Before generating the image, analyze the pool reference image [1] and identify:
+- Exact geometric shape (rectangle, oval, kidney, etc.)
+- All visible features (steps, ledges, depth variations, equipment)
+- Corner types (rounded vs. sharp)
+- Any unique design elements or cutouts
+Document these elements for perfect replication.
+
+` : ''}Professional Photography Context: Render as studio-quality real estate photography with calibrated lighting, professional composition, and marketing-grade clarity. Use 85mm lens perspective with f/8 aperture for architectural detail optimization.
 
 Input Specification
 
@@ -416,41 +516,84 @@ Image [0]: The property/backyard scene - your canvas for integration.
 
 Image [1]: Pool reference image - THIS IS THE EXACT SHAPE AND FEATURE TEMPLATE.
 
-UNBREAKABLE RULES: GEOMETRIC PRECISION
+UNBREAKABLE RULES: GEOMETRIC PRECISION (100% ACCURACY REQUIRED)
 
-Your ONLY critical task is to render the pool from Image [1] into Image [0] with IDENTICAL shape and features.
+Your CRITICAL task is to render the pool from Image [1] into Image [0] with IDENTICAL shape and features.
 
-NO ADDED FEATURES: You MUST NOT add any features absent from Image [1].
+MANDATORY GEOMETRIC CONSTRAINTS:
+- NO ADDED FEATURES: You MUST NOT add any features absent from Image [1].
+- NO STEPS: If Image [1] lacks steps, the final pool MUST NOT have steps.
+- NO CURVES: If Image [1] shows straight edges, maintain straight edges exactly.
+- NO CUTOUTS: Do not add ledges, alcoves, or cutouts unless explicitly visible in Image [1].
+- PERFECT OUTLINE: The final pool's perimeter must match Image [1] exactly. Do not "improve" or modify the geometric design.
+- EXACT PROPORTIONS: Length-to-width ratio must match Image [1] precisely.
 
-NO STEPS: If Image [1] lacks steps, the final pool MUST NOT have steps.
+This is precision engineering, not creative interpretation. Shape accuracy overrides ALL other considerations.
 
-NO CURVES: If Image [1] shows straight edges, maintain straight edges exactly.
+${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
+- Generate at maximum resolution (4K) for detail verification
+- Use Google Search grounding for factual pool specifications
+- Apply multi-step verification for geometric compliance
+- Implement advanced shape recognition algorithms
 
-NO CUTOUTS: Do not add ledges, alcoves, or cutouts unless explicitly visible in Image [1].
-
-PERFECT OUTLINE: The final pool's perimeter must match Image [1] exactly. Do not "improve" or modify the geometric design.
-
-This is a precision engineering task, not creative interpretation. Exact shape replication overrides all other considerations.
-
-Secondary Task: Professional Integration
+` : ''}Secondary Task: Professional Integration
 
 After guaranteeing 100% shape fidelity, execute these requirements:
 
 1. Optimal Placement: Determine the most effective pool position within the property based on available space, natural sight lines, accessibility, and visual composition that showcases the pool effectively.
 
-2. Precise Scaling: The pool measures ${length}m in length. Scale accurately using visible reference elements: standard doors (8 feet), fence panels (6 feet), and existing structures in Image [0].
+2. Precise Scaling: The pool measures ${length}m in length. Scale accurately using visible reference elements: standard doors (8 feet), fence panels (6 feet), and existing structures in Image [0].${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
-3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained.
+3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained.`
 
-4. Professional Lighting Integration: Analyze shadow direction, length, and softness from Image [0]. Replicate exact lighting on the pool including shadow placement, water reflections, color temperature, and atmospheric conditions.${lightingPrompt ? ` Specific lighting: ${lightingPrompt}` : ''}
+    // Enhanced lighting logic with preservation mode
+    if (preserveLighting) {
+      basePrompt += `
+
+4. LIGHTING PRESERVATION MODE: Analyze and PRESERVE the exact lighting conditions from Image [0]:
+   - Shadow direction, length, and softness must remain identical
+   - Color temperature and atmospheric conditions must be maintained exactly
+   - Pool integration must appear as if it was photographed under the same lighting
+   - Water reflections must match the preserved lighting environment
+   - NO changes to overall scene lighting or atmosphere`
+    } else {
+      basePrompt += `
+
+4. Professional Lighting Integration: Analyze shadow direction, length, and softness from Image [0]. Replicate exact lighting on the pool including shadow placement, water reflections, color temperature, and atmospheric conditions.${lightingPrompt ? ` Specific lighting: ${lightingPrompt}` : ''}`
+    }
+
+    basePrompt += `
 
 5. Premium Material Integration: Pool coping, tiles, and finish materials should integrate naturally with the property's existing materials and landscaping. Include appropriate decking transitions and utility considerations.
 
-${stylePrompt}
+${stylePrompt}`
 
-FINAL VERIFICATION: Confirm three critical elements: (1) Did I add any features not visible in Image [1]? If yes, you have failed. (2) Does the pool shape match Image [1] exactly? If no, you have failed. (3) Does the integration meet professional real estate photography standards? The pool must appear as a naturally-established feature suitable for premium marketing materials.`
+    if (nanoBananaOptions?.enableGeometricVerification) {
+      basePrompt += `
 
-  console.log(`Detected aspect ratio: ${aspectRatio} `)
+FINAL GEOMETRIC VERIFICATION CHECKLIST:
+1. Does the pool shape in the output match Image [1] exactly? (Must be YES)
+2. Are there any added features not visible in Image [1]? (Must be NO)
+3. Do the proportions match the reference image precisely? (Must be YES)
+4. Is the scaling accurate to real-world dimensions? (Must be YES)
+If any answer is incorrect, the generation has FAILED and must be corrected.`
+    }
+
+    return basePrompt
+  }
+
+  const prompt = customPrompt || getEnhancedPoolPrompt()
+
+  console.log(`Detected aspect ratio: ${aspectRatio}`)
+  console.log(`Pool accuracy mode: ${nanoBananaOptions?.accuracyMode || 'standard'}`)
+
+  // Enhanced configuration for maximum accuracy
+  const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+  const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
+  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
+                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  const useThinking = nanoBananaOptions?.useThinkingProcess ||
+                     (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning capabilities
@@ -458,10 +601,12 @@ FINAL VERIFICATION: Confirm three critical elements: (1) Did I add any features 
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
-      imageSize: nanoBananaOptions?.imageSize || '2K',
+      imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
     },
+    // Enhanced accuracy settings
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
   }
 
   const model = 'gemini-3-pro-image-preview'
