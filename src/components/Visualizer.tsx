@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react'
 import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel, ImageResolution } from '../types'
-import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
+import { processWithGemini, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 import { generateVisualization } from '../services/imageGenerationService'
 
 interface VisualizerProps {
   uploadedImage: UploadedImage
   selectedModel: VisualizationModel
-  wireframeGuideImage?: string | null
-  modelPosition?: 'center' | 'left' | 'right'
   selectedResolution?: ImageResolution
 }
 
-function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPosition = 'center', selectedResolution = '2K' }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -181,42 +179,23 @@ MANDATORY PERSON REMOVAL:
       let imageUrl: string
       let prompt: string | undefined
 
-      if (wireframeGuideImage) {
-        // Use wireframe guide processing (Gemini only for now)
-        imageUrl = await processWithWireframeGuide(
-          uploadedImage,
-          selectedModel,
-          wireframeGuideImage,
-          lightingPrompt,
-          nanoBananaOptions
-        )
-        prompt = 'Wireframe guide generation (prompt not available)'
-        // Wireframe guide maintains user's exact positioning
-        setPosition({
-          x: 50,
-          y: 50,
-          scale: 1,
-          rotation: 0
-        })
-      } else {
-        // Use unified service (Gemini or FLUX)
-        const result = await generateVisualization(
-          uploadedImage,
-          selectedModel,
-          lightingPrompt,
-          modelPosition,
-          nanoBananaOptions
-        )
-        imageUrl = result.imageUrl
-        prompt = result.prompt
-        setCurrentModelSettings(result.modelSettings || null)
-        setPosition({
-          x: 50,
-          y: 50,
-          scale: 1,
-          rotation: 0
-        })
-      }
+      // Use unified service (Nano Banana Pro)
+      const result = await generateVisualization(
+        uploadedImage,
+        selectedModel,
+        lightingPrompt,
+        'center', // Default to center positioning - AI will decide best placement
+        nanoBananaOptions
+      )
+      imageUrl = result.imageUrl
+      prompt = result.prompt
+      setCurrentModelSettings(result.modelSettings || null)
+      setPosition({
+        x: 50,
+        y: 50,
+        scale: 1,
+        rotation: 0
+      })
 
       addToHistory(imageUrl)
       setCurrentPrompt(prompt || null)

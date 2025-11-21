@@ -2,7 +2,6 @@ import { useState } from 'react'
 import ImageUpload from '../components/ImageUpload'
 import Visualizer from '../components/Visualizer'
 import InpaintingCanvas from '../components/InpaintingCanvas'
-import PositioningCanvas from '../components/PositioningCanvas'
 import { UploadedImage, VisualizationModel, isTinyHomeModel, ImageResolution } from '../types'
 import { tinyHomeModels } from '../data/tinyHomeModels'
 import { poolModels } from '../data/poolModels'
@@ -11,44 +10,16 @@ type ModelType = 'tiny-home' | 'pool'
 
 function VisualizerPage() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
-  const [currentStep, setCurrentStep] = useState<'upload' | 'cleanup' | 'select' | 'position' | 'visualize'>('upload')
+  const [currentStep, setCurrentStep] = useState<'upload' | 'cleanup' | 'select' | 'visualize'>('upload')
   const [modelType, setModelType] = useState<ModelType>('tiny-home')
   const [selectedModel, setSelectedModel] = useState<VisualizationModel>(tinyHomeModels[0])
-  const [modelPosition, setModelPosition] = useState<'center' | 'left' | 'right'>('center')
   const [maskDataUrl, setMaskDataUrl] = useState<string>('')
   const [isCleaning, setIsCleaning] = useState(false)
-  const [depthMapUrl, setDepthMapUrl] = useState<string | null>(null)
-  const [wireframeGuide, setWireframeGuide] = useState<string | null>(null)
   const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('2K')
 
   const handleImageUpload = async (image: UploadedImage) => {
     setUploadedImage(image)
     setCurrentStep('cleanup')
-
-    // Start generating depth map in background
-    try {
-      const { generateDepthMap } = await import('../services/fluxService')
-      // We need the data URL of the image. uploadedImage.url might be a blob URL.
-      // generateDepthMap expects a data URL or accessible URL.
-      // If it's a blob URL, we might need to convert it to base64 if fal-ai can't read blob URLs directly (it likely can't if they are local).
-      // However, generateDepthMap implementation takes `imageDataUrl`.
-      // Let's convert blob to data URL if needed.
-      const response = await fetch(image.url)
-      const blob = await response.blob()
-      const reader = new FileReader()
-      reader.onloadend = async () => {
-        const base64data = reader.result as string
-        try {
-          const depthData = await generateDepthMap(base64data)
-          setDepthMapUrl(depthData.imageUrl)
-        } catch (e) {
-          console.error('Failed to generate depth map background:', e)
-        }
-      }
-      reader.readAsDataURL(blob)
-    } catch (error) {
-      console.error('Error initiating depth map generation:', error)
-    }
   }
 
   const handleCleanupComplete = async () => {
@@ -83,9 +54,6 @@ function VisualizerPage() {
     setCurrentStep('select')
   }
 
-  const handleGenerate = () => {
-    setCurrentStep('visualize')
-  }
 
   const handleBack = () => {
     if (currentStep === 'select') {
@@ -129,12 +97,8 @@ function VisualizerPage() {
               <span className="step-number">3</span>
               <span className="step-label">Select Model</span>
             </div>
-            <div className={`step ${currentStep === 'position' ? 'active' : ''}`}>
-              <span className="step-number">4</span>
-              <span className="step-label">Position</span>
-            </div>
             <div className={`step ${currentStep === 'visualize' ? 'active' : ''}`}>
-              <span className="step-number">5</span>
+              <span className="step-number">4</span>
               <span className="step-label">Visualize</span>
             </div>
           </div>
@@ -265,49 +229,6 @@ function VisualizerPage() {
                   ))}
                 </div>
 
-                <div className="position-selection">
-                  <h3>{modelTypeLabel} Position</h3>
-                  <p className="position-instruction">Choose where the {modelTypeLabel.toLowerCase()} should be positioned in the frame</p>
-                  <div className="position-buttons">
-                    <button
-                      className={`position-btn ${modelPosition === 'left' ? 'active' : ''}`}
-                      onClick={() => setModelPosition('left')}
-                    >
-                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="2" y="5" width="14" height="20" rx="2" />
-                        <line x1="20" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="20" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="20" y1="22" x2="38" y2="22" strokeDasharray="2 2" opacity="0.4" />
-                      </svg>
-                      <span>Left</span>
-                    </button>
-                    <button
-                      className={`position-btn ${modelPosition === 'center' ? 'active' : ''}`}
-                      onClick={() => setModelPosition('center')}
-                    >
-                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="13" y="5" width="14" height="20" rx="2" />
-                        <line x1="2" y1="8" x2="10" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="30" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="2" y1="15" x2="10" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="30" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                      </svg>
-                      <span>Center</span>
-                    </button>
-                    <button
-                      className={`position-btn ${modelPosition === 'right' ? 'active' : ''}`}
-                      onClick={() => setModelPosition('right')}
-                    >
-                      <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="24" y="5" width="14" height="20" rx="2" />
-                        <line x1="2" y1="8" x2="20" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="2" y1="15" x2="20" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                        <line x1="2" y1="22" x2="20" y2="22" strokeDasharray="2 2" opacity="0.4" />
-                      </svg>
-                      <span>Right</span>
-                    </button>
-                  </div>
-                </div>
 
                 <div className="resolution-selection" style={{ marginTop: '2rem' }}>
                   <h3>Image Quality</h3>
@@ -369,50 +290,15 @@ function VisualizerPage() {
 
                 <button
                   className="generate-button-large"
-                  onClick={() => setCurrentStep('position')}
+                  onClick={() => setCurrentStep('visualize')}
                 >
-                  Next: Position Model
+                  Generate Visualization
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {currentStep === 'position' && uploadedImage && (
-          <div className="position-section">
-            <button className="back-button" onClick={() => setCurrentStep('select')}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Selection
-            </button>
-
-            <div className="position-content" style={{ textAlign: 'center', padding: '2rem' }}>
-              <h2>Position Your {modelTypeLabel}</h2>
-              <p>Drag to place the model. It will automatically scale based on the scene's depth.</p>
-
-              <div style={{ margin: '2rem auto', maxWidth: '800px' }}>
-                <PositioningCanvas
-                  imageUrl={uploadedImage.preview}
-                  depthMapUrl={depthMapUrl}
-                  model={selectedModel}
-                  onPositionChange={(pos) => {
-                    setModelPosition('center') // Reset or use custom logic
-                    setWireframeGuide(pos.wireframeImage)
-                    // We could also store exact x/y/scale if we wanted to pass it to Gemini as metadata
-                  }}
-                />
-              </div>
-
-              <button
-                className="generate-button-large"
-                onClick={handleGenerate}
-              >
-                Generate Visualization
-              </button>
-            </div>
-          </div>
-        )}
 
         {currentStep === 'visualize' && uploadedImage && (
           <>
@@ -425,8 +311,6 @@ function VisualizerPage() {
             <Visualizer
               uploadedImage={uploadedImage}
               selectedModel={selectedModel}
-              modelPosition={modelPosition}
-              wireframeGuideImage={wireframeGuide}
               selectedResolution={selectedResolution}
             />
           </>
