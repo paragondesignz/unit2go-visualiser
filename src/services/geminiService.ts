@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { UploadedImage, TinyHomeModel, PoolModel, Position, VisualizationResult, isPoolModel } from '../types'
+import { UploadedImage, TinyHomeModel, PoolModel, Position, VisualizationResult, isPoolModel, VisualizationStyle, NanoBananaProOptions } from '../types'
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 
@@ -19,7 +19,9 @@ export async function processWithGemini(
   currentPosition?: Position,
   lightingPrompt?: string,
   currentResultImage?: string,
-  position?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right',
+  style?: VisualizationStyle,
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<VisualizationResult> {
 
   if (!API_KEY) {
@@ -28,7 +30,7 @@ export async function processWithGemini(
 
   if (mode === 'initial') {
     if (isPoolModel(model)) {
-      const result = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt)
+      const result = await generateImageWithPool(uploadedImage, model, undefined, lightingPrompt, style, nanoBananaOptions)
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
@@ -41,7 +43,7 @@ export async function processWithGemini(
         }
       }
     } else {
-      const result = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position)
+      const result = await generateImageWithTinyHome(uploadedImage, model, undefined, lightingPrompt, position, style, nanoBananaOptions)
       return {
         imageUrl: result.imageUrl,
         prompt: result.prompt,
@@ -58,14 +60,15 @@ export async function processWithGemini(
     const isLightingOnly = command?.toLowerCase().includes('change lighting only') || command?.toLowerCase().includes('maintain current position')
 
     if (isLightingOnly && currentResultImage && lightingPrompt) {
-      const lightingAdjustedImage = await generateConversationalLightingEdit(currentResultImage, lightingPrompt)
+      const lightingAdjustedImage = await generateConversationalLightingEdit(currentResultImage, lightingPrompt, nanoBananaOptions)
 
       return {
         imageUrl: lightingAdjustedImage,
         prompt: `Lighting adjustment: ${lightingPrompt}`,
         modelSettings: {
-          model: 'gemini-2.5-flash-image',
-          temperature: 1.0
+          model: 'gemini-3-pro-image-preview',
+          temperature: nanoBananaOptions?.temperature || 0.5,
+          imageSize: nanoBananaOptions?.imageSize || '2K'
         },
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
       }
@@ -82,36 +85,41 @@ export async function processWithGemini(
           uploadedImage,
           model,
           commandToPrompt(command || '', model, lightingPrompt),
-          lightingPrompt
+          lightingPrompt,
+          style,
+          nanoBananaOptions
         )
-      return {
-        imageUrl: adjustedImage.imageUrl,
-        prompt: adjustedImage.prompt,
-        modelSettings: adjustedImage.modelSettings,
-        position: newPosition
+        return {
+          imageUrl: adjustedImage.imageUrl,
+          prompt: adjustedImage.prompt,
+          modelSettings: adjustedImage.modelSettings,
+          position: newPosition
+        }
+      } else {
+        const adjustedImage = await generateImageWithTinyHome(
+          uploadedImage,
+          model,
+          commandToPrompt(command || '', model, lightingPrompt),
+          lightingPrompt,
+          position,
+          style,
+          nanoBananaOptions
+        )
+        return {
+          imageUrl: adjustedImage.imageUrl,
+          prompt: adjustedImage.prompt,
+          modelSettings: adjustedImage.modelSettings,
+          position: newPosition
+        }
       }
-    } else {
-      const adjustedImage = await generateImageWithTinyHome(
-        uploadedImage,
-        model,
-        commandToPrompt(command || '', model, lightingPrompt),
-        lightingPrompt,
-        position
-      )
-      return {
-        imageUrl: adjustedImage.imageUrl,
-        prompt: adjustedImage.prompt,
-        modelSettings: adjustedImage.modelSettings,
-        position: newPosition
-      }
-    }
     }
   }
 }
 
 async function generateConversationalLightingEdit(
   currentImageDataUrl: string,
-  lightingPrompt: string
+  lightingPrompt: string,
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<string> {
   const imageBase64 = currentImageDataUrl.includes('base64,')
     ? currentImageDataUrl.split('base64,')[1]
@@ -124,14 +132,18 @@ async function generateConversationalLightingEdit(
   console.log(`Using aspect ratio for lighting edit: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.5, // Lower temperature for more consistent lighting adjustments
+    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent lighting adjustments
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
+      imageSize: nanoBananaOptions?.imageSize || '2K',
     },
+    ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
+    ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
 
-  const model = 'gemini-2.5-flash-image'
+  const model = 'gemini-3-pro-image-preview'
 
   const contents = [
     {
@@ -251,61 +263,51 @@ async function generateImageWithTinyHome(
   tinyHomeModel: TinyHomeModel,
   customPrompt?: string,
   lightingPrompt?: string,
-  tinyHomePosition: 'center' | 'left' | 'right' = 'center'
+  tinyHomePosition: 'center' | 'left' | 'right' = 'center',
+  style?: VisualizationStyle,
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const tinyHomeImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
-  // Get tiny home dimensions
-  const { length, width, height } = tinyHomeModel.dimensions
+  // Note: Dimensions are included in the model name and handled by AI scaling
 
-  // Generate random camera specs for variation
-  const lenses = ['24-70mm f/2.8', '16-35mm f/4', '70-200mm f/2.8', '35mm f/1.4']
-  const isos = ['100', '200', '400']
-  const apertures = ['2.8', '4', '5.6', '8']
-  const randomLens = lenses[Math.floor(Math.random() * lenses.length)]
-  const randomISO = isos[Math.floor(Math.random() * isos.length)]
-  const randomAperture = apertures[Math.floor(Math.random() * apertures.length)]
+  const stylePrompt = style ? `
+STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
+${getStyleDescription(style)}
+` : ''
 
-  // Position instructions based on user selection
-  const positionInstructions: Record<string, string> = {
-    center: 'Position the tiny home in the CENTER of the frame as the dominant focal point. Use center-weighted composition with the tiny home as the main subject.',
-    left: 'Position the tiny home on the LEFT side of the frame (left third), allowing more environmental context, scenery, and breathing room on the right side. This creates visual balance and shows more of the property setting.',
-    right: 'Position the tiny home on the RIGHT side of the frame (right third), allowing more environmental context, scenery, and breathing room on the left side. This creates visual balance and shows more of the property setting.'
-  }
-
-  // Create narrative, descriptive prompt following Google's best practices
-  const prompt = customPrompt || `This is a professional real estate photograph showing the ${tinyHomeModel.name} tiny home (${length}m × ${width}m × ${height}m) placed on an actual property.
-
-PHOTOGRAPHY SETUP:
-Shot with ${randomLens} lens at ISO ${randomISO}, f/${randomAperture}. Natural daylight with soft, realistic shadows. ${lightingPrompt ? lightingPrompt + '. ' : ''}The image captures authentic depth of field with the tiny home in sharp focus while background elements show subtle natural blur.
-
-SCENE COMPOSITION:
-${positionInstructions[tinyHomePosition]} The tiny home sits on stable ground—a lawn, deck, patio, or gravel area. It's oriented parallel to existing features like fences or pathways. The composition uses the rule of thirds with natural leading lines drawing attention to the structure. Foreground shows property details, the tiny home anchors the middle distance, and the background provides environmental context.
-
-SCALE AND PROPORTION:
-Match the tiny home's ${length}m length to visible reference objects in the scene: standard doors (2m high), windows (1-1.5m), vehicles (4-5m long), people (1.7m tall). The tiny home must appear at correct real-world scale relative to these elements, accounting for perspective if placed at distance.
-
-TINY HOME APPEARANCE:
-Use the exact tiny home from the reference image without modifications. Keep the original exterior colors, materials, window placement, and architectural details. Add only subtle warm interior lighting visible through windows to suggest the space is lived-in. The exterior shows natural weathering and authentic material textures—slight variations in siding color, realistic wood grain, genuine metal finishes.
-
-LIGHTING AND ATMOSPHERE:
-Shadows fall naturally with soft edges typical of outdoor diffuse light. The color temperature matches the scene's existing lighting. Materials respond to light realistically—wood absorbs, metal reflects slightly, glass shows subtle reflections. Include atmospheric perspective with slight depth haze if the tiny home is distant.
-
-The result is an authentic photograph—not a rendering—showing how this specific tiny home would actually appear on this property.`
+  const prompt = `This is a real estate photograph showing a ${tinyHomeModel.name} tiny home placed on a property.
+  
+  TASK:
+  1. Analyze the property photo (first image) to understand the terrain, lighting, and available space.
+  2. Place the tiny home (second image) into the scene in a photorealistic way.
+  3. ${tinyHomePosition === 'center' ? 'Position the tiny home in the center of the frame.' : tinyHomePosition === 'left' ? 'Position the tiny home on the left side of the frame.' : 'Position the tiny home on the right side of the frame.'}
+  4. Ensure the tiny home is scaled correctly relative to the surroundings.
+  5. Match the lighting, shadows, and color tone of the property photo.
+  6. Create a natural transition between the tiny home and the ground (grass, gravel, etc.).
+  ${customPrompt ? `7. ${customPrompt}` : ''}
+  ${lightingPrompt ? `8. Lighting: ${lightingPrompt}` : ''}
+  ${stylePrompt}
+  
+  The result should be a high-quality, photorealistic real estate marketing image.`
 
   console.log(`Detected aspect ratio: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.5, // Lower temperature for more consistent and predictable results
+    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent and predictable results
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
+      imageSize: nanoBananaOptions?.imageSize || '2K',
     },
+    ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
+    ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
 
-  const model = 'gemini-2.5-flash-image'
+  const model = 'gemini-3-pro-image-preview'
 
   const contents = [
     {
@@ -353,7 +355,11 @@ The result is an authentic photograph—not a rendering—showing how this speci
       modelSettings: {
         model: model,
         temperature: config.temperature,
-        aspectRatio: config.imageConfig.aspectRatio
+        aspectRatio: config.imageConfig.aspectRatio,
+        imageSize: config.imageConfig.imageSize,
+        ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
+        ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+        googleSearchUsed: nanoBananaOptions?.enableGoogleSearch || false
       }
     }
   }
@@ -370,7 +376,9 @@ async function generateImageWithPool(
   uploadedImage: UploadedImage,
   poolModel: PoolModel,
   customPrompt?: string,
-  lightingPrompt?: string
+  lightingPrompt?: string,
+  style?: VisualizationStyle,
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const poolImageBase64 = await fetchImageAsBase64(poolModel.imageUrl)
@@ -378,6 +386,11 @@ async function generateImageWithPool(
 
   // Get pool dimensions
   const { length } = poolModel.dimensions
+
+  const stylePrompt = style ? `
+STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
+${getStyleDescription(style)}
+` : ''
 
   // Strict prompt focused on shape fidelity (per Google's latest recommendations)
   // IMPORTANT: Reference images are sent in order: [0] = property photo, [1] = pool diagram
@@ -411,28 +424,29 @@ Secondary Task: Photorealistic Integration
 
 After you have guaranteed the shape is 100% identical, perform these tasks:
 
-Placement: Place the pool in the center of the yard in Image [0].
-
-Scale: The pool is ${length}m long. Scale it realistically relative to the house/fences in Image [0].
-
-Lighting: Adjust the pool's lighting, shadows, and reflections to perfectly match the natural, midday sun already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
-
-Integration: Blend the pool's edge (coping, tiles) to sit naturally in the grass or patio of Image [0].
+1. Placement: Place the pool in the center of the yard in Image [0].
+2. Scale: The pool is ${length}m long. Scale it realistically relative to the house/fences in Image [0].
+3. Lighting: Adjust the pool's lighting, shadows, and reflections to perfectly match the natural, midday sun already in Image [0]. ${lightingPrompt ? lightingPrompt + '. ' : ''}
+4. Integration: Blend the pool's edge (coping, tiles) to sit naturally in the grass or patio of Image [0].
+${stylePrompt}
 
 FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or features that were not in Image [1]?" If the answer is yes, you have failed. The shape must be identical.`
 
-  console.log(`Detected aspect ratio: ${aspectRatio}`)
+  console.log(`Detected aspect ratio: ${aspectRatio} `)
 
   const config = {
-    temperature: 0.3, // Lower temperature for more consistent results and better shape adherence
-    topP: 0.1, // Low topP focuses on the most probable outputs, minimizing diversity
+    temperature: nanoBananaOptions?.temperature || 0.3, // Lower temperature for more consistent results and better shape adherence
+    topP: nanoBananaOptions?.topP || 0.1, // Low topP focuses on the most probable outputs, minimizing diversity
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
+      imageSize: nanoBananaOptions?.imageSize || '2K',
     },
+    ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
 
-  const model = 'gemini-2.5-flash-image'
+  const model = 'gemini-3-pro-image-preview'
 
   const contents = [
     {
@@ -481,7 +495,10 @@ FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or f
         model: model,
         temperature: config.temperature,
         topP: config.topP,
-        aspectRatio: config.imageConfig.aspectRatio
+        aspectRatio: config.imageConfig.aspectRatio,
+        imageSize: config.imageConfig.imageSize,
+        ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+        googleSearchUsed: nanoBananaOptions?.enableGoogleSearch || false
       }
     }
   }
@@ -491,7 +508,7 @@ FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or f
     .map(part => part.text)
     .join('')
 
-  throw new Error(`No pool image generated. API Response: ${textResponse || 'No response text'}`)
+  throw new Error(`No pool image generated.API Response: ${textResponse || 'No response text'} `)
 }
 
 /**
@@ -501,15 +518,15 @@ FINAL VERIFICATION: Before you finish, check: "Did I add any steps, curves, or f
 function mapToAspectRatio(ratio: number): string {
   // Map to closest supported aspect ratio
   if (Math.abs(ratio - 1) < 0.1) return "1:1"
-  if (Math.abs(ratio - 4/3) < 0.1) return "4:3"
-  if (Math.abs(ratio - 3/4) < 0.1) return "3:4"
-  if (Math.abs(ratio - 16/9) < 0.1) return "16:9"
-  if (Math.abs(ratio - 9/16) < 0.1) return "9:16"
-  if (Math.abs(ratio - 3/2) < 0.1) return "3:2"
-  if (Math.abs(ratio - 2/3) < 0.1) return "2:3"
-  if (Math.abs(ratio - 5/4) < 0.1) return "5:4"
-  if (Math.abs(ratio - 4/5) < 0.1) return "4:5"
-  if (Math.abs(ratio - 21/9) < 0.1) return "21:9"
+  if (Math.abs(ratio - 4 / 3) < 0.1) return "4:3"
+  if (Math.abs(ratio - 3 / 4) < 0.1) return "3:4"
+  if (Math.abs(ratio - 16 / 9) < 0.1) return "16:9"
+  if (Math.abs(ratio - 9 / 16) < 0.1) return "9:16"
+  if (Math.abs(ratio - 3 / 2) < 0.1) return "3:2"
+  if (Math.abs(ratio - 2 / 3) < 0.1) return "2:3"
+  if (Math.abs(ratio - 5 / 4) < 0.1) return "5:4"
+  if (Math.abs(ratio - 4 / 5) < 0.1) return "4:5"
+  if (Math.abs(ratio - 21 / 9) < 0.1) return "21:9"
 
   // Default to closest common ratio
   if (ratio > 1.5) return "16:9"
@@ -681,7 +698,8 @@ export async function processWithWireframeGuide(
   uploadedImage: UploadedImage,
   model: TinyHomeModel | PoolModel,
   wireframeGuideDataUrl: string,
-  lightingPrompt?: string
+  lightingPrompt?: string,
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<string> {
   const imageBase64 = await fileToBase64(uploadedImage.file)
   const modelImageBase64 = await fetchImageAsBase64(model.imageUrl)
@@ -691,19 +709,23 @@ export async function processWithWireframeGuide(
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
   const modelType = isPoolModel(model) ? 'pool' : 'tiny home'
-  const prompt = `This is a real estate photograph showing the ${model.name} ${modelType} placed on a property. Use the wireframe guide (third image) to position the ${modelType} exactly where indicated in the property photo (first image). Match the ${modelType}'s appearance from the reference (second image) while ensuring it looks naturally integrated with realistic shadows, lighting, and scale. ${isPoolModel(model) ? 'Convert the pool diagram into a photorealistic pool with realistic water, materials, and integration.' : 'Orient it parallel to visible features like fences or pathways.'} The result should be an authentic photograph.${lightingPrompt ? ` Use these lighting conditions: ${lightingPrompt}.` : ''}`
+  const prompt = `This is a real estate photograph showing the ${model.name} ${modelType} placed on a property.Use the wireframe guide(third image) to position the ${modelType} exactly where indicated in the property photo(first image).Match the ${modelType} 's appearance from the reference (second image) while ensuring it looks naturally integrated with realistic shadows, lighting, and scale. ${isPoolModel(model) ? 'Convert the pool diagram into a photorealistic pool with realistic water, materials, and integration.' : 'Orient it parallel to visible features like fences or pathways.'} The result should be an authentic photograph.${lightingPrompt ? ` Use these lighting conditions: ${lightingPrompt}.` : ''}`
 
   console.log(`Using aspect ratio for wireframe guide: ${aspectRatio}`)
 
   const config = {
-    temperature: 0.5, // Lower temperature for more consistent positioning
+    temperature: nanoBananaOptions?.temperature || 0.5, // Lower temperature for more consistent positioning
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
+      imageSize: nanoBananaOptions?.imageSize || '2K',
     },
+    ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
+    ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
 
-  const modelName = 'gemini-2.5-flash-image'
+  const modelName = 'gemini-3-pro-image-preview'
 
   const contents = [
     {
@@ -762,10 +784,30 @@ export async function processWithWireframeGuide(
   throw new Error(`No image generated with wireframe guide. API Response: ${textResponse || 'No response text'}`)
 }
 
+function getStyleDescription(style: VisualizationStyle): string {
+  switch (style) {
+    case 'Realistic':
+      return 'Focus on absolute photorealism. Natural lighting, accurate colors, and realistic textures. The image should look like an unedited photograph.'
+    case 'Cinematic':
+      return 'Use dramatic lighting, high contrast, and a slightly wider aspect ratio feel. Emphasize mood and atmosphere. Rich colors and deep shadows.'
+    case 'Golden Hour':
+      return 'Simulate the warm, soft light of sunrise or sunset. Long shadows, golden hues, and a magical, inviting atmosphere.'
+    case 'Modern':
+      return 'Clean lines, cool tones, and high-key lighting. Emphasize clarity, brightness, and contemporary architectural aesthetics.'
+    case 'Rustic':
+      return 'Warm, earthy tones. Soft, diffused lighting. Emphasize natural materials and a cozy, welcoming feel.'
+    case 'Architectural':
+      return 'Focus on structure and form. Balanced composition, vertical lines, and neutral lighting. The image should look like a professional architectural visualization.'
+    default:
+      return ''
+  }
+}
+
 export async function conversationalEdit(
   currentImageDataUrl: string,
   editPrompt: string,
-  customConfig?: { temperature?: number; topP?: number; topK?: number }
+  customConfig?: { temperature?: number; topP?: number; topK?: number },
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<string> {
   const imageBase64 = currentImageDataUrl.includes('base64,')
     ? currentImageDataUrl.split('base64,')[1]
@@ -778,16 +820,20 @@ export async function conversationalEdit(
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
   const config = {
-    temperature: customConfig?.temperature ?? 0.2,
+    temperature: customConfig?.temperature ?? nanoBananaOptions?.temperature ?? 0.2,
     ...(customConfig?.topP && { topP: customConfig.topP }),
     ...(customConfig?.topK && { topK: customConfig.topK }),
+    ...(nanoBananaOptions?.topP && !customConfig?.topP && { topP: nanoBananaOptions.topP }),
+    ...(nanoBananaOptions?.topK && !customConfig?.topK && { topK: nanoBananaOptions.topK }),
     responseModalities: ['Image'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
+      imageSize: nanoBananaOptions?.imageSize || '2K',
     },
+    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
 
-  const model = 'gemini-2.5-flash-image'
+  const model = 'gemini-3-pro-image-preview'
 
   const contents = [
     {

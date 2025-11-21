@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel } from '../types'
+import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel, ImageResolution } from '../types'
 import { processWithGemini, processWithWireframeGuide, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 import { generateVisualization } from '../services/imageGenerationService'
 
@@ -8,9 +8,10 @@ interface VisualizerProps {
   selectedModel: VisualizationModel
   wireframeGuideImage?: string | null
   modelPosition?: 'center' | 'left' | 'right'
+  selectedResolution?: ImageResolution
 }
 
-function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPosition = 'center' }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPosition = 'center', selectedResolution = '2K' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -51,8 +52,18 @@ function Visualizer({ uploadedImage, selectedModel, wireframeGuideImage, modelPo
     "Download your image to share with family, friends, or planning consultants",
     isPoolModel(selectedModel)
       ? "The visualization helps you make confident decisions about your pool placement"
-      : "The visualization helps you make confident decisions about your tiny home placement"
+      : "The visualization helps you make confident decisions about your tiny home placement",
+    `Powered by Google's Nano Banana Pro (Gemini 3) for ${selectedResolution} quality generation`
   ]
+
+  // Create Nano Banana Pro options object
+  const nanoBananaOptions = {
+    imageSize: selectedResolution,
+    enableGoogleSearch: false, // Could be made configurable later
+    useThinkingProcess: true,
+    temperature: 0.5,
+    topP: 0.1
+  }
 
   const getLightingPrompt = (hour: number): string => {
     if (hour >= 7 && hour < 8) return 'Sunrise in New Zealand with the sun low on the horizon. Gentle warm tones with soft oranges and pinks in the sky. Moderate shadows. Natural, understated lighting'
@@ -176,7 +187,8 @@ MANDATORY PERSON REMOVAL:
           uploadedImage,
           selectedModel,
           wireframeGuideImage,
-          lightingPrompt
+          lightingPrompt,
+          nanoBananaOptions
         )
         prompt = 'Wireframe guide generation (prompt not available)'
         // Wireframe guide maintains user's exact positioning
@@ -192,7 +204,8 @@ MANDATORY PERSON REMOVAL:
           uploadedImage,
           selectedModel,
           lightingPrompt,
-          modelPosition
+          modelPosition,
+          nanoBananaOptions
         )
         imageUrl = result.imageUrl
         prompt = result.prompt
@@ -231,7 +244,10 @@ MANDATORY PERSON REMOVAL:
         'change lighting only - maintain current position',
         position,
         combinedPrompt,
-        resultImage || undefined
+        resultImage || undefined,
+        undefined,
+        undefined,
+        nanoBananaOptions
       )
       addToHistory(result.imageUrl)
       setCurrentPrompt(result.prompt || null)
@@ -262,7 +278,7 @@ MANDATORY PERSON REMOVAL:
       const editedImage = await conversationalEdit(resultImage, positionPrompts[position], {
         temperature: 0.7,
         topP: 0.9
-      })
+      }, nanoBananaOptions)
 
       addToHistory(editedImage)
       setShowingOriginal(false)
@@ -286,7 +302,7 @@ MANDATORY PERSON REMOVAL:
     setError(null)
 
     try {
-      const editedImage = await conversationalEdit(resultImage, editPrompt.trim())
+      const editedImage = await conversationalEdit(resultImage, editPrompt.trim(), undefined, nanoBananaOptions)
       addToHistory(editedImage)
       setEditPrompt('')
       setShowingOriginal(false)
@@ -311,7 +327,7 @@ MANDATORY PERSON REMOVAL:
     setError(null)
 
     try {
-      const editedImage = await conversationalEdit(resultImage, prompt)
+      const editedImage = await conversationalEdit(resultImage, prompt, undefined, nanoBananaOptions)
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {
@@ -508,6 +524,18 @@ MANDATORY PERSON REMOVAL:
                         <div className="setting-item">
                           <span className="setting-label">Aspect Ratio:</span>
                           <span className="setting-value">{currentModelSettings.aspectRatio}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.imageSize && (
+                        <div className="setting-item">
+                          <span className="setting-label">Resolution:</span>
+                          <span className="setting-value">{currentModelSettings.imageSize}</span>
+                        </div>
+                      )}
+                      {currentModelSettings.googleSearchUsed !== undefined && (
+                        <div className="setting-item">
+                          <span className="setting-label">Google Search:</span>
+                          <span className="setting-value">{currentModelSettings.googleSearchUsed ? 'Enabled' : 'Disabled'}</span>
                         </div>
                       )}
                       {currentModelSettings.guidanceScale !== undefined && (

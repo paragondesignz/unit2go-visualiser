@@ -66,6 +66,10 @@ export interface VisualizationResult {
     strength?: number
     referenceStrength?: number
     controlnetConditioningScale?: number
+    imageSize?: ImageResolution
+    aspectRatio?: string
+    thoughtSignature?: string
+    googleSearchUsed?: boolean
   }
   position: Position
 }
@@ -78,11 +82,32 @@ export interface DepthMapData {
   height: number
 }
 
+export type VisualizationStyle =
+  | 'Realistic'
+  | 'Cinematic'
+  | 'Golden Hour'
+  | 'Modern'
+  | 'Rustic'
+  | 'Architectural'
+
+export type ImageResolution = '1K' | '2K' | '4K'
+
 export interface FLUXGenerationOptions {
   propertyImage: File
   tinyHomeImageUrl: string
   depthMap?: DepthMapData
   clickPosition?: { x: number; y: number }
   lightingPrompt?: string
+  style?: VisualizationStyle
   controlnetStrength?: number
+}
+
+export interface NanoBananaProOptions {
+  imageSize?: ImageResolution
+  enableGoogleSearch?: boolean
+  useThinkingProcess?: boolean
+  maxInputImages?: number
+  temperature?: number
+  topP?: number
+  topK?: number
 }

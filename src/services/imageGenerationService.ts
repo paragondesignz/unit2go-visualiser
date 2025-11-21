@@ -1,4 +1,4 @@
-import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel } from '../types'
+import { UploadedImage, VisualizationModel, ImageModelProvider, isPoolModel, NanoBananaProOptions } from '../types'
 import { processWithGemini } from './geminiService'
 import { generateWithFLUX, generateWithQwenIntegrateProduct } from './fluxService'
 
@@ -19,7 +19,8 @@ export async function generateVisualization(
   uploadedImage: UploadedImage,
   model: VisualizationModel,
   lightingPrompt?: string,
-  position?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right',
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   if (MODEL_PROVIDER === 'flux') {
     console.log('Using Qwen Integrate Product model for enhanced product adherence...')
@@ -75,12 +76,12 @@ export async function generateVisualization(
       } catch (fluxError) {
         console.error('FLUX generation also failed, falling back to Gemini:', fluxError)
         // Final fallback to Gemini
-        return generateWithGemini(uploadedImage, model, lightingPrompt, position)
+        return generateWithGemini(uploadedImage, model, lightingPrompt, position, nanoBananaOptions)
       }
     }
   } else {
-    console.log('Using Gemini 2.5 Flash Image for generation...')
-    return generateWithGemini(uploadedImage, model, lightingPrompt, position)
+    console.log('Using Nano Banana Pro (Gemini 3 Pro Image) for generation...')
+    return generateWithGemini(uploadedImage, model, lightingPrompt, position, nanoBananaOptions)
   }
 }
 
@@ -91,7 +92,8 @@ async function generateWithGemini(
   uploadedImage: UploadedImage,
   model: VisualizationModel,
   lightingPrompt?: string,
-  position?: 'center' | 'left' | 'right'
+  position?: 'center' | 'left' | 'right',
+  nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt?: string; modelSettings?: any }> {
   // Use existing Gemini service with natural placement
   const result = await processWithGemini(
@@ -102,7 +104,9 @@ async function generateWithGemini(
     undefined,
     lightingPrompt,
     undefined,
-    position
+    position,
+    undefined,
+    nanoBananaOptions
   )
 
   return { imageUrl: result.imageUrl, prompt: result.prompt, modelSettings: result.modelSettings }
