@@ -501,7 +501,7 @@ async function generateImageWithPool(
   const aspectRatio = await detectAspectRatio(uploadedImage.file)
 
   // Get pool dimensions
-  const { length } = poolModel.dimensions
+  const { length, width } = poolModel.dimensions
 
   const stylePrompt = style ? `
 STYLE INSTRUCTION: Apply a "${style}" aesthetic to the final image.
@@ -568,7 +568,19 @@ After guaranteeing 100% shape fidelity, execute these requirements:
    - Ensure the pool aligns with the property's natural flow and existing structures
    - Position pool to complement sight lines from house windows and outdoor spaces
 
-2. Precise Scaling: The pool measures ${length}m in length. Scale accurately using visible reference elements: standard doors (8 feet), fence panels (6 feet), and existing structures in Image [0].${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
+2. Precise Scaling: The pool measures exactly ${length}m long × ${width}m wide (aspect ratio ${(width / length).toFixed(2)}:1 width-to-length). Scale accurately using these visible reference elements from Image [0]:
+
+   PRIMARY SCALING REFERENCES (use any visible):
+   - Standard residential doors: 2.0m height, 0.9m width
+   - Fence panels: 1.8m height, typical 2.4m sections
+   - Single-story house height: ~3m to roof line
+   - Standard cars: ~4.5m length, 1.8m width
+   - Patio furniture: chairs ~0.6m wide, tables ~1.0-1.5m
+   - Garden beds: analyze width against house proportions
+   - Driveways: typically 3-4m wide for residential
+   - Windows: standard residential ~1.2m wide
+
+   SCALING VERIFICATION: Ensure the pool's footprint looks proportionally correct against the house size - a ${length}m pool should appear roughly ${(length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
 3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained.`
 
