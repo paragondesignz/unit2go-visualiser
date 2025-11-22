@@ -126,6 +126,29 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'x-trainer',
+    name: 'X-Trainer',
+    dimensions: {
+      length: 7.2,   // meters - compact training pool
+      width: 3.7,    // meters - optimal width for training
+      depth: 1.5     // meters - standard training depth
+    },
+    price: 42000,
+    imageUrl: '/pool-models/x-trainer.png',
+    description: 'Compact training pool design perfect for exercise and lap swimming',
+    features: [
+      'Compact training design',
+      'Ideal for lap swimming',
+      'Space-efficient layout',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Customizable finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
