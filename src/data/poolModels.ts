@@ -149,6 +149,30 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'grand-lagoon',
+    name: 'Grand Lagoon',
+    dimensions: {
+      length: 11.8,  // meters - luxury large pool
+      width: 5.9,    // meters - spacious width for entertaining
+      depth: 1.9     // meters - deeper end for diving
+    },
+    price: 68000,
+    imageUrl: '/pool-models/11.8.png',
+    description: 'Luxury large-scale pool design perfect for entertaining and leisure swimming',
+    features: [
+      'Luxury large-scale design',
+      'Perfect for entertaining',
+      'Spacious swimming area',
+      'Ideal for families',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Premium finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
