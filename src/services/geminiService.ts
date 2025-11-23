@@ -208,10 +208,11 @@ export async function generateVideoWithVeo(
   const model = 'veo-3.1-fast-generate-preview'
   const config = {
     temperature: 0.7,
-    responseModalities: ['Video'] as string[],
-    videoConfig: {
+    // Remove responseModalities as it's not valid for video
+    veoConfig: {
       aspectRatio: "16:9",
-      durationSeconds: "6"
+      durationSeconds: "6",
+      resolution: "720p"
     }
   }
 
