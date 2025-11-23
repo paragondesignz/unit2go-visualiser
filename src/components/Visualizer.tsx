@@ -440,43 +440,14 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
         areaDescription += ' middle area'
       }
 
-      const zoomPrompt = `CROP AND ZOOM into this image to focus on the ${areaDescription} where the user clicked (approximately ${Math.round(x)}% from left, ${Math.round(y)}% from top). Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this specific area of the current image.
-
-PHOTOGRAPHIC ARTISTRY & CREATIVE ENHANCEMENT:
-Transform this crop into a stunning, magazine-quality close-up with professional photography techniques:
-
-🎨 VISUAL COMPOSITION:
-- Apply rule of thirds for dynamic framing within the cropped area
-- Create visual flow and leading lines that draw the eye naturally
-- Balance elements harmoniously with artistic spacing and positioning
-- Add subtle depth through layered foreground, middle ground, and background elements
-
-📸 PROFESSIONAL PHOTOGRAPHY EFFECTS:
-- Enhance with beautiful shallow depth of field (soft bokeh backgrounds where appropriate)
-- Apply warm, golden hour lighting quality with soft directional illumination
-- Create subtle lens flare and natural light filtering for magical atmosphere
-- Add professional color grading with rich, saturated tones and perfect contrast
-
-✨ ARTISTIC ENHANCEMENTS:
-- Enhance textures to be tactile and inviting (water ripples, plant details, material finishes)
-- Create atmospheric mood with subtle mist, dappled light, or warm ambiance
-- Add natural elements like floating particles, gentle steam, or organic details
-- Apply cinematic color palette with complementary tones and professional saturation
-
-🌟 LUXURY APPEAL:
-- Make surfaces appear premium with subtle reflections and material depth
-- Add sophisticated lighting that highlights quality and craftsmanship
-- Create an aspirational, lifestyle photography aesthetic
-- Ensure every detail appears polished and magazine-ready
-
-The result should be breathtakingly beautiful, enticing, and worthy of premium marketing materials.`
+      const zoomPrompt = `CROP AND ZOOM into this image to focus on the ${areaDescription} where the user clicked (approximately ${Math.round(x)}% from left, ${Math.round(y)}% from top). Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this specific area of the current image. Keep all lighting, colors, and details exactly as they appear in the original image.`
 
       const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, nanoBananaOptions)
 
       addToHistory(zoomedImage)
       setShowingOriginal(false)
     } catch (err) {
-      setError('Failed to create close-up view. Please try again.')
+      setError('Failed to zoom into image. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
@@ -607,8 +578,8 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
         {/* Click-to-Zoom - Moved under preview image */}
         {resultImage && (
           <div className="post-gen-section close-up-section">
-            <h3>✨ Artistic Close-ups</h3>
-            <p className="control-info">Click anywhere on the image above to create a stunning, magazine-quality close-up with professional photography effects and creative artistry</p>
+            <h3>🔍 Zoom In</h3>
+            <p className="control-info">Click anywhere on the image above to zoom into that area</p>
 
             {!zoomModeActive ? (
               <div className="zoom-controls">
@@ -617,21 +588,20 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
                   onClick={handleActivateZoomMode}
                   disabled={processing}
                 >
-                  🎨 Create Artistic Close-up
+                  🔍 Zoom In
                 </button>
               </div>
             ) : (
               <div className="zoom-instructions">
                 <div className="zoom-active-indicator">
                   <span className="zoom-crosshair">✛</span>
-                  <p><strong>Artistic Mode Active!</strong></p>
-                  <p>Click anywhere on the image above to create a stunning close-up of that area</p>
-                  <p className="artistic-note">✨ Professional photography effects and creative artistry will be applied</p>
+                  <p><strong>Zoom Mode Active!</strong></p>
+                  <p>Click anywhere on the image above to zoom into that area</p>
                   <button
                     className="cancel-zoom-btn"
                     onClick={() => setZoomModeActive(false)}
                   >
-                    Cancel Artistic Mode
+                    Cancel Zoom Mode
                   </button>
                 </div>
               </div>
