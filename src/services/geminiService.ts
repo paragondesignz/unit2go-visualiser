@@ -203,7 +203,7 @@ export async function generateVideoWithVeo(
   // Create dolly in camera movement prompt without audio
   const videoPrompt = `Slow cinematic dolly in camera movement toward the ${modelType}, mimicking a gentle drone flyover approach. The camera smoothly moves closer to reveal more detail of the scene. Professional cinematography with stable, controlled movement. No dialogue, no sound effects, no music.`
 
-  console.log('🎬 Generating video with Veo 3.1 Fast...')
+  console.log('🎬 Generating video with Veo 3.1 Standard...')
 
   try {
     console.log('Starting video generation operation with REST API...')
@@ -224,9 +224,17 @@ export async function generateVideoWithVeo(
       }
     }
 
-    // Start video generation operation
+    console.log('Request body structure:', {
+      instances: requestBody.instances.length,
+      promptLength: requestBody.instances[0].prompt.length,
+      hasImage: !!requestBody.instances[0].image,
+      imageSize: requestBody.instances[0].image?.imageBytes?.length || 0,
+      parameters: requestBody.parameters
+    })
+
+    // Start video generation operation - use standard model, not fast (fast may not support image-to-video)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-fast-generate-preview:predictLongRunning`,
+      `https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning`,
       {
         method: 'POST',
         headers: {
@@ -238,7 +246,9 @@ export async function generateVideoWithVeo(
     )
 
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+      const errorText = await response.text()
+      console.error('Veo API Error Response:', errorText)
+      throw new Error(`API request failed: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const operationResponse = await response.json()

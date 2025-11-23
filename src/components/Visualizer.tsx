@@ -634,7 +634,7 @@ The output should show only the content within this bounding box, cropped with p
 
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      setVideoGenerationProgress('Sending request to Veo 3.1 Fast... (this may take 2-5 minutes)')
+      setVideoGenerationProgress('Sending request to Veo 3.1... (this may take 2-5 minutes)')
 
       const videoDataUrl = await generateVideoWithVeo(resultImage, modelType)
 
@@ -810,7 +810,7 @@ The output should show only the content within this bounding box, cropped with p
         {generatedVideo && (
           <div className="post-gen-section">
             <h3>🎬 Generated Video</h3>
-            <p className="control-info">Cinematic dolly-in flyover generated with Veo 3.1 Fast</p>
+            <p className="control-info">Cinematic dolly-in flyover generated with Veo 3.1</p>
             <div className="video-container" style={{ position: 'relative', marginBottom: '20px' }}>
               <video
                 src={generatedVideo}
