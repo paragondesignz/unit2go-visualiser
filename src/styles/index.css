@@ -2722,21 +2722,25 @@ body {
 
 /* Zoom Controls */
 .close-up-section {
-  background: linear-gradient(135deg, #e3f2fd, #f8f9fa) !important;
-  border: 3px solid #2196F3 !important;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2) !important;
+  background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+  border: 3px solid #2196F3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .close-up-section h3 {
-  color: #1976D2 !important;
-  font-size: 1.4rem !important;
-  margin-bottom: 10px !important;
+  color: #1976D2;
+  font-size: 1.4rem;
+  margin-bottom: 10px;
 }
 
 .zoom-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 15px;
+  position: relative;
+  width: 100%;
 }
 
 .zoom-btn {
@@ -2750,6 +2754,9 @@ body {
   font-size: 1rem;
   font-weight: 600;
   box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  position: relative;
+  width: 100%;
+  display: block;
 }
 
 .zoom-btn.primary-zoom {
@@ -2760,9 +2767,18 @@ body {
 }
 
 @keyframes pulse-subtle {
-  0% { box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
-  50% { box-shadow: 0 6px 16px rgba(255,107,53,0.4); }
-  100% { box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+  0% {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 6px 16px rgba(255,107,53,0.4);
+    transform: translateY(0);
+  }
+  100% {
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    transform: translateY(0);
+  }
 }
 
 .zoom-btn:hover:not(:disabled) {
