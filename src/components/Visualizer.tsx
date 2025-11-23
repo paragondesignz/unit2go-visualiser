@@ -651,37 +651,39 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
           )}
 
           {resultImage ? (
-            <img
-              src={showingOriginal ? uploadedImage.url : resultImage}
-              alt={showingOriginal ? "Original space" : "Tiny home visualization"}
-              className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
-              onClick={!zoomModeActive ? openLightbox : undefined}
-              onMouseDown={zoomModeActive ? handleSelectionStart : undefined}
-              onMouseMove={zoomModeActive ? handleSelectionMove : undefined}
-              onMouseUp={zoomModeActive ? handleSelectionEnd : undefined}
-              onMouseLeave={zoomModeActive ? handleSelectionLeave : undefined}
-              style={{
-                cursor: zoomModeActive ? 'crosshair' : 'pointer',
-                border: zoomModeActive ? '3px solid #FF6B35' : 'none',
-                userSelect: 'none'
-              }}
-            />
-            {zoomModeActive && selectionRect && (
-              <div
-                className="selection-rectangle"
+            <>
+              <img
+                src={showingOriginal ? uploadedImage.url : resultImage}
+                alt={showingOriginal ? "Original space" : "Tiny home visualization"}
+                className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
+                onClick={!zoomModeActive ? openLightbox : undefined}
+                onMouseDown={zoomModeActive ? handleSelectionStart : undefined}
+                onMouseMove={zoomModeActive ? handleSelectionMove : undefined}
+                onMouseUp={zoomModeActive ? handleSelectionEnd : undefined}
+                onMouseLeave={zoomModeActive ? handleSelectionLeave : undefined}
                 style={{
-                  position: 'absolute',
-                  left: selectionRect.x,
-                  top: selectionRect.y,
-                  width: selectionRect.width,
-                  height: selectionRect.height,
-                  border: '2px dashed #FF6B35',
-                  backgroundColor: 'rgba(255, 107, 53, 0.1)',
-                  pointerEvents: 'none',
-                  zIndex: 10
+                  cursor: zoomModeActive ? 'crosshair' : 'pointer',
+                  border: zoomModeActive ? '3px solid #FF6B35' : 'none',
+                  userSelect: 'none'
                 }}
               />
-            )}
+              {zoomModeActive && selectionRect && (
+                <div
+                  className="selection-rectangle"
+                  style={{
+                    position: 'absolute',
+                    left: selectionRect.x,
+                    top: selectionRect.y,
+                    width: selectionRect.width,
+                    height: selectionRect.height,
+                    border: '2px dashed #FF6B35',
+                    backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                    pointerEvents: 'none',
+                    zIndex: 10
+                  }}
+                />
+              )}
+            </>
           ) : (
             <img
               src={uploadedImage.url}
