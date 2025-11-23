@@ -272,21 +272,24 @@ export async function generateVideoWithVeo(
       throw new Error(`Video generation failed: ${JSON.stringify(currentOperation.error)}`)
     }
 
-    // Handle response - use generatedVideos structure
-    const response = currentOperation.response
-    if (!response?.generatedVideos?.[0]?.video?.uri) {
+    // Handle response - use generateVideoResponse.generatedSamples structure
+    const response = currentOperation.response as any
+    const videoResponse = response?.generateVideoResponse
+
+    if (!videoResponse?.generatedSamples?.[0]?.video?.uri) {
+      console.error('No video data found in response. Full response structure:', JSON.stringify(response, null, 2))
       throw new Error('No video URI in completed operation')
     }
 
-    const videoUri = response.generatedVideos[0].video.uri
+    const videoUri = `${videoResponse.generatedSamples[0].video.uri}&key=${API_KEY}`.trim()
 
     // Download video (matching your marketing app approach)
-    const videoResponse = await fetch(videoUri)
-    if (!videoResponse.ok) {
-      throw new Error(`Failed to fetch video: ${videoResponse.status}`)
+    const downloadResponse = await fetch(videoUri)
+    if (!downloadResponse.ok) {
+      throw new Error(`Failed to fetch video: ${downloadResponse.status}`)
     }
 
-    const videoBlob = await videoResponse.blob()
+    const videoBlob = await downloadResponse.blob()
     const videoDataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result as string)
