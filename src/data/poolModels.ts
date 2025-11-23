@@ -173,6 +173,31 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'sanctuary',
+    name: 'Sanctuary',
+    dimensions: {
+      length: 8.2,   // meters - serene mid-size pool
+      width: 4.1,    // meters - balanced proportions
+      depth: 1.6     // meters - comfortable depth
+    },
+    price: 46000,
+    imageUrl: '/pool-models/8.2-sanctuary.jpg',
+    description: 'Tranquil pool design creating a peaceful sanctuary for relaxation and gentle swimming',
+    features: [
+      'Serene sanctuary design',
+      'Peaceful and tranquil',
+      'Perfect for relaxation',
+      'Therapeutic swimming',
+      'Calming aesthetics',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Premium finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
