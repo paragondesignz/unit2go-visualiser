@@ -849,30 +849,30 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
             </div>
 
             {/* Zoom/Close-up */}
-            <div className="post-gen-section">
-              <h3>Close-up Views</h3>
-              <p className="control-info">Generate detailed close-up views of specific areas</p>
+            <div className="post-gen-section close-up-section">
+              <h3>🔍 Generate Close-up Views</h3>
+              <p className="control-info">Create detailed high-resolution close-ups of specific areas (4K quality)</p>
               <div className="zoom-controls">
                 <button
-                  className="zoom-btn"
+                  className="zoom-btn primary-zoom"
                   onClick={() => handleZoom('pool-area')}
                   disabled={processing}
                 >
-                  {isPoolModel(selectedModel) ? 'Pool Close-up' : 'Structure Close-up'}
+                  📷 {isPoolModel(selectedModel) ? 'Pool Detail Shot' : 'Structure Detail Shot'}
                 </button>
                 <button
                   className="zoom-btn"
                   onClick={() => handleZoom('landscaping')}
                   disabled={processing}
                 >
-                  Landscaping Detail
+                  🌿 Landscaping Close-up
                 </button>
                 <button
                   className="zoom-btn"
                   onClick={() => handleZoom('entrance')}
                   disabled={processing}
                 >
-                  Entrance Area
+                  🚪 Entrance Detail
                 </button>
               </div>
             </div>
