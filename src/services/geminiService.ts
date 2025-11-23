@@ -1119,69 +1119,38 @@ export async function generateInteriorView(
 
   // Create detailed interior generation prompt
   const getInteriorPrompt = () => {
-    const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
-    const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
 
-    let basePrompt = `INTERIOR PHOTOGRAPHY TASK: Create a photorealistic interior photograph taken from inside a ${tinyHomeModel.name} tiny home using the provided floor plan as spatial reference.
+    // Calculate viewing direction more clearly
+    const getDirection = (angle: number) => {
+      if (angle >= 315 || angle < 45) return 'toward the top of the floor plan'
+      if (angle >= 45 && angle < 135) return 'toward the right side of the floor plan'
+      if (angle >= 135 && angle < 225) return 'toward the bottom of the floor plan'
+      return 'toward the left side of the floor plan'
+    }
 
-${useThinking ? `STEP 1: FLOOR PLAN SPATIAL ANALYSIS (Use thinking process)
-First, analyze the top-down floor plan image to understand the 3D interior space:
-- Identify each room's boundaries, size, and relationship to adjacent spaces
-- Note door and window positions - these are critical for spatial orientation
-- Understand built-in furniture, fixtures, and architectural features
-- Map the traffic flow and spatial connections between rooms
-- Determine what would be visible from the specified camera position and angle
+    let basePrompt = `Generate a photorealistic interior photograph of a ${tinyHomeModel.name} tiny home.
 
-STEP 2: 3D SPATIAL TRANSLATION
-Convert the 2D floor plan coordinates to 3D interior view:
-- Camera is positioned at ${camera.x}% horizontally and ${camera.y}% vertically on the floor plan
-- From this position, looking in the ${camera.viewingAngle}° direction
-- Calculate what rooms, walls, doors, and features should be visible
-- Consider perspective, depth, and proper spatial relationships
+REFERENCE IMAGE: The provided image is a top-down architectural floor plan showing the complete layout.
 
-` : ''}PRECISE CAMERA PLACEMENT:
+CAMERA POSITION: You are standing inside this tiny home at position ${camera.x}% across (left to right) and ${camera.y}% down (top to bottom) on the floor plan.
 
-You are inside the tiny home, standing at coordinates (${camera.x}%, ${camera.y}%) on the floor plan, looking ${camera.viewingAngle}° from north.
+VIEWING DIRECTION: From this position, you are looking ${getDirection(camera.viewingAngle)} (${camera.viewingAngle} degrees).
 
-CRITICAL SPATIAL TRANSLATION RULES:
+CRITICAL REQUIREMENTS:
+1. Study the floor plan carefully to understand room layouts, walls, doors, and windows
+2. Show ONLY architectural elements and built-ins visible in the floor plan - do not add storage, closets, or features not shown
+3. The view must match what someone would actually see from this exact position looking in this direction
+4. Room proportions and spatial relationships must match the floor plan exactly
+5. Use the floor plan as your architectural blueprint - it shows the true layout
 
-1. EXACT FLOOR PLAN INTERPRETATION:
-   - The provided image is a top-down floor plan of this ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m tiny home
-   - Your camera is positioned at ${camera.x}% from the left edge and ${camera.y}% from the top edge of this floor plan
-   - You are looking in direction ${camera.viewingAngle}° where 0°=North/up, 90°=East/right, 180°=South/down, 270°=West/left
-   - Camera height: ${camera.height}m above floor level (${camera.height === 1.2 ? 'seated perspective' : camera.height === 1.6 ? 'standing eye level' : 'custom height'})
+CAMERA SETTINGS:
+- Height: ${camera.height}m above floor (${camera.height <= 1.3 ? 'seated' : 'standing'} eye level)
+- Field of view: ${camera.fieldOfView} degrees (${camera.fieldOfView <= 60 ? 'narrow' : camera.fieldOfView <= 90 ? 'normal' : 'wide'} angle)
+- Style: ${interiorRequest.viewType} shot
 
-2. SPATIAL LAYOUT ACCURACY:
-   - What you see must match EXACTLY what would be visible from this position on the floor plan
-   - Room boundaries, wall positions, and openings must correspond to the floor plan layout
-   - Distance relationships between objects must reflect the real-world scale
-   - If looking toward a wall, show that wall; if looking toward an opening, show the space beyond
+INTERIOR DESIGN: Modern tiny home with clean lines, natural wood, white walls, and efficient built-in solutions. Light, airy, and minimalist aesthetic.${interiorRequest.room ? `\n\nFOCUS AREA: This view should emphasize the ${interiorRequest.room} space.` : ''}
 
-3. PERSPECTIVE AND COMPOSITION:
-   - Use ${camera.fieldOfView}° field of view (${camera.fieldOfView <= 50 ? 'narrow telephoto perspective' : camera.fieldOfView <= 85 ? 'natural human vision perspective' : 'wide angle perspective'})
-   - Frame the shot as a ${interiorRequest.viewType} view with proper depth of field
-   - Ensure foreground, midground, and background elements follow proper perspective rules
-   - Maintain realistic proportions based on ${camera.height}m viewing height
-
-4. INTERIOR DESIGN AUTHENTICITY:
-   - Premium tiny home interior with space-efficient, built-in solutions
-   - Modern Scandinavian-minimalist aesthetic with natural materials
-   - Light wood tones, white/neutral walls, and clean architectural lines
-   - Realistic lighting from windows and fixtures positioned per floor plan
-   - Appropriately sized furniture and appliances for tiny home scale
-
-PHOTOGRAPHY EXECUTION:
-Photograph this interior as a professional real estate photographer would:
-- Camera: 85mm lens at ${camera.height}m height, f/8 aperture for architectural clarity
-- Lighting: Balanced natural and artificial light, proper shadows and highlights
-- Composition: ${interiorRequest.viewType === 'wide' ? 'Wide establishing shot showing spatial context' : interiorRequest.viewType === 'standard' ? 'Standard real estate photography composition' : 'Detail-focused composition highlighting key features'}
-- Quality: Marketing-grade interior photography with HDR-like exposure balance
-
-ROOM FOCUS INSTRUCTIONS:
-${interiorRequest.room ? `PRIMARY FOCUS: This view should emphasize the ${interiorRequest.room} as seen from this camera position.` : 'GENERAL VIEW: Show the natural view from this camera position without forcing specific room focus.'}
-${interiorRequest.focusArea ? `SPECIFIC EMPHASIS: Within the frame, draw attention to ${interiorRequest.focusArea} while maintaining spatial accuracy.` : ''}
-
-FINAL DIRECTIVE: Create a photorealistic interior photograph that shows exactly what someone would see standing at coordinates (${camera.x}%, ${camera.y}%) on the floor plan, looking ${camera.viewingAngle}° from north, at ${camera.height}m height. The spatial layout must be architecturally consistent with the floor plan.`
+Render this as a professional interior photograph with natural lighting and realistic proportions.`
 
     return basePrompt
   }
