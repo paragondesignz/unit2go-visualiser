@@ -604,6 +604,41 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
           </p>
         )}
 
+        {/* Click-to-Zoom - Moved under preview image */}
+        {resultImage && (
+          <div className="post-gen-section close-up-section">
+            <h3>✨ Artistic Close-ups</h3>
+            <p className="control-info">Click anywhere on the image above to create a stunning, magazine-quality close-up with professional photography effects and creative artistry</p>
+
+            {!zoomModeActive ? (
+              <div className="zoom-controls">
+                <button
+                  className="zoom-btn primary-zoom"
+                  onClick={handleActivateZoomMode}
+                  disabled={processing}
+                >
+                  🎨 Create Artistic Close-up
+                </button>
+              </div>
+            ) : (
+              <div className="zoom-instructions">
+                <div className="zoom-active-indicator">
+                  <span className="zoom-crosshair">✛</span>
+                  <p><strong>Artistic Mode Active!</strong></p>
+                  <p>Click anywhere on the image above to create a stunning close-up of that area</p>
+                  <p className="artistic-note">✨ Professional photography effects and creative artistry will be applied</p>
+                  <button
+                    className="cancel-zoom-btn"
+                    onClick={() => setZoomModeActive(false)}
+                  >
+                    Cancel Artistic Mode
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Prompt Display Panel */}
         {resultImage && currentPrompt && (
           <div className="prompt-panel">
@@ -909,38 +944,6 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
               </div>
             </div>
 
-            {/* Click-to-Zoom */}
-            <div className="post-gen-section close-up-section">
-              <h3>✨ Artistic Close-ups</h3>
-              <p className="control-info">Click anywhere on the image above to create a stunning, magazine-quality close-up with professional photography effects and creative artistry</p>
-
-              {!zoomModeActive ? (
-                <div className="zoom-controls">
-                  <button
-                    className="zoom-btn primary-zoom"
-                    onClick={handleActivateZoomMode}
-                    disabled={processing}
-                  >
-                    🎨 Create Artistic Close-up
-                  </button>
-                </div>
-              ) : (
-                <div className="zoom-instructions">
-                  <div className="zoom-active-indicator">
-                    <span className="zoom-crosshair">✛</span>
-                    <p><strong>Artistic Mode Active!</strong></p>
-                    <p>Click anywhere on the image above to create a stunning close-up of that area</p>
-                    <p className="artistic-note">✨ Professional photography effects and creative artistry will be applied</p>
-                    <button
-                      className="cancel-zoom-btn"
-                      onClick={() => setZoomModeActive(false)}
-                    >
-                      Cancel Artistic Mode
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
 
