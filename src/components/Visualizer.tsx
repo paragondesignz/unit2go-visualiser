@@ -36,7 +36,6 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [zoomModeActive, setZoomModeActive] = useState(false)
   const [isSelecting, setIsSelecting] = useState(false)
   const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
-  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 })
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
 
   const tips = [
@@ -472,7 +471,6 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
 
     setIsSelecting(true)
     setSelectionStart({ x, y })
-    setSelectionEnd({ x, y })
     setSelectionRect(null)
   }
 
@@ -482,8 +480,6 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
-
-    setSelectionEnd({ x, y })
 
     // Calculate selection rectangle
     const startX = Math.min(selectionStart.x, x)
