@@ -291,7 +291,9 @@ MANDATORY PERSON REMOVAL:
 
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      const enhancedPrompt = `${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, and orientation. Do not move, resize, or alter the ${modelType} in any way. Only add the requested enhancements around or near the ${modelType} while preserving its exact placement and appearance.`
+      const enhancedPrompt = `TOP PRIORITY: PRESERVE ORIGINAL IMAGE COMPOSITION - Maintain the EXACT same camera angle, perspective, and viewpoint as the current image. NEVER change the user's photo composition.
+
+${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, and orientation. Do not move, resize, or alter the ${modelType} in any way. Do not change camera angles, perspectives, or viewing positions. Only add the requested enhancements around or near the ${modelType} while preserving its exact placement, appearance, and the original image composition.`
 
       const editedImage = await conversationalEdit(resultImage, enhancedPrompt, undefined, nanoBananaOptions)
       addToHistory(editedImage)
@@ -387,10 +389,10 @@ MANDATORY PERSON REMOVAL:
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
       const cameraPrompts = {
-        aerial: `Change to an aerial/bird's eye view perspective of this scene. Show the ${modelType} and property from directly above or at a high elevated angle. Maintain all existing elements and their spatial relationships while providing this top-down perspective.`,
-        ground: `Change to a ground-level perspective of this scene. Position the camera at standing height (about 1.7m) to show the ${modelType} and property from a human eye-level viewpoint. Keep all elements in their current positions.`,
-        elevated: `Change to an elevated angle perspective of this scene. Position the camera at a moderate height (2-3 meters) to show the ${modelType} and property from a slightly raised viewpoint. Maintain all existing elements and spatial relationships.`,
-        side: `Change to a side view perspective of this scene. Show the ${modelType} and property from the side angle to capture the profile and depth. Keep all elements in their current positions while providing this lateral perspective.`
+        aerial: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to an aerial/bird's eye view perspective of this scene. Show the ${modelType} and property from directly above or at a high elevated angle. Maintain all existing elements and their spatial relationships while providing this top-down perspective.`,
+        ground: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a ground-level perspective of this scene. Position the camera at standing height (about 1.7m) to show the ${modelType} and property from a human eye-level viewpoint. Keep all elements in their current positions.`,
+        elevated: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to an elevated angle perspective of this scene. Position the camera at a moderate height (2-3 meters) to show the ${modelType} and property from a slightly raised viewpoint. Maintain all existing elements and spatial relationships.`,
+        side: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a side view perspective of this scene. Show the ${modelType} and property from the side angle to capture the profile and depth. Keep all elements in their current positions while providing this lateral perspective.`
       }
 
       const editedImage = await conversationalEdit(resultImage, cameraPrompts[cameraAngle], undefined, nanoBananaOptions)

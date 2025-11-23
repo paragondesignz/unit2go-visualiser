@@ -281,7 +281,10 @@ ${getStyleDescription(style)}
     const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
     const preserveLighting = nanoBananaOptions?.preserveOriginalLighting && !lightingPrompt
 
-    let basePrompt = `PRIMARY OBJECTIVE: ACHIEVE 100% PRODUCT ACCURACY FOR ${tinyHomeModel.name} INTEGRATION.
+    let basePrompt = `TOP PRIORITY CONSTRAINT: PRESERVE USER'S ORIGINAL IMAGE COMPOSITION
+CRITICAL: NEVER change the camera angle, perspective, viewpoint, or composition from the user's original photograph [Image 0]. The user's photo represents their desired viewing angle and must be respected absolutely. Only add tiny home elements and environmental enhancements while maintaining the EXACT same camera position and perspective as the original image.
+
+PRIMARY OBJECTIVE: ACHIEVE 100% PRODUCT ACCURACY FOR ${tinyHomeModel.name} INTEGRATION.
 
 You are performing ultra-precise architectural visualization using Google Nano Banana Pro's advanced capabilities for professional real estate photography.
 
@@ -517,7 +520,10 @@ ${getStyleDescription(style)}
     const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
     const preserveLighting = nanoBananaOptions?.preserveOriginalLighting && !lightingPrompt
 
-    let basePrompt = `PRIMARY DIRECTIVE: ACHIEVE 100% PRODUCT ACCURACY AND SHAPE FIDELITY.
+    let basePrompt = `TOP PRIORITY CONSTRAINT: PRESERVE USER'S ORIGINAL IMAGE COMPOSITION
+CRITICAL: NEVER change the camera angle, perspective, viewpoint, or composition from the user's original photograph [Image 0]. The user's photo represents their desired viewing angle and must be respected absolutely. Only add pool elements and environmental enhancements while maintaining the EXACT same camera position and perspective as the original image.
+
+PRIMARY DIRECTIVE: ACHIEVE 100% PRODUCT ACCURACY AND SHAPE FIDELITY.
 
 You are performing ultra-precise architectural visualization using Google Nano Banana Pro's advanced capabilities for professional real estate photography.
 
@@ -1030,7 +1036,10 @@ export async function conversationalEdit(
 
   const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
 
-  const prompt = `Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATION REQUIREMENTS: Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Do NOT move, resize, rotate, or alter any existing structures (pools, tiny homes, buildings). The existing structures must remain in their exact same location and appearance. NEVER change the camera angle, viewing perspective, or photo crop - maintain the identical viewpoint. For pool enhancements, ensure all additions naturally integrate with the pool's current orientation and layout geometry. Only add or modify what was specifically requested around the existing elements. The result should look like a real photograph with the requested change naturally integrated while preserving all original elements and camera perspective.`
+  const prompt = `TOP PRIORITY: PRESERVE ORIGINAL IMAGE COMPOSITION
+CRITICAL: Maintain the EXACT same camera angle, perspective, viewpoint, and composition as the current image. The user's photo composition must be respected absolutely.
+
+Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATION REQUIREMENTS: Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Do NOT move, resize, rotate, or alter any existing structures (pools, tiny homes, buildings). The existing structures must remain in their exact same location and appearance. NEVER change the camera angle, viewing perspective, or photo crop unless the request explicitly starts with "EXPLICIT USER REQUEST: Change camera perspective" - maintain the identical viewpoint in all other cases. For pool enhancements, ensure all additions naturally integrate with the pool's current orientation and layout geometry. Only add or modify what was specifically requested around the existing elements. The result should look like a real photograph with the requested change naturally integrated while preserving all original elements and camera perspective.`
 
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
