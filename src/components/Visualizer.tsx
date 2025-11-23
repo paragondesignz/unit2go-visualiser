@@ -410,6 +410,55 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
   }
 
 
+  const handleBeautifyImage = async () => {
+    if (!resultImage || processing) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const beautifyPrompt = `Transform this image into a stunning, magazine-quality photograph using professional photography techniques while preserving the EXACT same camera angle, perspective, and composition:
+
+🎨 VISUAL COMPOSITION ENHANCEMENTS:
+- Apply subtle rule of thirds framing for improved visual balance
+- Create enhanced visual flow and leading lines that naturally draw the eye
+- Balance all elements harmoniously with refined artistic spacing and positioning
+- Add subtle depth enhancement through layered foreground, middle ground, and background elements
+
+📸 PROFESSIONAL PHOTOGRAPHY EFFECTS:
+- Apply beautiful shallow depth of field where appropriate (soft bokeh backgrounds for enhanced focus)
+- Enhance with warm, golden hour lighting quality and soft directional illumination
+- Create subtle lens flare and natural light filtering for magical atmosphere
+- Add professional color grading with rich, saturated tones and perfect contrast
+
+✨ ARTISTIC ENHANCEMENTS:
+- Enhance all textures to be tactile and inviting (water ripples, plant details, material finishes, surface textures)
+- Create enhanced atmospheric mood with subtle mist, dappled light, or warm ambiance
+- Add natural photographic elements like floating particles, gentle steam, or organic atmospheric details
+- Apply cinematic color palette with complementary tones and professional saturation
+
+🌟 LUXURY APPEAL & POLISH:
+- Make all surfaces appear premium with subtle reflections and enhanced material depth
+- Add sophisticated lighting that highlights quality, craftsmanship, and architectural details
+- Create an aspirational, lifestyle photography aesthetic that feels luxurious and inviting
+- Ensure every detail appears polished, refined, and worthy of premium marketing materials
+
+CRITICAL PRESERVATION: Maintain the EXACT same camera position, angle, perspective, and composition. Do not crop, zoom, or change the viewpoint. Only enhance the photographic quality and visual appeal of the existing scene.
+
+The result should be breathtakingly beautiful, enticing, and worthy of premium architectural marketing materials.`
+
+      const beautifiedImage = await conversationalEdit(resultImage, beautifyPrompt, undefined, nanoBananaOptions)
+
+      addToHistory(beautifiedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to enhance image. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
     if (!zoomModeActive || !resultImage || processing) return
 
@@ -575,14 +624,21 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
           </p>
         )}
 
-        {/* Click-to-Zoom - Moved under preview image */}
+        {/* Image Enhancement Controls - Moved under preview image */}
         {resultImage && (
           <div className="post-gen-section close-up-section">
-            <h3>🔍 Zoom In</h3>
-            <p className="control-info">Click anywhere on the image above to zoom into that area</p>
+            <h3>🔍 Image Controls</h3>
+            <p className="control-info">Enhance or zoom into your generated image</p>
 
             {!zoomModeActive ? (
               <div className="zoom-controls">
+                <button
+                  className="zoom-btn primary-zoom"
+                  onClick={handleBeautifyImage}
+                  disabled={processing}
+                >
+                  ✨ Beautiful Photography
+                </button>
                 <button
                   className="zoom-btn primary-zoom"
                   onClick={handleActivateZoomMode}
