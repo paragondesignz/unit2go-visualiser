@@ -2850,6 +2850,17 @@ body {
   color: #BF360C;
 }
 
+.artistic-note {
+  font-style: italic;
+  color: #E65100;
+  font-size: 0.9rem;
+  background: rgba(255, 193, 7, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  border-left: 3px solid #FF9800;
+}
+
 .cancel-zoom-btn {
   background: #f44336;
   color: white;
