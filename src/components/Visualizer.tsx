@@ -634,7 +634,7 @@ The output should show only the content within this bounding box, cropped with p
 
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      setVideoGenerationProgress('Sending request to Veo 3.1 SDK... (this may take 2-5 minutes)')
+      setVideoGenerationProgress('Sending request to Veo 3.1 SDK... (this may take 5-10 minutes)')
 
       const videoDataUrl = await generateVideoWithVeo(resultImage, modelType)
 

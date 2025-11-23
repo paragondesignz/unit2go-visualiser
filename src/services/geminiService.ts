@@ -229,14 +229,14 @@ export async function generateVideoWithVeo(
 
     console.log('Polling for operation completion...')
 
-    // Poll for completion (matching your marketing app pattern)
+    // Poll for completion with longer intervals for video generation
     let attempts = 0
-    const maxAttempts = 30
+    const maxAttempts = 20 // Reduced attempts since we're polling less frequently
     let currentOperation = operation
 
     while (!currentOperation.done && attempts < maxAttempts) {
       console.log(`Video generation in progress... (${attempts + 1}/${maxAttempts})`)
-      await new Promise(resolve => setTimeout(resolve, 10000))
+      await new Promise(resolve => setTimeout(resolve, 30000)) // Wait 30 seconds (3x longer)
 
       try {
         // Poll operation status using REST API (more reliable than SDK)
@@ -265,7 +265,7 @@ export async function generateVideoWithVeo(
     }
 
     if (!currentOperation.done) {
-      throw new Error('Video generation timed out after 5 minutes')
+      throw new Error('Video generation timed out after 10 minutes')
     }
 
     if (currentOperation.error) {
