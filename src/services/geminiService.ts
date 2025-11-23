@@ -648,7 +648,7 @@ If any answer is incorrect, the generation has FAILED and must be corrected.`
                      (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 0.8, // Lower temperature for improved pool shape accuracy
+    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning capabilities
     topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex scene analysis
     responseModalities: ['Image'] as string[],
     imageConfig: {
