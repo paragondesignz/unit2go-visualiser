@@ -1109,70 +1109,66 @@ export async function generateInteriorView(
     const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
     const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
 
-    let basePrompt = `INTERIOR PHOTOGRAPHY MISSION: Generate a photorealistic interior photograph of a ${tinyHomeModel.name} based on the top-down floor plan reference.
+    let basePrompt = `INTERIOR PHOTOGRAPHY TASK: Create a photorealistic interior photograph taken from inside a ${tinyHomeModel.name} tiny home using the provided floor plan as spatial reference.
 
-${useThinking ? `STEP 1: FLOOR PLAN ANALYSIS (Use thinking process)
-Analyze the top-down floor plan image and identify:
-- Room layouts and boundaries (bedroom, kitchen, bathroom, living area)
-- Window and door placements
-- Built-in furniture and fixtures
-- Ceiling height variations and architectural details
-- Traffic flow and spatial relationships
-Document these for accurate interior rendering.
+${useThinking ? `STEP 1: FLOOR PLAN SPATIAL ANALYSIS (Use thinking process)
+First, analyze the top-down floor plan image to understand the 3D interior space:
+- Identify each room's boundaries, size, and relationship to adjacent spaces
+- Note door and window positions - these are critical for spatial orientation
+- Understand built-in furniture, fixtures, and architectural features
+- Map the traffic flow and spatial connections between rooms
+- Determine what would be visible from the specified camera position and angle
 
-` : ''}CAMERA POSITIONING SPECIFICATION:
+STEP 2: 3D SPATIAL TRANSLATION
+Convert the 2D floor plan coordinates to 3D interior view:
+- Camera is positioned at ${camera.x}% horizontally and ${camera.y}% vertically on the floor plan
+- From this position, looking in the ${camera.viewingAngle}° direction
+- Calculate what rooms, walls, doors, and features should be visible
+- Consider perspective, depth, and proper spatial relationships
 
-Reference Image: Top-down architectural floor plan showing the complete interior layout of the ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m tiny home.
+` : ''}PRECISE CAMERA PLACEMENT:
 
-CAMERA COORDINATES:
-- Position: ${camera.x}%, ${camera.y}% from top-left corner of floor plan
-- Height: ${camera.height}m above floor level
-- Viewing Angle: ${camera.viewingAngle}° (0° = North/up on plan, 90° = East/right, 180° = South/down, 270° = West/left)
-- Field of View: ${camera.fieldOfView}° horizontal view angle
-- Shot Type: ${interiorRequest.viewType} (${interiorRequest.viewType === 'wide' ? 'wide angle showing room context' : interiorRequest.viewType === 'standard' ? 'normal perspective view' : 'close-up detail view'})
+You are inside the tiny home, standing at coordinates (${camera.x}%, ${camera.y}%) on the floor plan, looking ${camera.viewingAngle}° from north.
 
-CRITICAL REQUIREMENTS:
+CRITICAL SPATIAL TRANSLATION RULES:
 
-1. SPATIAL ACCURACY FROM FLOOR PLAN:
-   - Use the floor plan to determine exact room proportions and layout
-   - Position camera at specified coordinates relative to the floor plan
-   - Ensure viewing angle matches the directional orientation specified
-   - Respect ceiling height of ${tinyHomeModel.dimensions.height}m throughout
+1. EXACT FLOOR PLAN INTERPRETATION:
+   - The provided image is a top-down floor plan of this ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m tiny home
+   - Your camera is positioned at ${camera.x}% from the left edge and ${camera.y}% from the top edge of this floor plan
+   - You are looking in direction ${camera.viewingAngle}° where 0°=North/up, 90°=East/right, 180°=South/down, 270°=West/left
+   - Camera height: ${camera.height}m above floor level (${camera.height === 1.2 ? 'seated perspective' : camera.height === 1.6 ? 'standing eye level' : 'custom height'})
 
-2. ARCHITECTURAL INTEGRITY:
-   - Translate 2D floor plan elements into 3D interior space accurately
-   - Match window placements, sizes, and orientations from floor plan
-   - Replicate door positions and swing directions as shown
-   - Maintain proportional relationships between rooms
+2. SPATIAL LAYOUT ACCURACY:
+   - What you see must match EXACTLY what would be visible from this position on the floor plan
+   - Room boundaries, wall positions, and openings must correspond to the floor plan layout
+   - Distance relationships between objects must reflect the real-world scale
+   - If looking toward a wall, show that wall; if looking toward an opening, show the space beyond
 
-3. INTERIOR DESIGN & FINISHES:
-   - Premium tiny home interior with high-quality materials
-   - Modern minimalist design with efficient space utilization
-   - Natural wood finishes, clean lines, and built-in storage solutions
-   - Professional lighting design with both natural and artificial lighting
-   - Contemporary fixtures and appliances scaled for tiny home living
+3. PERSPECTIVE AND COMPOSITION:
+   - Use ${camera.fieldOfView}° field of view (${camera.fieldOfView <= 50 ? 'narrow telephoto perspective' : camera.fieldOfView <= 85 ? 'natural human vision perspective' : 'wide angle perspective'})
+   - Frame the shot as a ${interiorRequest.viewType} view with proper depth of field
+   - Ensure foreground, midground, and background elements follow proper perspective rules
+   - Maintain realistic proportions based on ${camera.height}m viewing height
 
-4. PHOTOGRAPHIC QUALITY:
-   - Professional interior photography standards
-   - Proper exposure balancing natural and artificial light
-   - Sharp focus with appropriate depth of field for ${interiorRequest.viewType} shots
-   - Realistic shadows and light distribution
-   - Marketing-quality composition suitable for real estate photography
+4. INTERIOR DESIGN AUTHENTICITY:
+   - Premium tiny home interior with space-efficient, built-in solutions
+   - Modern Scandinavian-minimalist aesthetic with natural materials
+   - Light wood tones, white/neutral walls, and clean architectural lines
+   - Realistic lighting from windows and fixtures positioned per floor plan
+   - Appropriately sized furniture and appliances for tiny home scale
 
-5. CONTEXTUAL DETAILS:
-   ${interiorRequest.room ? `- Focus on ${interiorRequest.room} area based on camera position` : ''}
-   ${interiorRequest.focusArea ? `- Emphasize ${interiorRequest.focusArea} in the composition` : ''}
-   - Include appropriate furnishings and decor for the space
-   - Show functionality and livability of the tiny home interior
-   - Demonstrate smart storage solutions and space-efficient design
+PHOTOGRAPHY EXECUTION:
+Photograph this interior as a professional real estate photographer would:
+- Camera: 85mm lens at ${camera.height}m height, f/8 aperture for architectural clarity
+- Lighting: Balanced natural and artificial light, proper shadows and highlights
+- Composition: ${interiorRequest.viewType === 'wide' ? 'Wide establishing shot showing spatial context' : interiorRequest.viewType === 'standard' ? 'Standard real estate photography composition' : 'Detail-focused composition highlighting key features'}
+- Quality: Marketing-grade interior photography with HDR-like exposure balance
 
-TECHNICAL EXECUTION:
-- Render as if shot with professional interior photography equipment
-- Use HDR-like exposure to capture detail in both highlights and shadows
-- Ensure color accuracy and realistic material representation
-- Create inviting atmosphere that showcases the tiny home's livability
+ROOM FOCUS INSTRUCTIONS:
+${interiorRequest.room ? `PRIMARY FOCUS: This view should emphasize the ${interiorRequest.room} as seen from this camera position.` : 'GENERAL VIEW: Show the natural view from this camera position without forcing specific room focus.'}
+${interiorRequest.focusArea ? `SPECIFIC EMPHASIS: Within the frame, draw attention to ${interiorRequest.focusArea} while maintaining spatial accuracy.` : ''}
 
-Generate a stunning interior photograph that accurately represents the view from the specified camera position and angle within this ${tinyHomeModel.name} layout.`
+FINAL DIRECTIVE: Create a photorealistic interior photograph that shows exactly what someone would see standing at coordinates (${camera.x}%, ${camera.y}%) on the floor plan, looking ${camera.viewingAngle}° from north, at ${camera.height}m height. The spatial layout must be architecturally consistent with the floor plan.`
 
     return basePrompt
   }
