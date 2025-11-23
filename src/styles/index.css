@@ -695,71 +695,6 @@ body {
   color: var(--text-secondary);
 }
 
-/* Position Selection */
-.position-selection {
-  margin: 30px 0;
-  padding-top: 30px;
-  border-top: 1px solid var(--border-color);
-}
-
-.position-selection h3 {
-  font-size: 1.3rem;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.position-instruction {
-  text-align: center;
-  color: var(--text-secondary);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-}
-
-.position-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.position-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 15px;
-  background: var(--bg-secondary);
-  border: 3px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: var(--transition);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.position-btn:hover {
-  border-color: var(--primary-light);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.position-btn.active {
-  border-color: var(--primary-color);
-  background: rgba(40, 169, 225, 0.08);
-  box-shadow: var(--shadow-lg);
-}
-
-.position-btn svg {
-  opacity: 0.8;
-}
-
-.position-btn.active svg {
-  opacity: 1;
-}
 
 /* Depth Selection */
 .depth-selection {
@@ -1566,26 +1501,6 @@ body {
   gap: 10px;
 }
 
-.position-btn {
-  padding: 12px;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.position-btn:hover:not(:disabled) {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-  transform: translateY(-1px);
-}
-
-.position-btn:disabled,
 .regenerate-button:disabled,
 .toggle-button:disabled,
 .apply-button:disabled {

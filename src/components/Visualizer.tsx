@@ -43,9 +43,6 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
     isPoolModel(selectedModel)
       ? "Try different lighting and times of day to see your pool in various conditions"
       : "Try different lighting and times of day to see your tiny home in various conditions",
-    isPoolModel(selectedModel)
-      ? "Use the left/center/right position buttons to reposition your pool in the frame"
-      : "Use the left/center/right position buttons to reposition your tiny home in the frame",
     "Use Undo/Redo to navigate through your editing history",
     "Download your image to share with family, friends, or planning consultants",
     isPoolModel(selectedModel)
@@ -247,35 +244,6 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
-  const handleRepositionModel = async (position: 'left' | 'center' | 'right') => {
-    if (!resultImage) return
-
-    setProcessing(true)
-    setError(null)
-
-    try {
-      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      const positionPrompts = {
-        left: `Reposition the ${modelType} to the left side of the frame (left third), creating more breathing room and environmental context on the right side. The ${modelType} should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.`,
-        center: `Reposition the ${modelType} toward the center of the frame as the dominant focal point, using center-weighted composition. The ${modelType} should be the main subject with balanced environmental context on both sides. Maintain the same photorealistic quality and lighting conditions.`,
-        right: `Reposition the ${modelType} to the right side of the frame (right third), creating more breathing room and environmental context on the left side. The ${modelType} should be clearly visible but allow more of the property setting to be showcased. Maintain the same photorealistic quality and lighting conditions.`
-      }
-
-      const editedImage = await conversationalEdit(resultImage, positionPrompts[position], {
-        temperature: 0.7,
-        topP: 0.9
-      }, nanoBananaOptions)
-
-      addToHistory(editedImage)
-      setShowingOriginal(false)
-    } catch (err) {
-      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      setError(`Failed to reposition ${modelType}. Please try again.`)
-      console.error(err)
-    } finally {
-      setProcessing(false)
-    }
-  }
 
   const handleToggleView = () => {
     setShowingOriginal(!showingOriginal)
@@ -737,51 +705,6 @@ MANDATORY PERSON REMOVAL:
             </div>
             <p className="control-info">Step backward or forward through your edits</p>
 
-            <div className="position-selection">
-              <h4>Reposition Tiny Home</h4>
-              <div className="position-buttons">
-                <button
-                  className="position-btn"
-                  onClick={() => handleRepositionModel('left')}
-                  disabled={processing || !resultImage}
-                >
-                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="5" width="14" height="20" rx="2" />
-                    <line x1="20" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="20" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="20" y1="22" x2="38" y2="22" strokeDasharray="2 2" opacity="0.4" />
-                  </svg>
-                  <span>Left</span>
-                </button>
-                <button
-                  className="position-btn"
-                  onClick={() => handleRepositionModel('center')}
-                  disabled={processing || !resultImage}
-                >
-                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="13" y="5" width="14" height="20" rx="2" />
-                    <line x1="2" y1="8" x2="10" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="30" y1="8" x2="38" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="2" y1="15" x2="10" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="30" y1="15" x2="38" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                  </svg>
-                  <span>Center</span>
-                </button>
-                <button
-                  className="position-btn"
-                  onClick={() => handleRepositionModel('right')}
-                  disabled={processing || !resultImage}
-                >
-                  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="24" y="5" width="14" height="20" rx="2" />
-                    <line x1="2" y1="8" x2="20" y2="8" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="2" y1="15" x2="20" y2="15" strokeDasharray="2 2" opacity="0.4" />
-                    <line x1="2" y1="22" x2="20" y2="22" strokeDasharray="2 2" opacity="0.4" />
-                  </svg>
-                  <span>Right</span>
-                </button>
-              </div>
-            </div>
 
             <button
               className="toggle-button"
