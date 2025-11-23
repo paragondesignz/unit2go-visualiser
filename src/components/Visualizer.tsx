@@ -483,17 +483,37 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
       const clampedX = Math.max(0, Math.min(imageRect.width, currentX))
       const clampedY = Math.max(0, Math.min(imageRect.height, currentY))
 
-      // Calculate selection rectangle
-      const startX = Math.min(x, clampedX)
-      const startY = Math.min(y, clampedY)
-      const width = Math.abs(clampedX - x)
-      const height = Math.abs(clampedY - y)
+      // Calculate raw selection rectangle
+      const rawWidth = Math.abs(clampedX - x)
+      const rawHeight = Math.abs(clampedY - y)
+
+      // Maintain aspect ratio of original image
+      const imageAspectRatio = imageRect.width / imageRect.height
+      let width = rawWidth
+      let height = rawHeight
+
+      // Adjust dimensions to maintain aspect ratio
+      if (width / height > imageAspectRatio) {
+        // Width is too large, reduce it
+        width = height * imageAspectRatio
+      } else {
+        // Height is too large, reduce it
+        height = width / imageAspectRatio
+      }
+
+      // Calculate proper start position based on drag direction
+      const startX = clampedX < x ? Math.max(0, clampedX) : Math.max(0, x - width)
+      const startY = clampedY < y ? Math.max(0, clampedY) : Math.max(0, y - height)
+
+      // Ensure selection doesn't go outside image boundaries
+      const finalWidth = Math.min(width, imageRect.width - startX)
+      const finalHeight = Math.min(height, imageRect.height - startY)
 
       setSelectionRect({
         x: startX,
         y: startY,
-        width,
-        height
+        width: finalWidth,
+        height: finalHeight
       })
     }
 
@@ -539,19 +559,24 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
 
       const imageRect = imageElement.getBoundingClientRect()
 
-      // Convert pixel coordinates to percentages
-      const leftPercent = (selectionRect.x / imageRect.width) * 100
-      const topPercent = (selectionRect.y / imageRect.height) * 100
-      const widthPercent = (selectionRect.width / imageRect.width) * 100
-      const heightPercent = (selectionRect.height / imageRect.height) * 100
+      // Convert to normalized coordinates [0, 1000] as per Gemini documentation
+      const leftNormalized = Math.round((selectionRect.x / imageRect.width) * 1000)
+      const topNormalized = Math.round((selectionRect.y / imageRect.height) * 1000)
+      const rightNormalized = Math.round(((selectionRect.x + selectionRect.width) / imageRect.width) * 1000)
+      const bottomNormalized = Math.round(((selectionRect.y + selectionRect.height) / imageRect.height) * 1000)
 
-      const zoomPrompt = `CROP AND ZOOM into this image to focus on the rectangular area selected by the user. The selection area covers:
-- Left edge: ${Math.round(leftPercent)}% from the left side
-- Top edge: ${Math.round(topPercent)}% from the top
-- Width: ${Math.round(widthPercent)}% of the image width
-- Height: ${Math.round(heightPercent)}% of the image height
+      const zoomPrompt = `CROP AND ZOOM into this image to focus on the rectangular area selected by the user.
 
-Crop to show ONLY this selected rectangular area while maintaining the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this precise selection. Keep all lighting, colors, and details exactly as they appear in the original image.`
+PRECISE REGION SPECIFICATION (using Gemini's normalized coordinate system [0-1000]):
+- Bounding box: [${topNormalized}, ${leftNormalized}, ${bottomNormalized}, ${rightNormalized}] (ymin, xmin, ymax, xmax)
+- Top edge: ${topNormalized}/1000 from top
+- Left edge: ${leftNormalized}/1000 from left
+- Bottom edge: ${bottomNormalized}/1000 from top
+- Right edge: ${rightNormalized}/1000 from left
+
+Crop to show ONLY this precisely defined rectangular region while maintaining the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this exact area using the normalized coordinates provided. Keep all lighting, colors, and details exactly as they appear in the original image.
+
+The output should show only the content within this bounding box, cropped with precision to match the user's selection exactly.`
 
       const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, nanoBananaOptions)
 
@@ -723,7 +748,7 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
         {resultImage && (
           <div className="post-gen-section close-up-section">
             <h3>🔍 Image Controls</h3>
-            <p className="control-info">Enhance your image or drag to select an area, then confirm to zoom into it</p>
+            <p className="control-info">Enhance your image or drag to select an area (maintains proportions), then confirm to zoom into it</p>
 
             {!zoomModeActive && !selectionRect ? (
               <div className="zoom-controls">
