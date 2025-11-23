@@ -208,16 +208,16 @@ export async function generateVideoWithVeo(
   try {
     console.log('Starting video generation operation with REST API...')
 
-    // Use correct REST API format for Veo 3.1
+    // Try different request structure - maybe image should be at parameter level
     const requestBody = {
       instances: [{
-        prompt: videoPrompt,
-        image: {
-          imageBytes: imageBase64,
-          mimeType: 'image/jpeg'
-        }
+        prompt: videoPrompt
       }],
       parameters: {
+        image: {
+          data: imageBase64,
+          mimeType: 'image/jpeg'
+        },
         aspectRatio: "16:9",
         durationSeconds: "6",
         resolution: "720p"
@@ -227,9 +227,9 @@ export async function generateVideoWithVeo(
     console.log('Request body structure:', {
       instances: requestBody.instances.length,
       promptLength: requestBody.instances[0].prompt.length,
-      hasImage: !!requestBody.instances[0].image,
-      imageSize: requestBody.instances[0].image?.imageBytes?.length || 0,
-      parameters: requestBody.parameters
+      hasImage: !!requestBody.parameters.image,
+      imageSize: requestBody.parameters.image?.data?.length || 0,
+      parameters: Object.keys(requestBody.parameters)
     })
 
     // Start video generation operation - use standard model, not fast (fast may not support image-to-video)
