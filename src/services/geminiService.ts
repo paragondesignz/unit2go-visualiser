@@ -239,8 +239,23 @@ export async function generateVideoWithVeo(
       await new Promise(resolve => setTimeout(resolve, 10000))
 
       try {
-        // Get operation status (matching your marketing app)
-        currentOperation = await ai.operations.get({ name: currentOperation.name })
+        // Poll operation status using REST API (more reliable than SDK)
+        const pollResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/${currentOperation.name}`,
+          {
+            method: 'GET',
+            headers: {
+              'x-goog-api-key': API_KEY
+            }
+          }
+        )
+
+        if (pollResponse.ok) {
+          currentOperation = await pollResponse.json()
+        } else {
+          console.error('Error polling operation:', pollResponse.status)
+          break
+        }
       } catch (pollError) {
         console.error('Error polling video operation:', pollError)
         break
@@ -257,13 +272,13 @@ export async function generateVideoWithVeo(
       throw new Error(`Video generation failed: ${JSON.stringify(currentOperation.error)}`)
     }
 
-    // Handle response like your marketing app
+    // Handle response - use generatedVideos structure
     const response = currentOperation.response
-    if (!response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri) {
+    if (!response?.generatedVideos?.[0]?.video?.uri) {
       throw new Error('No video URI in completed operation')
     }
 
-    const videoUri = response.generateVideoResponse.generatedSamples[0].video.uri
+    const videoUri = response.generatedVideos[0].video.uri
 
     // Download video (matching your marketing app approach)
     const videoResponse = await fetch(videoUri)
