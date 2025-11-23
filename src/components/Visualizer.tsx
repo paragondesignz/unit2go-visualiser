@@ -500,7 +500,8 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     const handleGlobalMouseUp = () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove)
       document.removeEventListener('mouseup', handleGlobalMouseUp)
-      handleSelectionEnd()
+      // Turn off zoom mode but keep selection visible for user to confirm
+      setZoomModeActive(false)
     }
 
     document.addEventListener('mousemove', handleGlobalMouseMove)
@@ -513,7 +514,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     setSelectionRect(null)
   }
 
-  const handleSelectionEnd = async () => {
+  const handleZoomToSelection = async () => {
     if (!selectionRect || !resultImage || processing) {
       // Clean up selection state even if we're not processing
       setSelectionRect(null)
@@ -667,7 +668,7 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
                   userSelect: 'none'
                 }}
               />
-              {zoomModeActive && selectionRect && (
+              {selectionRect && (
                 <div
                   className="selection-rectangle"
                   style={{
@@ -681,7 +682,19 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
                     pointerEvents: 'none',
                     zIndex: 10
                   }}
-                />
+                >
+                  {/* Resize handles for transforming selection */}
+                  <div className="resize-handle nw-resize" style={{ position: 'absolute', left: '-5px', top: '-5px', width: '10px', height: '10px', backgroundColor: '#FF6B35', cursor: 'nw-resize', pointerEvents: 'auto' }} />
+                  <div className="resize-handle ne-resize" style={{ position: 'absolute', right: '-5px', top: '-5px', width: '10px', height: '10px', backgroundColor: '#FF6B35', cursor: 'ne-resize', pointerEvents: 'auto' }} />
+                  <div className="resize-handle sw-resize" style={{ position: 'absolute', left: '-5px', bottom: '-5px', width: '10px', height: '10px', backgroundColor: '#FF6B35', cursor: 'sw-resize', pointerEvents: 'auto' }} />
+                  <div className="resize-handle se-resize" style={{ position: 'absolute', right: '-5px', bottom: '-5px', width: '10px', height: '10px', backgroundColor: '#FF6B35', cursor: 'se-resize', pointerEvents: 'auto' }} />
+
+                  {/* Edge resize handles */}
+                  <div className="resize-handle n-resize" style={{ position: 'absolute', left: '50%', top: '-5px', width: '20px', height: '10px', backgroundColor: '#FF6B35', cursor: 'n-resize', transform: 'translateX(-50%)', pointerEvents: 'auto' }} />
+                  <div className="resize-handle s-resize" style={{ position: 'absolute', left: '50%', bottom: '-5px', width: '20px', height: '10px', backgroundColor: '#FF6B35', cursor: 's-resize', transform: 'translateX(-50%)', pointerEvents: 'auto' }} />
+                  <div className="resize-handle w-resize" style={{ position: 'absolute', left: '-5px', top: '50%', width: '10px', height: '20px', backgroundColor: '#FF6B35', cursor: 'w-resize', transform: 'translateY(-50%)', pointerEvents: 'auto' }} />
+                  <div className="resize-handle e-resize" style={{ position: 'absolute', right: '-5px', top: '50%', width: '10px', height: '20px', backgroundColor: '#FF6B35', cursor: 'e-resize', transform: 'translateY(-50%)', pointerEvents: 'auto' }} />
+                </div>
               )}
             </>
           ) : (
@@ -710,9 +723,9 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
         {resultImage && (
           <div className="post-gen-section close-up-section">
             <h3>🔍 Image Controls</h3>
-            <p className="control-info">Enhance your image or drag to select an area to zoom into</p>
+            <p className="control-info">Enhance your image or drag to select an area, then confirm to zoom into it</p>
 
-            {!zoomModeActive ? (
+            {!zoomModeActive && !selectionRect ? (
               <div className="zoom-controls">
                 <button
                   className="zoom-btn primary-zoom"
@@ -727,6 +740,23 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
                   disabled={processing}
                 >
                   🔍 Zoom In
+                </button>
+              </div>
+            ) : selectionRect ? (
+              <div className="zoom-controls">
+                <button
+                  className="zoom-btn primary-zoom"
+                  onClick={handleZoomToSelection}
+                  disabled={processing}
+                >
+                  🎯 Zoom to Selection
+                </button>
+                <button
+                  className="zoom-btn secondary-zoom"
+                  onClick={handleCancelZoomMode}
+                  disabled={processing}
+                >
+                  ✖️ Cancel Selection
                 </button>
               </div>
             ) : (
