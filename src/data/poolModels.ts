@@ -198,6 +198,33 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'pool-spa-combo',
+    name: 'Pool & Spa Combo',
+    dimensions: {
+      length: 10.5,  // meters - generous pool with integrated spa
+      width: 5.2,    // meters - width accommodates spa section
+      depth: 1.8     // meters - varied depth for pool and spa
+    },
+    price: 75000,
+    imageUrl: '/pool-models/pool-spa-combo.png',
+    description: 'Luxury pool and spa combination featuring integrated design for the ultimate relaxation and entertainment experience',
+    features: [
+      'Integrated pool and spa design',
+      'Luxury entertainment features',
+      'Therapeutic spa jets',
+      'Heated spa functionality',
+      'Overflow spa design',
+      'Premium relaxation experience',
+      'Professional construction',
+      'Energy-efficient systems',
+      'Advanced filtration',
+      'LED lighting package',
+      'Premium finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
