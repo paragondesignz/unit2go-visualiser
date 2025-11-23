@@ -206,33 +206,72 @@ export async function generateVideoWithVeo(
   console.log('🎬 Generating video with Veo 3.1 Fast...')
 
   try {
-    console.log('Starting video generation operation...')
+    console.log('Starting video generation operation with REST API...')
 
-    // Use the correct generateVideos API
-    let operation = await ai.models.generateVideos({
-      model: 'veo-3.1-fast-generate-preview',
+    // Use REST API directly since SDK may not have full Veo support
+    const requestBody = {
       prompt: videoPrompt,
       image: {
-        imageBytes: imageBase64,
+        data: imageBase64,
         mimeType: 'image/jpeg'
       },
       aspectRatio: "16:9",
       durationSeconds: "6",
       resolution: "720p"
-    })
+    }
+
+    // Start video generation operation
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-fast-generate-preview:predictLongRunning`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': API_KEY
+        },
+        body: JSON.stringify(requestBody)
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+    }
+
+    const operationResponse = await response.json()
+    const operationName = operationResponse.name
+
+    if (!operationName) {
+      throw new Error('No operation name returned from video generation request')
+    }
 
     console.log('Polling for video generation completion...')
 
     // Poll for completion (max 5 minutes)
     let attempts = 0
     const maxAttempts = 30 // 5 minutes at 10-second intervals
+    let operation: any = { done: false }
 
     while (!operation.done && attempts < maxAttempts) {
       console.log(`Video generation in progress... (${attempts + 1}/${maxAttempts})`)
       await new Promise(resolve => setTimeout(resolve, 10000)) // Wait 10 seconds
 
       try {
-        operation = await ai.operations.getVideosOperation({ operation })
+        const pollResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/${operationName}`,
+          {
+            method: 'GET',
+            headers: {
+              'x-goog-api-key': API_KEY
+            }
+          }
+        )
+
+        if (pollResponse.ok) {
+          operation = await pollResponse.json()
+        } else {
+          console.error('Error polling operation:', pollResponse.status)
+          break
+        }
       } catch (pollError) {
         console.error('Error polling video operation:', pollError)
         break
@@ -246,7 +285,7 @@ export async function generateVideoWithVeo(
     }
 
     if (operation.error) {
-      throw new Error(`Video generation failed: ${operation.error}`)
+      throw new Error(`Video generation failed: ${JSON.stringify(operation.error)}`)
     }
 
     if (!operation.response?.generatedVideos?.[0]?.video) {
@@ -255,19 +294,29 @@ export async function generateVideoWithVeo(
 
     const video = operation.response.generatedVideos[0].video
 
-    // Download the video data
-    const videoData = await ai.files.download({ file: video })
-
-    // Convert to data URL
-    const videoBlob = new Blob([videoData], { type: 'video/mp4' })
-    const videoDataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.readAsDataURL(videoBlob)
-    })
-
-    console.log('✅ Video generated and downloaded successfully')
-    return videoDataUrl
+    // Handle different video response formats
+    if (video.data) {
+      // Video data is directly accessible
+      const videoDataUrl = `data:video/mp4;base64,${video.data}`
+      console.log('✅ Video generated and processed successfully')
+      return videoDataUrl
+    } else if (video.uri) {
+      // Fetch video from URI
+      const videoResponse = await fetch(video.uri)
+      if (!videoResponse.ok) {
+        throw new Error(`Failed to fetch video from URI: ${videoResponse.status}`)
+      }
+      const videoBlob = await videoResponse.blob()
+      const videoDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(videoBlob)
+      })
+      console.log('✅ Video generated and processed successfully')
+      return videoDataUrl
+    } else {
+      throw new Error('No video data or URI found in response')
+    }
 
   } catch (error) {
     console.error('Video generation failed:', error)
