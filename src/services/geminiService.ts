@@ -312,6 +312,7 @@ MANDATORY ARCHITECTURAL CONSTRAINTS:
 - PERFECT PROPORTIONS: Length, width, and height ratios must match Image [1] precisely
 - ACCURATE MATERIALS: Siding, roofing, trim colors must match the reference exactly
 - IDENTICAL STYLE: Architectural style (modern, rustic, traditional) must be preserved
+- GROUND PLANE ALIGNMENT: The tiny home MUST sit level and horizontal on the natural ground plane. The structure must appear naturally founded and never tilted or at an angle.
 
 This is precision architectural replication, not creative interpretation. Feature accuracy overrides ALL other considerations.
 
@@ -386,11 +387,12 @@ FINAL ARCHITECTURAL VERIFICATION CHECKLIST:
 2. Are all windows, doors, and features identical to reference? (Must be YES)
 3. Do the proportions and scale match the reference precisely? (Must be YES)
 4. Are materials and colors accurate to the reference? (Must be YES)
+5. Is the tiny home sitting level and horizontal on the ground plane? (Must be YES)
 If any answer is incorrect, the generation has FAILED and must be corrected.`
     } else {
       basePrompt += `
 
-FINAL VERIFICATION: Confirm that the tiny home's architectural features match Image [1] exactly, scale matches real-world proportions relative to visible reference points, shadows align precisely with the property's lighting direction, ground integration appears naturally established, and the overall composition maintains professional real estate photography standards suitable for premium marketing materials.`
+FINAL VERIFICATION: Confirm that the tiny home's architectural features match Image [1] exactly, scale matches real-world proportions relative to visible reference points, the structure sits perfectly level and horizontal on the ground plane, shadows align precisely with the property's lighting direction, ground integration appears naturally established, and the overall composition maintains professional real estate photography standards suitable for premium marketing materials.`
     }
 
     return basePrompt
@@ -546,6 +548,7 @@ MANDATORY GEOMETRIC CONSTRAINTS:
 - NO CUTOUTS: Do not add ledges, alcoves, or cutouts unless explicitly visible in Image [1].
 - PERFECT OUTLINE: The final pool's perimeter must match Image [1] exactly. Do not "improve" or modify the geometric design.
 - EXACT PROPORTIONS: Length-to-width ratio must match Image [1] precisely.
+- GROUND PLANE ALIGNMENT: The pool MUST be perfectly level and horizontal with the ground plane. Pool edges must be parallel to the natural ground surface and never appear tilted or at an angle.
 
 This is precision engineering, not creative interpretation. Shape accuracy overrides ALL other considerations.
 
@@ -567,6 +570,7 @@ After guaranteeing 100% shape fidelity, execute these requirements:
    - Determine optimal pool position using spatial intelligence rather than simple placement
    - Ensure the pool aligns with the property's natural flow and existing structures
    - Position pool to complement sight lines from house windows and outdoor spaces
+   - CRITICAL: Establish the natural ground plane from visible terrain features and ensure the pool sits perfectly level and horizontal with this ground plane. The pool surface must appear as a natural extension of the yard's level areas.
 
 2. Precise Scaling: The pool measures exactly ${length}m long × ${width}m wide (aspect ratio ${(width / length).toFixed(2)}:1 width-to-length). Scale accurately using these visible reference elements from Image [0]:
 
@@ -623,6 +627,7 @@ FINAL GEOMETRIC VERIFICATION CHECKLIST:
 2. Are there any added features not visible in Image [1]? (Must be NO)
 3. Do the proportions match the reference image precisely? (Must be YES)
 4. Is the scaling accurate to real-world dimensions? (Must be YES)
+5. Is the pool perfectly level and horizontal with the ground plane? (Must be YES)
 If any answer is incorrect, the generation has FAILED and must be corrected.`
     }
 
