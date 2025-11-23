@@ -249,6 +249,31 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'resort',
+    name: 'Resort',
+    dimensions: {
+      length: 12.0,  // meters - luxury resort-style pool
+      width: 6.0,    // meters - spacious width for entertaining
+      depth: 1.9     // meters - deeper end for diving and recreation
+    },
+    price: 72000,
+    imageUrl: '/pool-models/Resort_Vertical1.jpg',
+    description: 'Luxury resort-style pool design perfect for entertaining, relaxation and creating an ultimate backyard escape',
+    features: [
+      'Resort-style luxury design',
+      'Perfect for entertaining',
+      'Spacious swimming area',
+      'Ultimate relaxation experience',
+      'Premium resort aesthetics',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting package',
+      'Luxury finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
