@@ -366,7 +366,7 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
 
     // Check if current model supports higher resolutions
     const currentModel = currentModelSettings?.model || 'gemini-3-pro-image-preview'
-    if (currentModel.includes('2.5-flash') && targetResolution !== '1K') {
+    if (currentModel.includes('2.5-flash')) {
       setError(`Gemini 2.5 Flash Image only supports 1024px resolution. Use Gemini 3 Pro Image for ${targetResolution} upscaling.`)
       return
     }

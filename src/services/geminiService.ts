@@ -205,44 +205,46 @@ export async function generateVideoWithVeo(
 
   console.log('🎬 Generating video with Veo 3.1 Fast...')
 
-  try {
-    const model = ai.getGenerativeModel({
-      model: 'veo-3.1-fast-generate-preview',
-      generationConfig: {
-        temperature: 0.7,
-        responseModalities: ['Video'] as string[],
-        videoConfig: {
-          aspectRatio: "16:9",
-          durationSeconds: "6"
+  const model = 'veo-3.1-fast-generate-preview'
+  const config = {
+    temperature: 0.7,
+    responseModalities: ['Video'] as string[],
+    videoConfig: {
+      aspectRatio: "16:9",
+      durationSeconds: "6"
+    }
+  }
+
+  const contents = [
+    {
+      role: 'user' as const,
+      parts: [
+        {
+          text: videoPrompt
+        },
+        {
+          inlineData: {
+            mimeType: 'image/jpeg',
+            data: imageBase64
+          }
         }
-      }
+      ]
+    }
+  ]
+
+  try {
+    console.log('Sending request to Veo 3.1...')
+    const response = await ai.models.generateContent({
+      model,
+      config,
+      contents
     })
 
-    const contents = [
-      {
-        role: 'user' as const,
-        parts: [
-          {
-            text: videoPrompt
-          },
-          {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: imageBase64
-            }
-          }
-        ]
-      }
-    ]
-
-    console.log('Sending request to Veo 3.1...')
-    const response = await model.generateContent({ contents })
-
-    if (!response.response.candidates?.[0]?.content?.parts?.[0]) {
+    if (!response.candidates?.[0]?.content?.parts?.[0]) {
       throw new Error('No video content received from Veo 3.1')
     }
 
-    const videoPart = response.response.candidates[0].content.parts[0]
+    const videoPart = response.candidates[0].content.parts[0]
 
     if (videoPart.inlineData?.data) {
       const videoDataUrl = `data:video/mp4;base64,${videoPart.inlineData.data}`
