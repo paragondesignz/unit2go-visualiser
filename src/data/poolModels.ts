@@ -324,6 +324,31 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'regal',
+    name: 'Regal',
+    dimensions: {
+      length: 11.0,  // meters - regal luxury size
+      width: 5.5,    // meters - elegant proportions
+      depth: 1.8     // meters - sophisticated depth
+    },
+    price: 62000,
+    imageUrl: '/pool-models/Regal_Vertical1.jpg',
+    description: 'Regal pool design featuring majestic proportions and luxury styling perfect for prestigious residential settings',
+    features: [
+      'Regal luxury design',
+      'Majestic proportions',
+      'Prestigious styling',
+      'Premium entertainment space',
+      'Sophisticated aesthetics',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting package',
+      'Luxury finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
