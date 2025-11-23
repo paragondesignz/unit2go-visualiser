@@ -568,35 +568,35 @@ MANDATORY PERSON REMOVAL:
                 <>
                   <button
                     className="quick-action-button"
-                    onClick={() => handleQuickEdit('add pool decking and patio area around the pool')}
+                    onClick={() => handleQuickEdit('add pool decking and patio area around the pool that naturally integrates with the pool\'s current orientation and shape. The decking should follow the pool\'s existing layout and complement its positioning. Maintain the exact same camera angle and photo perspective - do not change the viewing angle or crop the image.')}
                     disabled={processing}
                   >
                     Add Pool Decking
                   </button>
                   <button
                     className="quick-action-button"
-                    onClick={() => handleQuickEdit('add pool furniture: lounge chairs, umbrella, and outdoor dining set')}
+                    onClick={() => handleQuickEdit('add pool furniture (lounge chairs, umbrella, and outdoor dining set) positioned naturally around the pool\'s current layout. Arrange furniture to complement the pool\'s orientation and create natural gathering areas. Maintain the exact same camera angle and photo perspective - do not change the viewing angle or crop the image.')}
                     disabled={processing}
                   >
                     Add Pool Furniture
                   </button>
                   <button
                     className="quick-action-button"
-                    onClick={() => handleQuickEdit('add tropical pool landscaping with palms and decorative plants')}
+                    onClick={() => handleQuickEdit('add tropical pool landscaping with palms and decorative plants that naturally integrate with the pool\'s current positioning. Plant placement should complement the pool\'s orientation and enhance the existing layout. Maintain the exact same camera angle and photo perspective - do not change the viewing angle or crop the image.')}
                     disabled={processing}
                   >
                     Add Pool Landscaping
                   </button>
                   <button
                     className="quick-action-button"
-                    onClick={() => handleQuickEdit('add pool equipment and filtration system screening with landscaping')}
+                    onClick={() => handleQuickEdit('add pool equipment and filtration system screening with landscaping that naturally integrates with the pool\'s current layout. Position screening elements to complement the pool\'s orientation and existing positioning. Maintain the exact same camera angle and photo perspective - do not change the viewing angle or crop the image.')}
                     disabled={processing}
                   >
                     Add Equipment Screening
                   </button>
                   <button
                     className="quick-action-button"
-                    onClick={() => handleQuickEdit('create a complete NZ backyard pool area with comprehensive landscaping including native New Zealand plants, entertaining areas with outdoor furniture, pool decking, pathways, privacy fencing, and a cohesive outdoor living space perfect for the New Zealand lifestyle')}
+                    onClick={() => handleQuickEdit('create a complete NZ backyard pool area with comprehensive landscaping including native New Zealand plants, entertaining areas with outdoor furniture, pool decking, pathways, privacy fencing, and a cohesive outdoor living space that naturally integrates with the pool\'s current orientation and layout. All additions should complement the pool\'s existing positioning. Maintain the exact same camera angle and photo perspective - do not change the viewing angle or crop the image.')}
                     disabled={processing}
                   >
                     Complete Pool Area
