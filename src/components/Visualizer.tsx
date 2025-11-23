@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel, ImageResolution } from '../types'
 import { processWithGemini, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 import { generateVisualization } from '../services/imageGenerationService'
@@ -34,8 +34,6 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [showPromptPanel, setShowPromptPanel] = useState(false)
   const [zoomModeActive, setZoomModeActive] = useState(false)
-  const [isSelecting, setIsSelecting] = useState(false)
-  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
 
   const tips = [
@@ -470,8 +468,6 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
 
-    setIsSelecting(true)
-    setSelectionStart({ x, y })
     setSelectionRect(null)
 
     // Add global mouse event listeners for proper drag functionality
@@ -514,26 +510,21 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
   // Reset selection when zoom mode is deactivated
   const handleCancelZoomMode = () => {
     setZoomModeActive(false)
-    setIsSelecting(false)
     setSelectionRect(null)
   }
 
   const handleSelectionEnd = async () => {
     if (!selectionRect || !resultImage || processing) {
       // Clean up selection state even if we're not processing
-      setIsSelecting(false)
       setSelectionRect(null)
       return
     }
 
     // Require minimum selection size (20x20 pixels)
     if (selectionRect.width < 20 || selectionRect.height < 20) {
-      setIsSelecting(false)
       setSelectionRect(null)
       return
     }
-
-    setIsSelecting(false)
     setZoomModeActive(false)
     setProcessing(true)
     setError(null)
