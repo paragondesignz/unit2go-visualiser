@@ -328,6 +328,112 @@ MANDATORY PERSON REMOVAL:
     }
   }
 
+  // New post-generation handlers
+  const handleAspectRatioChange = async (newRatio: string) => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const ratioPrompt = `Change the aspect ratio of this image to ${newRatio}. Keep the ${modelType} and all other elements in exactly the same positions and proportions. Do not crop or alter the content - instead, adjust the frame composition to fit the ${newRatio} aspect ratio while preserving all visible elements. Maintain the same lighting, perspective, and spatial relationships.`
+
+      const editedImage = await conversationalEdit(resultImage, ratioPrompt, undefined, {
+        ...nanoBananaOptions,
+        imageSize: selectedResolution
+      })
+
+      addToHistory(editedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to change aspect ratio. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleUpscale = async (targetResolution: '2K' | '4K') => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const upscalePrompt = `Upscale this image to ${targetResolution} resolution while maintaining exact content, composition, and quality. Keep all elements in their current positions without any changes to the scene. Enhance detail and clarity without altering the image content.`
+
+      const upscaledImage = await conversationalEdit(resultImage, upscalePrompt, undefined, {
+        ...nanoBananaOptions,
+        imageSize: targetResolution
+      })
+
+      addToHistory(upscaledImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to upscale image. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleCameraChange = async (cameraAngle: 'aerial' | 'ground' | 'elevated' | 'side') => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const cameraPrompts = {
+        aerial: `Change to an aerial/bird's eye view perspective of this scene. Show the ${modelType} and property from directly above or at a high elevated angle. Maintain all existing elements and their spatial relationships while providing this top-down perspective.`,
+        ground: `Change to a ground-level perspective of this scene. Position the camera at standing height (about 1.7m) to show the ${modelType} and property from a human eye-level viewpoint. Keep all elements in their current positions.`,
+        elevated: `Change to an elevated angle perspective of this scene. Position the camera at a moderate height (2-3 meters) to show the ${modelType} and property from a slightly raised viewpoint. Maintain all existing elements and spatial relationships.`,
+        side: `Change to a side view perspective of this scene. Show the ${modelType} and property from the side angle to capture the profile and depth. Keep all elements in their current positions while providing this lateral perspective.`
+      }
+
+      const editedImage = await conversationalEdit(resultImage, cameraPrompts[cameraAngle], undefined, nanoBananaOptions)
+
+      addToHistory(editedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to change camera angle. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
+  const handleZoom = async (zoomArea: 'pool-area' | 'landscaping' | 'entrance') => {
+    if (!resultImage) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const zoomPrompts = {
+        'pool-area': `Create a detailed close-up view focusing on the ${modelType} area. Show the ${modelType} and its immediate surroundings in high detail, capturing textures, materials, and nearby features. Maintain realistic proportions and lighting while providing an intimate view of this central area.`,
+        'landscaping': `Create a detailed close-up view focusing on the landscaping and garden areas around the ${modelType}. Show plants, trees, decorative elements, and natural features in high detail. Capture the textures of vegetation, soil, and landscape materials while maintaining the spatial context with the ${modelType}.`,
+        'entrance': `Create a detailed close-up view focusing on the main entrance or access area to the ${modelType}. Show pathways, steps, doorways, and approach areas in high detail. Capture architectural details, materials, and the transition from outdoor space to the ${modelType} entrance.`
+      }
+
+      const zoomedImage = await conversationalEdit(resultImage, zoomPrompts[zoomArea], undefined, {
+        ...nanoBananaOptions,
+        imageSize: '4K' // Use highest resolution for close-ups
+      })
+
+      addToHistory(zoomedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError('Failed to create close-up view. Please try again.')
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const openLightbox = () => {
     if (resultImage) {
       setIsLightboxOpen(true)
@@ -637,6 +743,138 @@ MANDATORY PERSON REMOVAL:
               )}
             </div>
           </div>
+        )}
+
+        {/* Post-Generation Controls */}
+        {resultImage && (
+          <>
+            {/* Aspect Ratio Change */}
+            <div className="post-gen-section">
+              <h3>Change Aspect Ratio</h3>
+              <div className="aspect-ratio-grid">
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('1:1')}
+                  disabled={processing}
+                >
+                  1:1 Square
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('4:3')}
+                  disabled={processing}
+                >
+                  4:3 Standard
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('16:9')}
+                  disabled={processing}
+                >
+                  16:9 Widescreen
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('9:16')}
+                  disabled={processing}
+                >
+                  9:16 Portrait
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('21:9')}
+                  disabled={processing}
+                >
+                  21:9 Ultra-wide
+                </button>
+              </div>
+            </div>
+
+            {/* Resolution Upscaling */}
+            <div className="post-gen-section">
+              <h3>Upscale Resolution</h3>
+              <div className="upscale-buttons">
+                <button
+                  className="upscale-btn"
+                  onClick={() => handleUpscale('2K')}
+                  disabled={processing}
+                >
+                  Upscale to 2K
+                </button>
+                <button
+                  className="upscale-btn"
+                  onClick={() => handleUpscale('4K')}
+                  disabled={processing}
+                >
+                  Upscale to 4K
+                </button>
+              </div>
+            </div>
+
+            {/* Camera Controls */}
+            <div className="post-gen-section">
+              <h3>Camera Perspective</h3>
+              <div className="camera-controls-grid">
+                <button
+                  className="camera-btn"
+                  onClick={() => handleCameraChange('aerial')}
+                  disabled={processing}
+                >
+                  Aerial View
+                </button>
+                <button
+                  className="camera-btn"
+                  onClick={() => handleCameraChange('ground')}
+                  disabled={processing}
+                >
+                  Ground Level
+                </button>
+                <button
+                  className="camera-btn"
+                  onClick={() => handleCameraChange('elevated')}
+                  disabled={processing}
+                >
+                  Elevated Angle
+                </button>
+                <button
+                  className="camera-btn"
+                  onClick={() => handleCameraChange('side')}
+                  disabled={processing}
+                >
+                  Side View
+                </button>
+              </div>
+            </div>
+
+            {/* Zoom/Close-up */}
+            <div className="post-gen-section">
+              <h3>Close-up Views</h3>
+              <p className="control-info">Generate detailed close-up views of specific areas</p>
+              <div className="zoom-controls">
+                <button
+                  className="zoom-btn"
+                  onClick={() => handleZoom('pool-area')}
+                  disabled={processing}
+                >
+                  {isPoolModel(selectedModel) ? 'Pool Close-up' : 'Structure Close-up'}
+                </button>
+                <button
+                  className="zoom-btn"
+                  onClick={() => handleZoom('landscaping')}
+                  disabled={processing}
+                >
+                  Landscaping Detail
+                </button>
+                <button
+                  className="zoom-btn"
+                  onClick={() => handleZoom('entrance')}
+                  disabled={processing}
+                >
+                  Entrance Area
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {/* Conversational Editing - moved under preview */}
