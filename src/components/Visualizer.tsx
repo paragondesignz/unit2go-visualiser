@@ -37,6 +37,7 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
+  const [videoGenerationProgress, setVideoGenerationProgress] = useState<string>('')
 
   const tips = [
     isPoolModel(selectedModel)
@@ -628,16 +629,21 @@ The output should show only the content within this bounding box, cropped with p
     if (!resultImage || processing) return
 
     setIsGeneratingVideo(true)
+    setVideoGenerationProgress('Initializing video generation...')
     setError(null)
 
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      setVideoGenerationProgress('Sending request to Veo 3.1 Fast... (this may take 2-5 minutes)')
+
       const videoDataUrl = await generateVideoWithVeo(resultImage, modelType)
 
       setGeneratedVideo(videoDataUrl)
+      setVideoGenerationProgress('')
     } catch (err) {
       setError('Failed to generate video. Please try again.')
       console.error(err)
+      setVideoGenerationProgress('')
     } finally {
       setIsGeneratingVideo(false)
     }
@@ -719,11 +725,19 @@ The output should show only the content within this bounding box, cropped with p
     <div className="visualizer">
       <div className="visualization-wrapper">
         <div className="visualization-container" style={{ position: 'relative' }}>
-          {processing && (
+          {(processing || isGeneratingVideo) && (
             <div className="processing-overlay">
               <div className="spinner"></div>
-              <p className="processing-text">Processing your image...</p>
-              <p className="processing-tip">{tips[tipIndex]}</p>
+              <p className="processing-text">
+                {isGeneratingVideo ? 'Generating video with Veo 3.1...' : 'Processing your image...'}
+              </p>
+              {isGeneratingVideo ? (
+                <p className="processing-tip" style={{ color: '#ff6b35', fontWeight: 'bold' }}>
+                  Video generation takes 2-5 minutes. Please wait...
+                </p>
+              ) : (
+                <p className="processing-tip">{tips[tipIndex]}</p>
+              )}
             </div>
           )}
 
@@ -866,6 +880,11 @@ The output should show only the content within this bounding box, cropped with p
                 >
                   {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
                 </button>
+                {videoGenerationProgress && (
+                  <div style={{ marginTop: '10px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
+                    {videoGenerationProgress}
+                  </div>
+                )}
               </div>
             ) : selectionRect ? (
               <div className="zoom-controls">

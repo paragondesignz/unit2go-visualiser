@@ -205,55 +205,70 @@ export async function generateVideoWithVeo(
 
   console.log('🎬 Generating video with Veo 3.1 Fast...')
 
-  const model = 'veo-3.1-fast-generate-preview'
-  const config = {
-    temperature: 0.7,
-    // Remove responseModalities as it's not valid for video
-    veoConfig: {
+  try {
+    console.log('Starting video generation operation...')
+
+    // Use the correct generateVideos API
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.1-fast-generate-preview',
+      prompt: videoPrompt,
+      image: {
+        imageBytes: imageBase64,
+        mimeType: 'image/jpeg'
+      },
       aspectRatio: "16:9",
       durationSeconds: "6",
       resolution: "720p"
-    }
-  }
-
-  const contents = [
-    {
-      role: 'user' as const,
-      parts: [
-        {
-          text: videoPrompt
-        },
-        {
-          inlineData: {
-            mimeType: 'image/jpeg',
-            data: imageBase64
-          }
-        }
-      ]
-    }
-  ]
-
-  try {
-    console.log('Sending request to Veo 3.1...')
-    const response = await ai.models.generateContent({
-      model,
-      config,
-      contents
     })
 
-    if (!response.candidates?.[0]?.content?.parts?.[0]) {
-      throw new Error('No video content received from Veo 3.1')
+    console.log('Polling for video generation completion...')
+
+    // Poll for completion (max 5 minutes)
+    let attempts = 0
+    const maxAttempts = 30 // 5 minutes at 10-second intervals
+
+    while (!operation.done && attempts < maxAttempts) {
+      console.log(`Video generation in progress... (${attempts + 1}/${maxAttempts})`)
+      await new Promise(resolve => setTimeout(resolve, 10000)) // Wait 10 seconds
+
+      try {
+        operation = await ai.operations.getVideosOperation({ operation })
+      } catch (pollError) {
+        console.error('Error polling video operation:', pollError)
+        break
+      }
+
+      attempts++
     }
 
-    const videoPart = response.candidates[0].content.parts[0]
-
-    if (videoPart.inlineData?.data) {
-      const videoDataUrl = `data:video/mp4;base64,${videoPart.inlineData.data}`
-      console.log('✅ Video generated successfully')
-      return videoDataUrl
-    } else {
-      throw new Error('No video data received from Veo 3.1')
+    if (!operation.done) {
+      throw new Error('Video generation timed out after 5 minutes')
     }
+
+    if (operation.error) {
+      throw new Error(`Video generation failed: ${operation.error}`)
+    }
+
+    if (!operation.response?.generatedVideos?.[0]?.video) {
+      throw new Error('No video content in completed operation')
+    }
+
+    const video = operation.response.generatedVideos[0].video
+
+    // Download the video data
+    const videoData = await ai.files.download({ file: video })
+
+    // Convert to data URL
+    const videoBlob = new Blob([videoData], { type: 'video/mp4' })
+    const videoDataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.readAsDataURL(videoBlob)
+    })
+
+    console.log('✅ Video generated and downloaded successfully')
+    return videoDataUrl
+
   } catch (error) {
     console.error('Video generation failed:', error)
     throw new Error(`Failed to generate video: ${error instanceof Error ? error.message : 'Unknown error'}`)
