@@ -82,7 +82,16 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
 
     if (hour >= 19 && hour < 21) return 'New Zealand sunset with natural oranges, soft pinks, and gentle purples in the sky. The setting sun casts warm tones with natural shadows'
 
-    if (hour >= 21 && hour <= 22) return 'New Zealand nighttime with dark sky (deep blue or black with stars). Natural outdoor lighting from warm deck lights, landscape path lights, and house lighting'
+    if (hour >= 21 && hour <= 22) {
+      const baseNightLighting = 'New Zealand nighttime with dark sky (deep blue or black with stars). Natural outdoor lighting from warm deck lights, landscape path lights, and house lighting'
+
+      // Add pool lighting specifically for pool generations at night
+      if (isPoolModel(selectedModel)) {
+        return baseNightLighting + '. CRITICAL: Include beautiful underwater pool lighting - warm LED lights illuminating the pool water from within, creating an inviting blue glow and gentle water reflections. The pool should have sophisticated lighting that highlights the water clarity and creates an elegant nighttime ambiance.'
+      }
+
+      return baseNightLighting
+    }
 
     return 'Natural New Zealand daylight with realistic intensity and color temperature'
   }

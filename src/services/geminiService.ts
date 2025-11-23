@@ -586,7 +586,7 @@ After guaranteeing 100% shape fidelity, execute these requirements:
 
    SCALING VERIFICATION: Ensure the pool's footprint looks proportionally correct against the house size - a ${length}m pool should appear roughly ${(length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
-3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained.`
+3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained. For nighttime scenes, ensure underwater lighting creates beautiful illumination that highlights water clarity and produces elegant reflections.`
 
     // Enhanced lighting logic with preservation mode
     if (preserveLighting) {
@@ -648,7 +648,7 @@ If any answer is incorrect, the generation has FAILED and must be corrected.`
                      (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
   const config = {
-    temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning capabilities
+    temperature: nanoBananaOptions?.temperature || 0.8, // Lower temperature for improved pool shape accuracy
     topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex scene analysis
     responseModalities: ['Image'] as string[],
     imageConfig: {
