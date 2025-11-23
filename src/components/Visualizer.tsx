@@ -33,6 +33,7 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [showPromptPanel, setShowPromptPanel] = useState(false)
+  const [zoomModeActive, setZoomModeActive] = useState(false)
 
   const tips = [
     isPoolModel(selectedModel)
@@ -407,21 +408,40 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
     }
   }
 
-  const handleZoom = async (zoomArea: 'pool-area' | 'landscaping' | 'entrance') => {
-    if (!resultImage) return
 
+  const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!zoomModeActive || !resultImage || processing) return
+
+    setZoomModeActive(false)
     setProcessing(true)
     setError(null)
 
     try {
-      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      const zoomPrompts = {
-        'pool-area': `CROP AND ZOOM into this image to focus on the ${modelType} area. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the ${modelType} section of the current image. Show the ${modelType} and its immediate surroundings in higher detail by cropping tighter on this area of the existing view.`,
-        'landscaping': `CROP AND ZOOM into this image to focus on the landscaping and garden areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the landscaping section of the current image. Show plants, trees, and decorative elements in higher detail by cropping tighter on the garden areas of the existing view.`,
-        'entrance': `CROP AND ZOOM into this image to focus on the entrance or access areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the entrance section of the current image. Show pathways, steps, and approach areas in higher detail by cropping tighter on this area of the existing view.`
+      const rect = event.currentTarget.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width) * 100
+      const y = ((event.clientY - rect.top) / rect.height) * 100
+
+      // Convert coordinates to descriptive areas
+      let areaDescription = ''
+      if (x < 33) {
+        areaDescription += 'left side'
+      } else if (x > 67) {
+        areaDescription += 'right side'
+      } else {
+        areaDescription += 'center'
       }
 
-      const zoomedImage = await conversationalEdit(resultImage, zoomPrompts[zoomArea], undefined, {
+      if (y < 33) {
+        areaDescription += ' upper area'
+      } else if (y > 67) {
+        areaDescription += ' lower area'
+      } else {
+        areaDescription += ' middle area'
+      }
+
+      const zoomPrompt = `CROP AND ZOOM into this image to focus on the ${areaDescription} where the user clicked (approximately ${Math.round(x)}% from left, ${Math.round(y)}% from top). Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this specific area of the current image. Show this section in higher detail by cropping tighter around the clicked location.`
+
+      const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, {
         ...nanoBananaOptions,
         imageSize: '4K' // Use highest resolution for close-ups
       })
@@ -434,6 +454,10 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
     } finally {
       setProcessing(false)
     }
+  }
+
+  const handleActivateZoomMode = () => {
+    setZoomModeActive(true)
   }
 
   const openLightbox = () => {
@@ -524,9 +548,12 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
             <img
               src={showingOriginal ? uploadedImage.url : resultImage}
               alt={showingOriginal ? "Original space" : "Tiny home visualization"}
-              className="result-image clickable"
-              onClick={openLightbox}
-              style={{ cursor: 'pointer' }}
+              className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
+              onClick={zoomModeActive ? handleImageClick : openLightbox}
+              style={{
+                cursor: zoomModeActive ? 'crosshair' : 'pointer',
+                border: zoomModeActive ? '3px solid #FF6B35' : 'none'
+              }}
             />
           ) : (
             <img
@@ -848,33 +875,36 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
               </div>
             </div>
 
-            {/* Zoom/Close-up */}
+            {/* Click-to-Zoom */}
             <div className="post-gen-section close-up-section">
-              <h3>🔍 Generate Close-up Views</h3>
-              <p className="control-info">Create detailed high-resolution close-ups of specific areas (4K quality)</p>
-              <div className="zoom-controls">
-                <button
-                  className="zoom-btn primary-zoom"
-                  onClick={() => handleZoom('pool-area')}
-                  disabled={processing}
-                >
-                  📷 {isPoolModel(selectedModel) ? 'Pool Detail Shot' : 'Structure Detail Shot'}
-                </button>
-                <button
-                  className="zoom-btn"
-                  onClick={() => handleZoom('landscaping')}
-                  disabled={processing}
-                >
-                  🌿 Landscaping Close-up
-                </button>
-                <button
-                  className="zoom-btn"
-                  onClick={() => handleZoom('entrance')}
-                  disabled={processing}
-                >
-                  🚪 Entrance Detail
-                </button>
-              </div>
+              <h3>🔍 Click-to-Zoom</h3>
+              <p className="control-info">Click anywhere on the image above to create a detailed high-resolution close-up of that area (4K quality)</p>
+
+              {!zoomModeActive ? (
+                <div className="zoom-controls">
+                  <button
+                    className="zoom-btn primary-zoom"
+                    onClick={handleActivateZoomMode}
+                    disabled={processing}
+                  >
+                    📷 Activate Click-to-Zoom Mode
+                  </button>
+                </div>
+              ) : (
+                <div className="zoom-instructions">
+                  <div className="zoom-active-indicator">
+                    <span className="zoom-crosshair">✛</span>
+                    <p><strong>Zoom Mode Active!</strong></p>
+                    <p>Click anywhere on the image above to zoom into that area</p>
+                    <button
+                      className="cancel-zoom-btn"
+                      onClick={() => setZoomModeActive(false)}
+                    >
+                      Cancel Zoom Mode
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}

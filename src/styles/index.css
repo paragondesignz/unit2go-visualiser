@@ -2798,6 +2798,84 @@ body {
   cursor: not-allowed;
 }
 
+/* Click-to-Zoom Interface */
+.zoom-instructions {
+  text-align: center;
+}
+
+.zoom-active-indicator {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border: 2px solid #FF6B35;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 10px 0;
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(255, 107, 53, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.4);
+  }
+}
+
+.zoom-crosshair {
+  font-size: 2rem;
+  color: #FF6B35;
+  display: block;
+  margin-bottom: 10px;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.zoom-active-indicator p {
+  margin: 5px 0;
+  color: #D84315;
+}
+
+.zoom-active-indicator strong {
+  color: #BF360C;
+}
+
+.cancel-zoom-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+.cancel-zoom-btn:hover {
+  background: #d32f2f;
+}
+
+/* Zoom mode styling for image */
+.result-image.zoom-mode {
+  transition: border 0.3s ease;
+}
+
+.result-image.zoom-mode:hover {
+  border-color: #F7931E !important;
+  box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+}
+
 /* Responsive adjustments for post-generation controls */
 @media (max-width: 768px) {
   .aspect-ratio-grid {
