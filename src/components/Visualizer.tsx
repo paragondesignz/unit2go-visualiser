@@ -483,38 +483,56 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
       const clampedX = Math.max(0, Math.min(imageRect.width, currentX))
       const clampedY = Math.max(0, Math.min(imageRect.height, currentY))
 
-      // Calculate raw selection rectangle
-      const rawWidth = Math.abs(clampedX - x)
-      const rawHeight = Math.abs(clampedY - y)
+      // Calculate raw selection rectangle dimensions
+      const deltaX = clampedX - x
+      const deltaY = clampedY - y
 
-      // Maintain aspect ratio of original image
-      const imageAspectRatio = imageRect.width / imageRect.height
-      let width = rawWidth
-      let height = rawHeight
+      let width = Math.abs(deltaX)
+      let height = Math.abs(deltaY)
 
-      // Adjust dimensions to maintain aspect ratio
-      if (width / height > imageAspectRatio) {
-        // Width is too large, reduce it
-        width = height * imageAspectRatio
-      } else {
-        // Height is too large, reduce it
-        height = width / imageAspectRatio
+      // Apply minimum size constraint first
+      if (width < 20 || height < 20) {
+        setSelectionRect(null)
+        return
       }
 
-      // Calculate proper start position based on drag direction
-      const startX = clampedX < x ? Math.max(0, clampedX) : Math.max(0, x - width)
-      const startY = clampedY < y ? Math.max(0, clampedY) : Math.max(0, y - height)
+      // Calculate image aspect ratio and apply constraint
+      const imageAspectRatio = imageRect.width / imageRect.height
 
-      // Ensure selection doesn't go outside image boundaries
-      const finalWidth = Math.min(width, imageRect.width - startX)
-      const finalHeight = Math.min(height, imageRect.height - startY)
+      // Maintain image aspect ratio for the selection
+      if (height > 0) {
+        const selectionAspectRatio = width / height
+        if (selectionAspectRatio > imageAspectRatio) {
+          // Selection is too wide - reduce width
+          width = height * imageAspectRatio
+        } else {
+          // Selection is too tall - reduce height
+          height = width / imageAspectRatio
+        }
+      }
 
-      setSelectionRect({
-        x: startX,
-        y: startY,
-        width: finalWidth,
-        height: finalHeight
-      })
+      // Calculate position based on drag direction
+      const startX = deltaX >= 0 ? x : clampedX
+      const startY = deltaY >= 0 ? y : clampedY
+
+      // Apply final boundary constraints
+      const maxWidth = imageRect.width - startX
+      const maxHeight = imageRect.height - startY
+
+      const finalWidth = Math.min(width, maxWidth)
+      const finalHeight = Math.min(height, maxHeight)
+
+      // Only set selection if it's large enough after constraints
+      if (finalWidth >= 20 && finalHeight >= 20) {
+        setSelectionRect({
+          x: startX,
+          y: startY,
+          width: finalWidth,
+          height: finalHeight
+        })
+      } else {
+        setSelectionRect(null)
+      }
     }
 
     const handleGlobalMouseUp = () => {
