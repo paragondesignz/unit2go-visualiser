@@ -471,10 +471,7 @@ Transform this crop into a stunning, magazine-quality close-up with professional
 
 The result should be breathtakingly beautiful, enticing, and worthy of premium marketing materials.`
 
-      const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, {
-        ...nanoBananaOptions,
-        imageSize: '4K' // Use highest resolution for close-ups
-      })
+      const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, nanoBananaOptions)
 
       addToHistory(zoomedImage)
       setShowingOriginal(false)
@@ -915,7 +912,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
             {/* Click-to-Zoom */}
             <div className="post-gen-section close-up-section">
               <h3>✨ Artistic Close-ups</h3>
-              <p className="control-info">Click anywhere on the image above to create a stunning, magazine-quality close-up with professional photography effects and creative artistry (4K quality)</p>
+              <p className="control-info">Click anywhere on the image above to create a stunning, magazine-quality close-up with professional photography effects and creative artistry</p>
 
               {!zoomModeActive ? (
                 <div className="zoom-controls">
