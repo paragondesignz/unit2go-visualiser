@@ -208,16 +208,20 @@ export async function generateVideoWithVeo(
   try {
     console.log('Starting video generation operation with REST API...')
 
-    // Use REST API directly since SDK may not have full Veo support
+    // Use correct REST API format for Veo 3.1
     const requestBody = {
-      prompt: videoPrompt,
-      image: {
-        data: imageBase64,
-        mimeType: 'image/jpeg'
-      },
-      aspectRatio: "16:9",
-      durationSeconds: "6",
-      resolution: "720p"
+      instances: [{
+        prompt: videoPrompt,
+        image: {
+          imageBytes: imageBase64,
+          mimeType: 'image/jpeg'
+        }
+      }],
+      parameters: {
+        aspectRatio: "16:9",
+        durationSeconds: "6",
+        resolution: "720p"
+      }
     }
 
     // Start video generation operation
