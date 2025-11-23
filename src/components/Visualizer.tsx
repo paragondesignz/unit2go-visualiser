@@ -416,9 +416,9 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
       const zoomPrompts = {
-        'pool-area': `Create a detailed close-up view focusing on the ${modelType} area. Show the ${modelType} and its immediate surroundings in high detail, capturing textures, materials, and nearby features. Maintain realistic proportions and lighting while providing an intimate view of this central area.`,
-        'landscaping': `Create a detailed close-up view focusing on the landscaping and garden areas around the ${modelType}. Show plants, trees, decorative elements, and natural features in high detail. Capture the textures of vegetation, soil, and landscape materials while maintaining the spatial context with the ${modelType}.`,
-        'entrance': `Create a detailed close-up view focusing on the main entrance or access area to the ${modelType}. Show pathways, steps, doorways, and approach areas in high detail. Capture architectural details, materials, and the transition from outdoor space to the ${modelType} entrance.`
+        'pool-area': `CROP AND ZOOM into this image to focus on the ${modelType} area. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the ${modelType} section of the current image. Show the ${modelType} and its immediate surroundings in higher detail by cropping tighter on this area of the existing view.`,
+        'landscaping': `CROP AND ZOOM into this image to focus on the landscaping and garden areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the landscaping section of the current image. Show plants, trees, and decorative elements in higher detail by cropping tighter on the garden areas of the existing view.`,
+        'entrance': `CROP AND ZOOM into this image to focus on the entrance or access areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the entrance section of the current image. Show pathways, steps, and approach areas in higher detail by cropping tighter on this area of the existing view.`
       }
 
       const zoomedImage = await conversationalEdit(resultImage, zoomPrompts[zoomArea], undefined, {
