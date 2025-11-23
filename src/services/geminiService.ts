@@ -278,7 +278,7 @@ ${getStyleDescription(style)}
   // Enhanced prompt for 100% tiny home accuracy
   const getEnhancedTinyHomePrompt = () => {
     const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
-    const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
+    const useThinking = nanoBananaOptions?.useThinkingProcess !== false // Default to enabled for architectural accuracy
     const preserveLighting = nanoBananaOptions?.preserveOriginalLighting && !lightingPrompt
 
     let basePrompt = `TOP PRIORITY CONSTRAINT: PRESERVE USER'S ORIGINAL IMAGE COMPOSITION
@@ -288,14 +288,16 @@ PRIMARY OBJECTIVE: ACHIEVE 100% PRODUCT ACCURACY FOR ${tinyHomeModel.name} INTEG
 
 You are performing ultra-precise architectural visualization using Google Nano Banana Pro's advanced capabilities for professional real estate photography.
 
-${useThinking ? `STEP 1: ARCHITECTURAL ANALYSIS (Use thinking process)
-Before generating the image, analyze the tiny home reference image [1] and document:
-- Exact architectural features (windows, doors, roof type, siding)
-- Proportions and scale relationships
-- Unique design elements (dormers, porches, chimneys)
-- Color scheme and material finishes
-- Foundation/base structure details
-Document these elements for perfect replication.
+${useThinking ? `STEP 1: FORENSIC ARCHITECTURAL ANALYSIS (Use thinking process)
+Before generating the image, perform a detailed forensic study of the tiny home reference image [1]. Create a comprehensive architectural inventory by carefully examining and documenting:
+
+STRUCTURAL ELEMENTS: Count and describe every window (noting exact shapes, sizes, frame styles, and grid patterns), identify door types and their exact placement, analyze the complete roof configuration including pitch angles and any dormers or chimneys, document siding materials and their installation patterns.
+
+VISUAL CHARACTERISTICS: Record the precise color palette of all exterior materials, note any weathering or aging effects on surfaces, document hardware details like door handles and window trim, identify the foundation or base structure design.
+
+PROPORTIONAL ANALYSIS: Measure the relationships between architectural elements (window-to-wall ratios, door proportions, roof overhang dimensions), establish the overall building proportions and massing.
+
+This forensic documentation will serve as your architectural specification for perfect replication in the property scene.
 
 ` : ''}Professional Photography Standards: Shoot with architectural photography standards using 85mm lens perspective, f/8 aperture for optimal clarity, tripod-mounted with perspective correction. Maintain marketing-grade composition and lighting quality.
 
@@ -310,14 +312,25 @@ UNBREAKABLE RULES: ARCHITECTURAL PRECISION (100% ACCURACY REQUIRED)
 Your CRITICAL task is to render the tiny home from Image [1] into Image [0] with IDENTICAL architectural features and proportions.
 
 MANDATORY ARCHITECTURAL CONSTRAINTS:
-- EXACT FEATURES: Every window, door, roofline, and detail from Image [1] must be replicated perfectly
-- NO ADDED FEATURES: Do not add windows, dormers, porches, or details not visible in Image [1]
-- PERFECT PROPORTIONS: Length, width, and height ratios must match Image [1] precisely
-- ACCURATE MATERIALS: Siding, roofing, trim colors must match the reference exactly
-- IDENTICAL STYLE: Architectural style (modern, rustic, traditional) must be preserved
-- GROUND PLANE ALIGNMENT: The tiny home MUST sit level and horizontal on the natural ground plane. The structure must appear naturally founded and never tilted or at an angle.
 
-This is precision architectural replication, not creative interpretation. Feature accuracy overrides ALL other considerations.
+FEATURE PRESERVATION PROTOCOL:
+Study the tiny home reference image [1] like an architectural blueprint. Count and document every architectural element: the exact number of windows, their precise sizes and positions, the specific door style and placement, the roof design including any dormers or chimneys, the siding material and pattern, and all trim details. Transfer these elements with forensic accuracy to the property scene [0].
+
+CRITICAL PROHIBITIONS:
+- NEVER add architectural features not present in the reference image [1]
+- NEVER modify window sizes, shapes, or quantities from the reference
+- NEVER change door styles or add additional doors beyond what's shown
+- NEVER alter the roofline configuration or add roof features not in reference
+- NEVER modify siding patterns or material appearances
+- NEVER add porches, decks, or structural elements not visible in reference
+- NEVER change the proportional relationships between architectural elements
+
+DESCRIPTIVE ACCURACY REQUIREMENTS:
+The tiny home must appear as if the exact structure from reference image [1] was physically transported and placed in the property scene [0]. Every architectural detail—from the window mullions to the door hardware to the roof edge details—must match the reference with photographic precision. The materials should exhibit the same weathering, color saturation, and surface textures as shown in the reference image.
+
+GROUND PLANE ALIGNMENT: The tiny home MUST sit level and horizontal on the natural ground plane, appearing naturally founded and stable, never tilted or at an angle.
+
+This is forensic architectural replication. Visual accuracy of existing features overrides ALL other considerations.
 
 ${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
 - Generate at maximum resolution (4K) for architectural detail verification
@@ -411,8 +424,7 @@ FINAL VERIFICATION: Confirm that the tiny home's architectural features match Im
   const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
   const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
                             (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
-  const useThinking = nanoBananaOptions?.useThinkingProcess ||
-                     (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  const useThinking = nanoBananaOptions?.useThinkingProcess !== false // Default enabled for architectural accuracy
 
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural placement
@@ -425,7 +437,7 @@ FINAL VERIFICATION: Confirm that the tiny home's architectural features match Im
     // Enhanced accuracy settings
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
     ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
-    ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
+    ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : (accuracyLevel === 'maximum' ? 1500 : 1000) }),
   }
 
   const model = 'gemini-3-pro-image-preview'
