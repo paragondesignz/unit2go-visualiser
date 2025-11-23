@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel, ImageResolution } from '../types'
-import { processWithGemini, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
+import { processWithGemini, addWatermarkToImage, conversationalEdit, generateVideoWithVeo } from '../services/geminiService'
 import { generateVisualization } from '../services/imageGenerationService'
 
 interface VisualizerProps {
@@ -35,6 +35,8 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [showPromptPanel, setShowPromptPanel] = useState(false)
   const [zoomModeActive, setZoomModeActive] = useState(false)
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
 
   const tips = [
     isPoolModel(selectedModel)
@@ -341,12 +343,13 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
 
     try {
       const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
-      const ratioPrompt = `Change the aspect ratio of this image to ${newRatio}. Keep the ${modelType} and all other elements in exactly the same positions and proportions. Do not crop or alter the content - instead, adjust the frame composition to fit the ${newRatio} aspect ratio while preserving all visible elements. Maintain the same lighting, perspective, and spatial relationships.`
+      const ratioPrompt = `Reframe this image to ${newRatio} aspect ratio. CRITICAL: Keep the ${modelType} and all other elements in exactly the same positions and proportions. Expand the frame composition to fit the ${newRatio} aspect ratio while preserving all visible elements. Maintain the same lighting, perspective, and spatial relationships. Do not crop - expand the scene naturally.`
 
+      // Use proper API aspectRatio parameter for better results
       const editedImage = await conversationalEdit(resultImage, ratioPrompt, undefined, {
         ...nanoBananaOptions,
         imageSize: selectedResolution
-      })
+      }, newRatio) // Pass aspectRatio as override parameter
 
       addToHistory(editedImage)
       setShowingOriginal(false)
@@ -361,15 +364,23 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
   const handleUpscale = async (targetResolution: '2K' | '4K') => {
     if (!resultImage) return
 
+    // Check if current model supports higher resolutions
+    const currentModel = currentModelSettings?.model || 'gemini-3-pro-image-preview'
+    if (currentModel.includes('2.5-flash') && targetResolution !== '1K') {
+      setError(`Gemini 2.5 Flash Image only supports 1024px resolution. Use Gemini 3 Pro Image for ${targetResolution} upscaling.`)
+      return
+    }
+
     setProcessing(true)
     setError(null)
 
     try {
-      const upscalePrompt = `Upscale this image to ${targetResolution} resolution while maintaining exact content, composition, and quality. Keep all elements in their current positions without any changes to the scene. Enhance detail and clarity without altering the image content.`
+      // Use minimal prompt since we're relying on API imageSize parameter
+      const upscalePrompt = `Enhance the detail and clarity of this image while maintaining exact content and composition.`
 
       const upscaledImage = await conversationalEdit(resultImage, upscalePrompt, undefined, {
         ...nanoBananaOptions,
-        imageSize: targetResolution
+        imageSize: targetResolution // Proper API parameter for resolution
       })
 
       addToHistory(upscaledImage)
@@ -613,6 +624,25 @@ The output should show only the content within this bounding box, cropped with p
     setZoomModeActive(true)
   }
 
+  const handleGenerateVideo = async () => {
+    if (!resultImage || processing) return
+
+    setIsGeneratingVideo(true)
+    setError(null)
+
+    try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const videoDataUrl = await generateVideoWithVeo(resultImage, modelType)
+
+      setGeneratedVideo(videoDataUrl)
+    } catch (err) {
+      setError('Failed to generate video. Please try again.')
+      console.error(err)
+    } finally {
+      setIsGeneratingVideo(false)
+    }
+  }
+
   const openLightbox = () => {
     if (resultImage) {
       setIsLightboxOpen(true)
@@ -762,11 +792,56 @@ The output should show only the content within this bounding box, cropped with p
           </p>
         )}
 
+        {/* Generated Video Display */}
+        {generatedVideo && (
+          <div className="post-gen-section">
+            <h3>🎬 Generated Video</h3>
+            <p className="control-info">Cinematic dolly-in flyover generated with Veo 3.1 Fast</p>
+            <div className="video-container" style={{ position: 'relative', marginBottom: '20px' }}>
+              <video
+                src={generatedVideo}
+                controls
+                autoPlay={false}
+                loop
+                muted
+                style={{
+                  width: '100%',
+                  maxHeight: '400px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd'
+                }}
+              >
+                Your browser doesn't support video playback.
+              </video>
+              <div className="video-actions" style={{ marginTop: '10px', textAlign: 'center' }}>
+                <button
+                  className="download-button"
+                  onClick={() => {
+                    const link = document.createElement('a')
+                    link.href = generatedVideo
+                    link.download = `unit2go-video-${Date.now()}.mp4`
+                    link.click()
+                  }}
+                  style={{ marginRight: '10px' }}
+                >
+                  📥 Download Video
+                </button>
+                <button
+                  className="zoom-btn secondary-zoom"
+                  onClick={() => setGeneratedVideo(null)}
+                >
+                  ✖️ Remove Video
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Image Enhancement Controls - Moved under preview image */}
         {resultImage && (
           <div className="post-gen-section close-up-section">
-            <h3>🔍 Image Controls</h3>
-            <p className="control-info">Enhance your image or drag to select an area (maintains proportions), then confirm to zoom into it</p>
+            <h3>🔍 Image & Video Controls</h3>
+            <p className="control-info">Enhance your image, create a cinematic video with Veo 3.1, or drag to select an area to zoom into (maintains proportions)</p>
 
             {!zoomModeActive && !selectionRect ? (
               <div className="zoom-controls">
@@ -783,6 +858,13 @@ The output should show only the content within this bounding box, cropped with p
                   disabled={processing}
                 >
                   🔍 Zoom In
+                </button>
+                <button
+                  className="zoom-btn primary-zoom"
+                  onClick={handleGenerateVideo}
+                  disabled={processing || isGeneratingVideo}
+                >
+                  {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
                 </button>
               </div>
             ) : selectionRect ? (
@@ -1023,6 +1105,7 @@ The output should show only the content within this bounding box, cropped with p
             {/* Aspect Ratio Change */}
             <div className="post-gen-section">
               <h3>Change Aspect Ratio</h3>
+              <p className="control-info">Expand the frame to different aspect ratios using Gemini's native aspect ratio support</p>
               <div className="aspect-ratio-grid">
                 <button
                   className="aspect-ratio-btn"
@@ -1040,6 +1123,13 @@ The output should show only the content within this bounding box, cropped with p
                 </button>
                 <button
                   className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('3:4')}
+                  disabled={processing}
+                >
+                  3:4 Portrait
+                </button>
+                <button
+                  className="aspect-ratio-btn"
                   onClick={() => handleAspectRatioChange('16:9')}
                   disabled={processing}
                 >
@@ -1050,7 +1140,7 @@ The output should show only the content within this bounding box, cropped with p
                   onClick={() => handleAspectRatioChange('9:16')}
                   disabled={processing}
                 >
-                  9:16 Portrait
+                  9:16 Mobile
                 </button>
                 <button
                   className="aspect-ratio-btn"
@@ -1058,6 +1148,20 @@ The output should show only the content within this bounding box, cropped with p
                   disabled={processing}
                 >
                   21:9 Ultra-wide
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('2:3')}
+                  disabled={processing}
+                >
+                  2:3 Photo
+                </button>
+                <button
+                  className="aspect-ratio-btn"
+                  onClick={() => handleAspectRatioChange('3:2')}
+                  disabled={processing}
+                >
+                  3:2 Camera
                 </button>
               </div>
             </div>

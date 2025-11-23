@@ -188,6 +188,75 @@ async function generateConversationalLightingEdit(
   throw new Error(`No image generated during lighting edit. API Response: ${textResponse || 'No response text'}`)
 }
 
+export async function generateVideoWithVeo(
+  imageDataUrl: string,
+  modelType: 'pool' | 'tiny home'
+): Promise<string> {
+  if (!API_KEY) {
+    throw new Error('Gemini API key is not configured. Please add your API key to the .env file.')
+  }
+
+  const imageBase64 = imageDataUrl.includes('base64,')
+    ? imageDataUrl.split('base64,')[1]
+    : imageDataUrl
+
+  // Create dolly in camera movement prompt without audio
+  const videoPrompt = `Slow cinematic dolly in camera movement toward the ${modelType}, mimicking a gentle drone flyover approach. The camera smoothly moves closer to reveal more detail of the scene. Professional cinematography with stable, controlled movement. No dialogue, no sound effects, no music.`
+
+  console.log('🎬 Generating video with Veo 3.1 Fast...')
+
+  try {
+    const model = ai.getGenerativeModel({
+      model: 'veo-3.1-fast-generate-preview',
+      generationConfig: {
+        temperature: 0.7,
+        responseModalities: ['Video'] as string[],
+        videoConfig: {
+          aspectRatio: "16:9",
+          durationSeconds: "6"
+        }
+      }
+    })
+
+    const contents = [
+      {
+        role: 'user' as const,
+        parts: [
+          {
+            text: videoPrompt
+          },
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: imageBase64
+            }
+          }
+        ]
+      }
+    ]
+
+    console.log('Sending request to Veo 3.1...')
+    const response = await model.generateContent({ contents })
+
+    if (!response.response.candidates?.[0]?.content?.parts?.[0]) {
+      throw new Error('No video content received from Veo 3.1')
+    }
+
+    const videoPart = response.response.candidates[0].content.parts[0]
+
+    if (videoPart.inlineData?.data) {
+      const videoDataUrl = `data:video/mp4;base64,${videoPart.inlineData.data}`
+      console.log('✅ Video generated successfully')
+      return videoDataUrl
+    } else {
+      throw new Error('No video data received from Veo 3.1')
+    }
+  } catch (error) {
+    console.error('Video generation failed:', error)
+    throw new Error(`Failed to generate video: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
 export async function addWatermarkToImage(imageDataUrl: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas')
@@ -1051,20 +1120,22 @@ export async function conversationalEdit(
   currentImageDataUrl: string,
   editPrompt: string,
   customConfig?: { temperature?: number; topP?: number; topK?: number },
-  nanoBananaOptions?: NanoBananaProOptions
+  nanoBananaOptions?: NanoBananaProOptions,
+  overrideAspectRatio?: string
 ): Promise<string> {
   const imageBase64 = currentImageDataUrl.includes('base64,')
     ? currentImageDataUrl.split('base64,')[1]
     : currentImageDataUrl
 
-  const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
+  const detectedAspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
+  const aspectRatio = overrideAspectRatio || detectedAspectRatio
 
   const prompt = `TOP PRIORITY: PRESERVE ORIGINAL IMAGE COMPOSITION
 CRITICAL: Maintain the EXACT same camera angle, perspective, viewpoint, and composition as the current image. The user's photo composition must be respected absolutely.
 
 Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATION REQUIREMENTS: Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Do NOT move, resize, rotate, or alter any existing structures (pools, tiny homes, buildings). The existing structures must remain in their exact same location and appearance. NEVER change the camera angle, viewing perspective, or photo crop unless the request explicitly starts with "EXPLICIT USER REQUEST: Change camera perspective" - maintain the identical viewpoint in all other cases. For pool enhancements, ensure all additions naturally integrate with the pool's current orientation and layout geometry. Only add or modify what was specifically requested around the existing elements. The result should look like a real photograph with the requested change naturally integrated while preserving all original elements and camera perspective.`
 
-  console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
+  console.log(`Using aspect ratio for conversational edit: ${aspectRatio}${overrideAspectRatio ? ' (override)' : ' (detected)'}`)
 
   const config = {
     temperature: customConfig?.temperature ?? nanoBananaOptions?.temperature ?? 1.0,
