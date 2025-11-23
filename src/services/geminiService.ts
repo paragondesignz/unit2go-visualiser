@@ -475,8 +475,32 @@ ${accuracyLevel === 'ultra' ? `ULTRA ACCURACY MODE ACTIVE:
    - Consider privacy, wind patterns, and sun exposure for practical placement
    - Integrate with existing landscaping and hardscaping features
 
-3. Scale & Proportion Accuracy:
-Scale the tiny home to precise real-world proportions using visible reference points: standard doors (8 feet), fence panels (6 feet), windows (3x4 feet), and vehicle dimensions when present. The tiny home should maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint relative to these reference elements.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Tiny home should measure ${(tinyHomeModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}`
+3. ENHANCED SCALE DETECTION & PROPORTION ACCURACY:
+   The tiny home must maintain its authentic ${tinyHomeModel.dimensions.length}m x ${tinyHomeModel.dimensions.width}m footprint.
+
+   SCALE DETECTION PROTOCOL:
+   - First, carefully IDENTIFY all visible reference objects in Image [0] using enhanced object detection
+   - Use spatial understanding to determine relative distances and perspective relationships
+   - Cross-reference multiple objects for scale accuracy verification
+   - Account for perspective foreshortening and camera angle effects
+
+   PRIMARY SCALING REFERENCES (analyze any visible):
+   - Residential doors: 2.0m height, 0.9m width (most reliable reference)
+   - Fence panels: 1.8m height, typical 2.4m sections (excellent for linear measurement)
+   - Single-story house height: ~3m to roof line (good for large-scale reference)
+   - Standard cars: ~4.5m length, 1.8m width (highly reliable if visible)
+   - People: Use standard 1.7m height if visible (remove from final image)
+   - Windows: standard residential ~1.2m wide × 1.5m high
+   - Deck railings: standard 1.1m height
+   - Patio furniture: chairs ~0.6m wide, tables ~1.0-1.5m diameter
+
+   ADVANCED SCALING ANALYSIS:
+   - Use segmentation capabilities to isolate reference objects and measure their apparent size
+   - Calculate tiny home dimensions relative to the CLOSEST and most reliable reference object
+   - Verify scale consistency across multiple reference points
+   - Apply perspective correction based on camera angle and distance
+
+   SCALING VERIFICATION: The ${tinyHomeModel.dimensions.length}m tiny home should appear roughly ${(tinyHomeModel.dimensions.length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Tiny home should measure ${(tinyHomeModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}`
 
     // Enhanced lighting logic with preservation mode
     if (preserveLighting) {
@@ -705,21 +729,50 @@ After guaranteeing 100% shape fidelity, execute these requirements:
    - Determine optimal pool position using spatial intelligence rather than simple placement
    - Ensure the pool aligns with the property's natural flow and existing structures
    - Position pool to complement sight lines from house windows and outdoor spaces
-   - CRITICAL: Establish the natural ground plane from visible terrain features and ensure the pool sits perfectly level and horizontal with this ground plane. The pool surface must appear as a natural extension of the yard's level areas.
 
-2. Precise Scaling: The pool measures exactly ${length}m long × ${width}m wide (aspect ratio ${(width / length).toFixed(2)}:1 width-to-length). Scale accurately using these visible reference elements from Image [0]:
+   WATER PHYSICS & TERRAIN ANALYSIS (CRITICAL):
+   - WATER LEVEL PHYSICS: Water MUST remain perfectly level with the horizon at ALL times - this is non-negotiable physics
+   - TERRAIN SLOPE DETECTION: Analyze the terrain slope in the proposed pool area by examining:
+     * Fence post angles relative to vertical
+     * Building foundations and their relationship to ground
+     * Existing hardscaping slopes (paths, patios, decks)
+     * Shadow patterns indicating ground elevation changes
+     * Any visible retaining walls, steps, or grade changes
+   - SITE PREPARATION REQUIREMENTS: If terrain shows ANY slope where the pool would be placed:
+     * ADD APPROPRIATE RETAINING WALLS: Show realistic retaining walls on the uphill side
+     * GRADE ADJUSTMENT: Depict realistic grading/cut-and-fill to create level foundation
+     * DRAINAGE CONSIDERATION: Include subtle drainage solutions around retaining structures
+     * INTEGRATION: Make retaining walls appear as intentional landscape features using complementary materials
+   - WATER SURFACE: The pool water surface MUST be perfectly horizontal and level with the horizon line, regardless of surrounding terrain slope
 
-   PRIMARY SCALING REFERENCES (use any visible):
-   - Standard residential doors: 2.0m height, 0.9m width
-   - Fence panels: 1.8m height, typical 2.4m sections
-   - Single-story house height: ~3m to roof line
-   - Standard cars: ~4.5m length, 1.8m width
-   - Patio furniture: chairs ~0.6m wide, tables ~1.0-1.5m
-   - Garden beds: analyze width against house proportions
-   - Driveways: typically 3-4m wide for residential
-   - Windows: standard residential ~1.2m wide
+2. ENHANCED SCALE DETECTION & PRECISE SCALING:
+   The pool measures exactly ${length}m long × ${width}m wide (aspect ratio ${(width / length).toFixed(2)}:1 width-to-length).
 
-   SCALING VERIFICATION: Ensure the pool's footprint looks proportionally correct against the house size - a ${length}m pool should appear roughly ${(length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
+   SCALE DETECTION PROTOCOL:
+   - First, carefully IDENTIFY all visible reference objects in Image [0] using enhanced object detection
+   - Use spatial understanding to determine relative distances and perspective relationships
+   - Cross-reference multiple objects for scale accuracy verification
+   - Account for perspective foreshortening and camera angle effects
+
+   PRIMARY SCALING REFERENCES (analyze any visible):
+   - Residential doors: 2.0m height, 0.9m width (most reliable reference)
+   - Fence panels: 1.8m height, typical 2.4m sections (excellent for linear measurement)
+   - Single-story house height: ~3m to roof line (good for large-scale reference)
+   - Standard cars: ~4.5m length, 1.8m width (highly reliable if visible)
+   - People: Use standard 1.7m height if visible (remove from final image)
+   - Patio furniture: chairs ~0.6m wide, tables ~1.0-1.5m diameter
+   - Garden features: raised beds typically 0.3-0.6m high, paths 1.0-1.5m wide
+   - Windows: standard residential ~1.2m wide × 1.5m high
+   - Deck railings: standard 1.1m height
+   - Outdoor steps: risers typically 15-18cm high
+
+   ADVANCED SCALING ANALYSIS:
+   - Use segmentation capabilities to isolate reference objects and measure their apparent size
+   - Calculate pool dimensions relative to the CLOSEST and most reliable reference object
+   - Verify scale consistency across multiple reference points
+   - Apply perspective correction based on camera angle and distance
+
+   SCALING VERIFICATION: The ${length}m pool should appear roughly ${(length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
 3. PREMIUM WATER QUALITY RENDERING:
    MANDATORY WATER SPECIFICATIONS - The pool water MUST be absolutely pristine and photorealistic:

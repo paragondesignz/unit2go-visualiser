@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { UploadedImage } from '../types'
 import heic2any from 'heic2any'
+import QRCode from './QRCode'
+import { useCurrentUrl } from '../hooks/useCurrentUrl'
 
 interface ImageUploadProps {
   onImageUpload: (image: UploadedImage) => void
@@ -11,6 +13,7 @@ function ImageUpload({ onImageUpload }: ImageUploadProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const currentUrl = useCurrentUrl()
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -107,6 +110,15 @@ function ImageUpload({ onImageUpload }: ImageUploadProps) {
           <li>Supported formats: JPEG, PNG, WebP, HEIC (max 20MB)</li>
         </ul>
       </div>
+
+      {currentUrl && (
+        <QRCode
+          url={currentUrl}
+          title="Switch to Mobile"
+          description="Scan this QR code to continue on your mobile device for easier photo capture"
+          size={140}
+        />
+      )}
 
       <div
         className={`upload-zone ${dragActive ? 'drag-active' : ''} ${processing ? 'processing' : ''}`}

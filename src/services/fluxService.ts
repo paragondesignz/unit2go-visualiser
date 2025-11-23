@@ -122,12 +122,18 @@ CRITICAL SHAPE PRESERVATION RULES:
 - Do NOT add features not present in the reference diagram
 - The shape is a TEMPLATE - copy it exactly, only change the visual style (diagram → photorealistic)
 
+WATER PHYSICS & TERRAIN REQUIREMENTS:
+- WATER LEVEL PHYSICS: Water surface must remain perfectly horizontal and level with the horizon
+- TERRAIN ANALYSIS: Examine terrain slope and add retaining walls/grading if needed for level foundation
+- SCALE DETECTION: Use visible reference objects (doors, windows, cars, furniture) to size pool accurately
+
 PRESERVATION REQUIREMENTS:
 - Preserve the property photo exactly as-is
 - Preserve the pool shape from the reference diagram exactly as-is
 - Only add these minimal integration elements:
   * Natural contact shadows beneath the pool edges
   * Ground interaction where the pool meets terrain
+  * Site preparation (retaining walls, grading) if terrain slopes
   * Realistic water appearance (transparent, blue-turquoise, with depth and reflections)
   * Pool materials (concrete/fiberglass shell, coping/tile edges matching property style)
   * Lighting adjustments to match the property photo
@@ -415,7 +421,13 @@ function buildQwenIntegrationPrompt(
   if (isPoolModel(model)) {
     return `Image [0] is the property background photo. Image [1] is the swimming pool product reference.
 
-Integrate Image [1] seamlessly into Image [0]. Match the pool's perspective, scale, and rotation to the ground plane in Image [0], excavate it naturally into the lawn, and create realistic shadows, water reflections, and contact edges. The pool must look physically built into the property, not floating or pasted on top.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
+WATER PHYSICS & TERRAIN REQUIREMENTS:
+- WATER LEVEL PHYSICS: Water surface must remain perfectly horizontal and level with the horizon line
+- TERRAIN ANALYSIS: Analyze terrain slope and add retaining walls or grading if needed to create level foundation
+- SCALE DETECTION: Use visible reference objects (doors, windows, cars, furniture) to ensure accurate pool sizing
+
+INTEGRATION REQUIREMENTS:
+Integrate Image [1] seamlessly into Image [0]. Match the pool's perspective, scale, and rotation to the ground plane in Image [0], excavate it naturally into the lawn, and create realistic shadows, water reflections, and contact edges. If terrain slopes, add appropriate retaining walls and site grading to ensure water remains level. The pool must look physically built into the property, not floating or pasted on top.${lightingPrompt ? ` ${lightingPrompt}` : ''}`
   }
 
   return `Seamlessly integrate the tiny home from the product image into the property background with maximum product adherence and natural positioning.
@@ -425,6 +437,12 @@ CRITICAL PRODUCT ADHERENCE:
 - Do NOT modify, simplify, or adjust any part of the structure's design or appearance
 - Maintain precise architectural details, window placement, materials, and colors exactly as shown
 - Keep all structural elements, proportions, and design features identical to the product image
+
+SCALE DETECTION & SIZING:
+- Analyze visible reference objects in the property photo for accurate scale (doors, windows, cars, furniture, people)
+- Use enhanced object detection to identify multiple scale references and cross-verify sizing
+- Apply perspective correction based on camera angle and distance to reference objects
+- Ensure tiny home dimensions appear realistic relative to existing structures
 
 NATURAL POSITIONING & INTEGRATION:
 - Position the tiny home naturally within the property, respecting terrain, pathways, and existing features

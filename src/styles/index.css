@@ -3119,3 +3119,119 @@ body {
     margin: 15px 0;
   }
 }
+
+/* QR Code Component Styles */
+.qr-code-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  text-align: center;
+  margin: 20px 0;
+}
+
+.qr-code-container:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+.qr-code-header {
+  margin-bottom: 20px;
+}
+
+.qr-code-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.qr-code-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.qr-code-content {
+  position: relative;
+  margin: 20px 0;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-code-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.qr-code-error {
+  color: var(--error-color);
+  font-size: 0.9rem;
+  padding: 12px;
+  background: rgba(245, 101, 101, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(245, 101, 101, 0.2);
+}
+
+.qr-code-canvas {
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.qr-code-canvas:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.qr-code-canvas.hidden {
+  display: none;
+}
+
+.qr-code-url {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.qr-code-url small {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  word-break: break-all;
+  font-family: monospace;
+  background: var(--bg-secondary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* Mobile-specific QR code styles */
+@media (max-width: 768px) {
+  .qr-code-container {
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .qr-code-title {
+    font-size: 1.1rem;
+  }
+
+  .qr-code-description {
+    font-size: 0.85rem;
+  }
+
+  .qr-code-content {
+    min-height: 120px;
+  }
+
+  .qr-code-canvas {
+    max-width: 120px;
+  }
+}
