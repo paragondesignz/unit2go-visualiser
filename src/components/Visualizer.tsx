@@ -614,6 +614,13 @@ MANDATORY PERSON REMOVAL:
                   >
                     Add Equipment Screening
                   </button>
+                  <button
+                    className="quick-action-button"
+                    onClick={() => handleQuickEdit('create a complete NZ backyard pool area with comprehensive landscaping including native New Zealand plants, entertaining areas with outdoor furniture, pool decking, pathways, privacy fencing, and a cohesive outdoor living space perfect for the New Zealand lifestyle')}
+                    disabled={processing}
+                  >
+                    Complete Pool Area
+                  </button>
                 </>
               ) : (
                 // Tiny home-specific enhancements
