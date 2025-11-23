@@ -110,5 +110,28 @@ export const tinyHomeModels: TinyHomeModel[] = [
     productUrl: 'https://unit2go.co.nz',
     supportsInteriorViews: true,
     isTopDownView: true
+  },
+  {
+    id: 'f-series-2-bedroom-premium',
+    name: 'F-Series Premium Two-Bedroom (8m²)',
+    dimensions: {
+      length: 5.3,
+      width: 1.52,
+      height: 3.0
+    },
+    price: 42900,
+    imageUrl: '/tiny-home-models/F_2-1.52-8m2-two-bedroom-premium_W1600.jpg',
+    description: 'Compact F-Series premium tiny home featuring efficient two-bedroom layout in just 8 square meters',
+    features: [
+      'Compact 2-bedroom design',
+      'Space-efficient layout',
+      'Premium micro-living solution',
+      'Modern architectural design',
+      'Energy-efficient construction',
+      'Kitchenette and bathroom',
+      'Smart storage solutions',
+      'Sustainable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
