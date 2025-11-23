@@ -11,6 +11,8 @@ export interface TinyHomeModel {
   description: string
   features: string[]
   productUrl?: string
+  supportsInteriorViews?: boolean  // Indicates if this model supports interior camera positioning
+  isTopDownView?: boolean          // Indicates if the image is a top-down floor plan view
 }
 
 export interface PoolModel {
@@ -118,3 +120,22 @@ export interface NanoBananaProOptions {
   // Advanced lighting control
   lightingPreservationMode?: 'strict' | 'adaptive' | 'off' // How strictly to preserve lighting
 }
+
+// Camera positioning for interior views
+export interface CameraPosition {
+  x: number              // X coordinate on the floor plan (0-100%)
+  y: number              // Y coordinate on the floor plan (0-100%)
+  viewingAngle: number   // Horizontal viewing angle in degrees (0-360)
+  height: number         // Camera height in meters (0.5-2.5m)
+  fieldOfView: number    // Camera field of view in degrees (30-120)
+}
+
+export interface InteriorViewRequest {
+  camera: CameraPosition
+  room?: string          // Optional room name for context
+  viewType: 'wide' | 'standard' | 'close-up'
+  focusArea?: string     // What to focus on in the view
+}
+
+// View generation modes
+export type VisualizationMode = 'exterior' | 'interior'

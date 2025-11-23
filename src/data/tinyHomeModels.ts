@@ -84,5 +84,31 @@ export const tinyHomeModels: TinyHomeModel[] = [
       'Sustainable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'premium-tiny-home-1-bed-topdown',
+    name: 'Premium Tiny Home - 1 Bedroom (Top-Down View)',
+    dimensions: {
+      length: 12.0,
+      width: 4.8,
+      height: 3.2
+    },
+    price: 85900,
+    imageUrl: '/tiny-home-models/premium-tiny-home-1-bed_3.webp',
+    description: 'Premium 1-bedroom tiny home with detailed top-down floor plan view for precise interior visualization',
+    features: [
+      'Top-down architectural layout',
+      'Interior camera positioning',
+      'Detailed floor plan reference',
+      '1-bedroom configuration',
+      'Premium interior finishes',
+      'Energy-efficient construction',
+      'Full kitchen and bathroom',
+      'Smart home ready',
+      'Sustainable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz',
+    supportsInteriorViews: true,
+    isTopDownView: true
   }
 ]

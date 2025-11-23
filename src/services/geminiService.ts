@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { UploadedImage, TinyHomeModel, PoolModel, Position, VisualizationResult, isPoolModel, VisualizationStyle, NanoBananaProOptions } from '../types'
+import { UploadedImage, TinyHomeModel, PoolModel, Position, VisualizationResult, isPoolModel, VisualizationStyle, NanoBananaProOptions, InteriorViewRequest } from '../types'
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 
@@ -1088,4 +1088,168 @@ export async function conversationalEdit(
     .join('')
 
   throw new Error(`No image generated for conversational edit. API Response: ${textResponse || 'No response text'}`)
+}
+
+// Generate interior views using top-down floor plan reference
+export async function generateInteriorView(
+  tinyHomeModel: TinyHomeModel,
+  interiorRequest: InteriorViewRequest,
+  nanoBananaOptions?: NanoBananaProOptions
+): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
+
+  if (!tinyHomeModel.supportsInteriorViews || !tinyHomeModel.isTopDownView) {
+    throw new Error('This tiny home model does not support interior view generation')
+  }
+
+  const floorPlanImageBase64 = await fetchImageAsBase64(tinyHomeModel.imageUrl)
+  const { camera } = interiorRequest
+
+  // Create detailed interior generation prompt
+  const getInteriorPrompt = () => {
+    const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+    const useThinking = nanoBananaOptions?.useThinkingProcess && accuracyLevel !== 'standard'
+
+    let basePrompt = `INTERIOR PHOTOGRAPHY MISSION: Generate a photorealistic interior photograph of a ${tinyHomeModel.name} based on the top-down floor plan reference.
+
+${useThinking ? `STEP 1: FLOOR PLAN ANALYSIS (Use thinking process)
+Analyze the top-down floor plan image and identify:
+- Room layouts and boundaries (bedroom, kitchen, bathroom, living area)
+- Window and door placements
+- Built-in furniture and fixtures
+- Ceiling height variations and architectural details
+- Traffic flow and spatial relationships
+Document these for accurate interior rendering.
+
+` : ''}CAMERA POSITIONING SPECIFICATION:
+
+Reference Image: Top-down architectural floor plan showing the complete interior layout of the ${tinyHomeModel.dimensions.length}m × ${tinyHomeModel.dimensions.width}m tiny home.
+
+CAMERA COORDINATES:
+- Position: ${camera.x}%, ${camera.y}% from top-left corner of floor plan
+- Height: ${camera.height}m above floor level
+- Viewing Angle: ${camera.viewingAngle}° (0° = North/up on plan, 90° = East/right, 180° = South/down, 270° = West/left)
+- Field of View: ${camera.fieldOfView}° horizontal view angle
+- Shot Type: ${interiorRequest.viewType} (${interiorRequest.viewType === 'wide' ? 'wide angle showing room context' : interiorRequest.viewType === 'standard' ? 'normal perspective view' : 'close-up detail view'})
+
+CRITICAL REQUIREMENTS:
+
+1. SPATIAL ACCURACY FROM FLOOR PLAN:
+   - Use the floor plan to determine exact room proportions and layout
+   - Position camera at specified coordinates relative to the floor plan
+   - Ensure viewing angle matches the directional orientation specified
+   - Respect ceiling height of ${tinyHomeModel.dimensions.height}m throughout
+
+2. ARCHITECTURAL INTEGRITY:
+   - Translate 2D floor plan elements into 3D interior space accurately
+   - Match window placements, sizes, and orientations from floor plan
+   - Replicate door positions and swing directions as shown
+   - Maintain proportional relationships between rooms
+
+3. INTERIOR DESIGN & FINISHES:
+   - Premium tiny home interior with high-quality materials
+   - Modern minimalist design with efficient space utilization
+   - Natural wood finishes, clean lines, and built-in storage solutions
+   - Professional lighting design with both natural and artificial lighting
+   - Contemporary fixtures and appliances scaled for tiny home living
+
+4. PHOTOGRAPHIC QUALITY:
+   - Professional interior photography standards
+   - Proper exposure balancing natural and artificial light
+   - Sharp focus with appropriate depth of field for ${interiorRequest.viewType} shots
+   - Realistic shadows and light distribution
+   - Marketing-quality composition suitable for real estate photography
+
+5. CONTEXTUAL DETAILS:
+   ${interiorRequest.room ? `- Focus on ${interiorRequest.room} area based on camera position` : ''}
+   ${interiorRequest.focusArea ? `- Emphasize ${interiorRequest.focusArea} in the composition` : ''}
+   - Include appropriate furnishings and decor for the space
+   - Show functionality and livability of the tiny home interior
+   - Demonstrate smart storage solutions and space-efficient design
+
+TECHNICAL EXECUTION:
+- Render as if shot with professional interior photography equipment
+- Use HDR-like exposure to capture detail in both highlights and shadows
+- Ensure color accuracy and realistic material representation
+- Create inviting atmosphere that showcases the tiny home's livability
+
+Generate a stunning interior photograph that accurately represents the view from the specified camera position and angle within this ${tinyHomeModel.name} layout.`
+
+    return basePrompt
+  }
+
+  const prompt = getInteriorPrompt()
+
+  // Enhanced configuration for interior photography
+  const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
+  const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
+  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
+                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  const useThinking = nanoBananaOptions?.useThinkingProcess ||
+                     (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+
+  const config = {
+    temperature: nanoBananaOptions?.temperature || 1.0,
+    topP: nanoBananaOptions?.topP || 0.95,
+    responseModalities: ['Image'] as string[],
+    imageConfig: {
+      aspectRatio: '16:9', // Standard interior photography aspect ratio
+      imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
+    },
+    ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
+    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
+  }
+
+  const model = 'gemini-3-pro-image-preview'
+
+  const contents = [
+    {
+      role: 'user' as const,
+      parts: [
+        {
+          inlineData: {
+            mimeType: 'image/webp',
+            data: floorPlanImageBase64,
+          },
+        },
+        {
+          text: prompt,
+        },
+      ],
+    },
+  ]
+
+  console.log(`Generating interior view at position (${camera.x}%, ${camera.y}%) with ${camera.viewingAngle}° viewing angle`)
+
+  const ai = new GoogleGenAI({
+    apiKey: API_KEY,
+  })
+  const response = await ai.models.generateContent({
+    model,
+    config,
+    contents,
+  })
+
+  if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
+    throw new Error('No response from Gemini API for interior view generation')
+  }
+
+  const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+
+  if (imagePart?.inlineData) {
+    console.log('Interior view generated successfully!')
+    const { mimeType, data } = imagePart.inlineData
+    return {
+      imageUrl: `data:${mimeType};base64,${data}`,
+      prompt: prompt,
+      modelSettings: config
+    }
+  }
+
+  const textResponse = response.candidates[0].content.parts
+    .filter(part => part.text)
+    .map(part => part.text)
+    .join('')
+
+  throw new Error(`No interior image generated. API Response: ${textResponse || 'No response text'}`)
 }
