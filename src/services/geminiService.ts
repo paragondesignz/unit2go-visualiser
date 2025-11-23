@@ -1097,7 +1097,20 @@ export async function generateInteriorView(
   nanoBananaOptions?: NanoBananaProOptions
 ): Promise<{ imageUrl: string; prompt: string; modelSettings: any }> {
 
+  console.log('🚀 generateInteriorView called with:', {
+    modelId: tinyHomeModel.id,
+    modelName: tinyHomeModel.name,
+    supportsInteriorViews: tinyHomeModel.supportsInteriorViews,
+    isTopDownView: tinyHomeModel.isTopDownView,
+    cameraPosition: interiorRequest.camera,
+    viewType: interiorRequest.viewType
+  })
+
   if (!tinyHomeModel.supportsInteriorViews || !tinyHomeModel.isTopDownView) {
+    console.error('❌ Model does not support interior views:', {
+      supportsInteriorViews: tinyHomeModel.supportsInteriorViews,
+      isTopDownView: tinyHomeModel.isTopDownView
+    })
     throw new Error('This tiny home model does not support interior view generation')
   }
 
@@ -1215,7 +1228,14 @@ FINAL DIRECTIVE: Create a photorealistic interior photograph that shows exactly 
     },
   ]
 
-  console.log(`Generating interior view at position (${camera.x}%, ${camera.y}%) with ${camera.viewingAngle}° viewing angle`)
+  console.log(`🏠 INTERIOR VIEW DEBUG:`)
+  console.log(`- Position: (${camera.x}%, ${camera.y}%)`)
+  console.log(`- Viewing angle: ${camera.viewingAngle}°`)
+  console.log(`- Height: ${camera.height}m`)
+  console.log(`- FOV: ${camera.fieldOfView}°`)
+  console.log(`- Floor plan image: ${tinyHomeModel.imageUrl}`)
+  console.log(`- Floor plan base64 length: ${floorPlanImageBase64.length}`)
+  console.log(`- Prompt preview:`, prompt.substring(0, 200) + '...')
 
   const ai = new GoogleGenAI({
     apiKey: API_KEY,
@@ -1226,15 +1246,31 @@ FINAL DIRECTIVE: Create a photorealistic interior photograph that shows exactly 
     contents,
   })
 
+  console.log(`🔍 API Response received:`, {
+    hasCandidates: !!response.candidates,
+    candidatesLength: response.candidates?.length,
+    hasContent: !!response.candidates?.[0]?.content,
+    partsLength: response.candidates?.[0]?.content?.parts?.length
+  })
+
   if (!response.candidates || !response.candidates[0].content || !response.candidates[0].content.parts) {
+    console.error('❌ No valid API response structure')
     throw new Error('No response from Gemini API for interior view generation')
   }
 
   const imagePart = response.candidates[0].content.parts.find(part => part.inlineData)
+  const textParts = response.candidates[0].content.parts.filter(part => part.text)
+
+  console.log(`📊 Response analysis:`, {
+    hasImagePart: !!imagePart,
+    textPartsCount: textParts.length,
+    totalParts: response.candidates[0].content.parts.length
+  })
 
   if (imagePart?.inlineData) {
-    console.log('Interior view generated successfully!')
+    console.log('✅ Interior view generated successfully!')
     const { mimeType, data } = imagePart.inlineData
+    console.log(`🖼️ Image details: ${mimeType}, base64 length: ${data?.length || 0}`)
     return {
       imageUrl: `data:${mimeType};base64,${data}`,
       prompt: prompt,
@@ -1242,10 +1278,10 @@ FINAL DIRECTIVE: Create a photorealistic interior photograph that shows exactly 
     }
   }
 
-  const textResponse = response.candidates[0].content.parts
-    .filter(part => part.text)
+  const textResponse = textParts
     .map(part => part.text)
     .join('')
 
+  console.error('❌ No image in response. Text response:', textResponse)
   throw new Error(`No interior image generated. API Response: ${textResponse || 'No response text'}`)
 }
