@@ -299,6 +299,31 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'villa',
+    name: 'Villa',
+    dimensions: {
+      length: 10.5,  // meters - elegant villa-style pool
+      width: 5.5,    // meters - sophisticated proportions
+      depth: 1.8     // meters - luxurious depth
+    },
+    price: 65000,
+    imageUrl: '/pool-models/Villa_Vertical1.jpg',
+    description: 'Sophisticated Villa pool design featuring elegant proportions and luxury aesthetics perfect for upscale residential settings',
+    features: [
+      'Sophisticated villa design',
+      'Elegant luxury proportions',
+      'Upscale residential aesthetics',
+      'Premium entertainment features',
+      'Refined architectural styling',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting package',
+      'Luxury finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
