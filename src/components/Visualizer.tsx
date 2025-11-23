@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { UploadedImage, VisualizationModel, Position, isTinyHomeModel, isPoolModel, ImageResolution } from '../types'
 import { processWithGemini, addWatermarkToImage, conversationalEdit } from '../services/geminiService'
 import { generateVisualization } from '../services/imageGenerationService'
@@ -465,6 +465,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
   const handleSelectionStart = (event: React.MouseEvent<HTMLImageElement>) => {
     if (!zoomModeActive || !resultImage || processing) return
 
+    event.preventDefault()
     const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
@@ -472,34 +473,42 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     setIsSelecting(true)
     setSelectionStart({ x, y })
     setSelectionRect(null)
-  }
 
-  const handleSelectionMove = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (!isSelecting || !zoomModeActive) return
+    // Add global mouse event listeners for proper drag functionality
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      const imageElement = document.querySelector('.result-image') as HTMLImageElement
+      if (!imageElement) return
 
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
+      const imageRect = imageElement.getBoundingClientRect()
+      const currentX = e.clientX - imageRect.left
+      const currentY = e.clientY - imageRect.top
 
-    // Calculate selection rectangle
-    const startX = Math.min(selectionStart.x, x)
-    const startY = Math.min(selectionStart.y, y)
-    const width = Math.abs(x - selectionStart.x)
-    const height = Math.abs(y - selectionStart.y)
+      // Clamp coordinates to image boundaries
+      const clampedX = Math.max(0, Math.min(imageRect.width, currentX))
+      const clampedY = Math.max(0, Math.min(imageRect.height, currentY))
 
-    setSelectionRect({
-      x: startX,
-      y: startY,
-      width,
-      height
-    })
-  }
+      // Calculate selection rectangle
+      const startX = Math.min(x, clampedX)
+      const startY = Math.min(y, clampedY)
+      const width = Math.abs(clampedX - x)
+      const height = Math.abs(clampedY - y)
 
-  // Handle mouse leave to end selection if dragging outside
-  const handleSelectionLeave = () => {
-    if (isSelecting) {
+      setSelectionRect({
+        x: startX,
+        y: startY,
+        width,
+        height
+      })
+    }
+
+    const handleGlobalMouseUp = () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
       handleSelectionEnd()
     }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
   }
 
   // Reset selection when zoom mode is deactivated
@@ -510,7 +519,12 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
   }
 
   const handleSelectionEnd = async () => {
-    if (!isSelecting || !selectionRect || !resultImage || processing) return
+    if (!selectionRect || !resultImage || processing) {
+      // Clean up selection state even if we're not processing
+      setIsSelecting(false)
+      setSelectionRect(null)
+      return
+    }
 
     // Require minimum selection size (20x20 pixels)
     if (selectionRect.width < 20 || selectionRect.height < 20) {
@@ -527,7 +541,9 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     try {
       // Get the image element to calculate percentages
       const imageElement = document.querySelector('.result-image') as HTMLImageElement
-      if (!imageElement) return
+      if (!imageElement) {
+        throw new Error('Image element not found')
+      }
 
       const imageRect = imageElement.getBoundingClientRect()
 
@@ -549,12 +565,12 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
 
       addToHistory(zoomedImage)
       setShowingOriginal(false)
-      setSelectionRect(null)
     } catch (err) {
       setError('Failed to zoom into selected area. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
+      setSelectionRect(null)
     }
   }
 
@@ -654,9 +670,6 @@ Crop to show ONLY this selected rectangular area while maintaining the EXACT sam
                 className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
                 onClick={!zoomModeActive ? openLightbox : undefined}
                 onMouseDown={zoomModeActive ? handleSelectionStart : undefined}
-                onMouseMove={zoomModeActive ? handleSelectionMove : undefined}
-                onMouseUp={zoomModeActive ? handleSelectionEnd : undefined}
-                onMouseLeave={zoomModeActive ? handleSelectionLeave : undefined}
                 style={{
                   cursor: zoomModeActive ? 'crosshair' : 'pointer',
                   border: zoomModeActive ? '3px solid #FF6B35' : 'none',
