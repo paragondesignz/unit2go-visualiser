@@ -225,6 +225,30 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'vogue',
+    name: 'Vogue',
+    dimensions: {
+      length: 8.2,   // meters - elegant mid-size pool
+      width: 4.2,    // meters - stylish proportions
+      depth: 1.6     // meters - comfortable depth
+    },
+    price: 47000,
+    imageUrl: '/pool-models/vogue8.2.png',
+    description: 'Sophisticated Vogue pool design combining contemporary style with timeless elegance',
+    features: [
+      'Sophisticated vogue design',
+      'Contemporary styling',
+      'Elegant proportions',
+      'Timeless aesthetic',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Premium finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
