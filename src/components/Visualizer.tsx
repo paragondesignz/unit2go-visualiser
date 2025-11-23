@@ -733,7 +733,7 @@ The output should show only the content within this bounding box, cropped with p
               </p>
               {isGeneratingVideo ? (
                 <p className="processing-tip" style={{ color: '#ff6b35', fontWeight: 'bold' }}>
-                  Video generation takes 2-5 minutes. Please wait...
+                  Video generation takes 5-10 minutes. Please wait...
                 </p>
               ) : (
                 <p className="processing-tip">{tips[tipIndex]}</p>
@@ -741,7 +741,23 @@ The output should show only the content within this bounding box, cropped with p
             </div>
           )}
 
-          {resultImage ? (
+          {generatedVideo ? (
+            <video
+              src={generatedVideo}
+              controls
+              autoPlay={false}
+              loop
+              muted
+              className="result-image"
+              style={{
+                width: '100%',
+                height: 'auto',
+                borderRadius: '8px'
+              }}
+            >
+              Your browser doesn't support video playback.
+            </video>
+          ) : resultImage ? (
             <>
               <img
                 src={showingOriginal ? uploadedImage.url : resultImage}
@@ -800,56 +816,12 @@ The output should show only the content within this bounding box, cropped with p
           )}
         </div>
 
-        {resultImage && (
+        {(resultImage || generatedVideo) && (
           <p className="image-disclaimer">
-            Generated images are artistic representations for entertainment purposes only. Results may vary due to AI interpretation and may not be to exact scale. Not intended as a substitute for professional architectural or planning advice.
+            Generated {generatedVideo ? 'videos and ' : ''}images are artistic representations for entertainment purposes only. Results may vary due to AI interpretation and may not be to exact scale. Not intended as a substitute for professional architectural or planning advice.
           </p>
         )}
 
-        {/* Generated Video Display */}
-        {generatedVideo && (
-          <div className="post-gen-section">
-            <h3>🎬 Generated Video</h3>
-            <p className="control-info">Cinematic dolly-in flyover generated with Veo 3.1</p>
-            <div className="video-container" style={{ position: 'relative', marginBottom: '20px' }}>
-              <video
-                src={generatedVideo}
-                controls
-                autoPlay={false}
-                loop
-                muted
-                style={{
-                  width: '100%',
-                  maxHeight: '400px',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
-              >
-                Your browser doesn't support video playback.
-              </video>
-              <div className="video-actions" style={{ marginTop: '10px', textAlign: 'center' }}>
-                <button
-                  className="download-button"
-                  onClick={() => {
-                    const link = document.createElement('a')
-                    link.href = generatedVideo
-                    link.download = `unit2go-video-${Date.now()}.mp4`
-                    link.click()
-                  }}
-                  style={{ marginRight: '10px' }}
-                >
-                  📥 Download Video
-                </button>
-                <button
-                  className="zoom-btn secondary-zoom"
-                  onClick={() => setGeneratedVideo(null)}
-                >
-                  ✖️ Remove Video
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Image Enhancement Controls - Moved under preview image */}
         {resultImage && (
@@ -873,13 +845,36 @@ The output should show only the content within this bounding box, cropped with p
                 >
                   🔍 Zoom In
                 </button>
-                <button
-                  className="zoom-btn primary-zoom"
-                  onClick={handleGenerateVideo}
-                  disabled={processing || isGeneratingVideo}
-                >
-                  {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
-                </button>
+                {!generatedVideo ? (
+                  <button
+                    className="zoom-btn primary-zoom"
+                    onClick={handleGenerateVideo}
+                    disabled={processing || isGeneratingVideo}
+                  >
+                    {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="download-button"
+                      onClick={() => {
+                        const link = document.createElement('a')
+                        link.href = generatedVideo
+                        link.download = `unit2go-video-${Date.now()}.mp4`
+                        link.click()
+                      }}
+                      style={{ marginRight: '10px' }}
+                    >
+                      📥 Download Video
+                    </button>
+                    <button
+                      className="zoom-btn secondary-zoom"
+                      onClick={() => setGeneratedVideo(null)}
+                    >
+                      ✖️ Remove Video
+                    </button>
+                  </>
+                )}
                 {videoGenerationProgress && (
                   <div style={{ marginTop: '10px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
                     {videoGenerationProgress}

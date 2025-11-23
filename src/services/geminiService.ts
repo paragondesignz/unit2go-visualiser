@@ -210,7 +210,7 @@ export async function generateVideoWithVeo(
     const config = {
       numberOfVideos: 1,
       aspectRatio: "16:9",
-      durationSeconds: 6,
+      durationSeconds: 10,
       negativePrompt: 'No dialogue, no sound effects, no music, no audio'
     }
 
