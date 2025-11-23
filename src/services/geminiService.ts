@@ -592,7 +592,18 @@ After guaranteeing 100% shape fidelity, execute these requirements:
 
    SCALING VERIFICATION: Ensure the pool's footprint looks proportionally correct against the house size - a ${length}m pool should appear roughly ${(length/12).toFixed(1)} times the width of a standard residential door when viewed at similar distances.${uploadedImage.increasedAccuracy && uploadedImage.personHeight ? ` CRITICAL: Use person height reference (${uploadedImage.personHeight}cm) for precise scaling ratio. Pool should measure ${(poolModel.dimensions.length / (uploadedImage.personHeight / 100)).toFixed(1)} times the person's height. REMOVE person from final image.` : ''}
 
-3. Advanced Water Rendering: Create crystal clear water with natural surface tension, realistic light refraction patterns, subtle movement ripples, and depth transparency. Water should appear inviting and professionally maintained. For nighttime scenes, ensure underwater lighting creates beautiful illumination that highlights water clarity and produces elegant reflections.`
+3. PREMIUM WATER QUALITY RENDERING:
+   MANDATORY WATER SPECIFICATIONS - The pool water MUST be absolutely pristine and photorealistic:
+   - CRYSTAL CLARITY: Water must be completely transparent and crystal clear with pristine blue coloration
+   - CRISP DETAIL: Every water detail must be sharp and photorealistic - no blurring or artifacting
+   - SURFACE PERFECTION: Smooth, natural surface tension with subtle, realistic ripples and movement
+   - LIGHT REFRACTION: Perfect light refraction patterns showing depth and clarity through the water
+   - DEPTH VISIBILITY: Bottom of pool must be clearly visible through the crystal clear water
+   - PROFESSIONAL MAINTENANCE: Water appearance must suggest professional pool maintenance and filtration
+   - INVITING QUALITY: Water should appear refreshing, clean, and inviting for swimming
+   - NO CLOUDINESS: Absolutely no murky, cloudy, or unclear water - pristine transparency required
+   - REALISTIC PHYSICS: Natural water behavior with correct reflection angles and surface dynamics
+   For nighttime scenes: Underwater LED lighting must illuminate the crystal clear water from within, creating stunning blue glow that showcases perfect water clarity and produces elegant surface reflections.`
 
     // Enhanced lighting logic with preservation mode
     if (preserveLighting) {
