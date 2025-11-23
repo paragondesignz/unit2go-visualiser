@@ -381,7 +381,7 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
     }
   }
 
-  const handleCameraChange = async (cameraAngle: 'aerial' | 'ground' | 'elevated' | 'side') => {
+  const handleCameraChange = async (cameraAngle: 'aerial' | 'ground' | 'elevated' | 'side' | 'worms-eye') => {
     if (!resultImage) return
 
     setProcessing(true)
@@ -393,7 +393,8 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
         aerial: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to an aerial/bird's eye view perspective of this scene. Show the ${modelType} and property from directly above or at a high elevated angle. Maintain all existing elements and their spatial relationships while providing this top-down perspective.`,
         ground: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a ground-level perspective of this scene. Position the camera at standing height (about 1.7m) to show the ${modelType} and property from a human eye-level viewpoint. Keep all elements in their current positions.`,
         elevated: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to an elevated angle perspective of this scene. Position the camera at a moderate height (2-3 meters) to show the ${modelType} and property from a slightly raised viewpoint. Maintain all existing elements and spatial relationships.`,
-        side: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a side view perspective of this scene. Show the ${modelType} and property from the side angle to capture the profile and depth. Keep all elements in their current positions while providing this lateral perspective.`
+        side: `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a side view perspective of this scene. Show the ${modelType} and property from the side angle to capture the profile and depth. Keep all elements in their current positions while providing this lateral perspective.`,
+        'worms-eye': `EXPLICIT USER REQUEST: Change camera perspective. User has specifically requested to change to a worm's eye view perspective of this scene. Position the camera at a very low angle close to ground level, looking upward to show the ${modelType} and property from below. This dramatic low-angle perspective should create an impressive upward view that emphasizes height and scale. Maintain all existing elements and spatial relationships while providing this upward-looking perspective.`
       }
 
       const editedImage = await conversationalEdit(resultImage, cameraPrompts[cameraAngle], undefined, nanoBananaOptions)
@@ -900,6 +901,13 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium m
                   disabled={processing}
                 >
                   Side View
+                </button>
+                <button
+                  className="camera-btn"
+                  onClick={() => handleCameraChange('worms-eye')}
+                  disabled={processing}
+                >
+                  Worm's Eye View
                 </button>
               </div>
             </div>
