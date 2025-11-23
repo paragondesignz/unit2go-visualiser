@@ -290,7 +290,10 @@ MANDATORY PERSON REMOVAL:
     setError(null)
 
     try {
-      const editedImage = await conversationalEdit(resultImage, prompt, undefined, nanoBananaOptions)
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const enhancedPrompt = `${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, and orientation. Do not move, resize, or alter the ${modelType} in any way. Only add the requested enhancements around or near the ${modelType} while preserving its exact placement and appearance.`
+
+      const editedImage = await conversationalEdit(resultImage, enhancedPrompt, undefined, nanoBananaOptions)
       addToHistory(editedImage)
       setShowingOriginal(false)
     } catch (err) {

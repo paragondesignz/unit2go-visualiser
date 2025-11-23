@@ -1030,7 +1030,7 @@ export async function conversationalEdit(
 
   const aspectRatio = await detectAspectRatioFromDataUrl(currentImageDataUrl)
 
-  const prompt = `Make this specific change to the photograph: ${editPrompt}. Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Only modify what was requested. The result should look like a real photograph with the requested change naturally integrated.`
+  const prompt = `Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATION REQUIREMENTS: Keep everything else in the scene exactly as it appears—same composition, positions, and lighting. Do NOT move, resize, rotate, or alter any existing structures (pools, tiny homes, buildings). The existing structures must remain in their exact same location and appearance. Only add or modify what was specifically requested around the existing elements. The result should look like a real photograph with the requested change naturally integrated while preserving all original elements.`
 
   console.log(`Using aspect ratio for conversational edit: ${aspectRatio}`)
 
