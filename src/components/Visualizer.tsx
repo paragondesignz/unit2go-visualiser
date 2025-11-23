@@ -34,6 +34,10 @@ function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }:
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [showPromptPanel, setShowPromptPanel] = useState(false)
   const [zoomModeActive, setZoomModeActive] = useState(false)
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 })
+  const [selectionEnd, setSelectionEnd] = useState({ x: 0, y: 0 })
+  const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
 
   const tips = [
     isPoolModel(selectedModel)
@@ -459,44 +463,99 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
     }
   }
 
-  const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
+  const handleSelectionStart = (event: React.MouseEvent<HTMLImageElement>) => {
     if (!zoomModeActive || !resultImage || processing) return
 
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    setIsSelecting(true)
+    setSelectionStart({ x, y })
+    setSelectionEnd({ x, y })
+    setSelectionRect(null)
+  }
+
+  const handleSelectionMove = (event: React.MouseEvent<HTMLImageElement>) => {
+    if (!isSelecting || !zoomModeActive) return
+
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+
+    setSelectionEnd({ x, y })
+
+    // Calculate selection rectangle
+    const startX = Math.min(selectionStart.x, x)
+    const startY = Math.min(selectionStart.y, y)
+    const width = Math.abs(x - selectionStart.x)
+    const height = Math.abs(y - selectionStart.y)
+
+    setSelectionRect({
+      x: startX,
+      y: startY,
+      width,
+      height
+    })
+  }
+
+  // Handle mouse leave to end selection if dragging outside
+  const handleSelectionLeave = () => {
+    if (isSelecting) {
+      handleSelectionEnd()
+    }
+  }
+
+  // Reset selection when zoom mode is deactivated
+  const handleCancelZoomMode = () => {
+    setZoomModeActive(false)
+    setIsSelecting(false)
+    setSelectionRect(null)
+  }
+
+  const handleSelectionEnd = async () => {
+    if (!isSelecting || !selectionRect || !resultImage || processing) return
+
+    // Require minimum selection size (20x20 pixels)
+    if (selectionRect.width < 20 || selectionRect.height < 20) {
+      setIsSelecting(false)
+      setSelectionRect(null)
+      return
+    }
+
+    setIsSelecting(false)
     setZoomModeActive(false)
     setProcessing(true)
     setError(null)
 
     try {
-      const rect = event.currentTarget.getBoundingClientRect()
-      const x = ((event.clientX - rect.left) / rect.width) * 100
-      const y = ((event.clientY - rect.top) / rect.height) * 100
+      // Get the image element to calculate percentages
+      const imageElement = document.querySelector('.result-image') as HTMLImageElement
+      if (!imageElement) return
 
-      // Convert coordinates to descriptive areas
-      let areaDescription = ''
-      if (x < 33) {
-        areaDescription += 'left side'
-      } else if (x > 67) {
-        areaDescription += 'right side'
-      } else {
-        areaDescription += 'center'
-      }
+      const imageRect = imageElement.getBoundingClientRect()
 
-      if (y < 33) {
-        areaDescription += ' upper area'
-      } else if (y > 67) {
-        areaDescription += ' lower area'
-      } else {
-        areaDescription += ' middle area'
-      }
+      // Convert pixel coordinates to percentages
+      const leftPercent = (selectionRect.x / imageRect.width) * 100
+      const topPercent = (selectionRect.y / imageRect.height) * 100
+      const widthPercent = (selectionRect.width / imageRect.width) * 100
+      const heightPercent = (selectionRect.height / imageRect.height) * 100
 
-      const zoomPrompt = `CROP AND ZOOM into this image to focus on the ${areaDescription} where the user clicked (approximately ${Math.round(x)}% from left, ${Math.round(y)}% from top). Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this specific area of the current image. Keep all lighting, colors, and details exactly as they appear in the original image.`
+      const zoomPrompt = `CROP AND ZOOM into this image to focus on the rectangular area selected by the user. The selection area covers:
+- Left edge: ${Math.round(leftPercent)}% from the left side
+- Top edge: ${Math.round(topPercent)}% from the top
+- Width: ${Math.round(widthPercent)}% of the image width
+- Height: ${Math.round(heightPercent)}% of the image height
+
+Crop to show ONLY this selected rectangular area while maintaining the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this precise selection. Keep all lighting, colors, and details exactly as they appear in the original image.`
 
       const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, nanoBananaOptions)
 
       addToHistory(zoomedImage)
       setShowingOriginal(false)
+      setSelectionRect(null)
     } catch (err) {
-      setError('Failed to zoom into image. Please try again.')
+      setError('Failed to zoom into selected area. Please try again.')
       console.error(err)
     } finally {
       setProcessing(false)
@@ -582,7 +641,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
   return (
     <div className="visualizer">
       <div className="visualization-wrapper">
-        <div className="visualization-container">
+        <div className="visualization-container" style={{ position: 'relative' }}>
           {processing && (
             <div className="processing-overlay">
               <div className="spinner"></div>
@@ -596,12 +655,33 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
               src={showingOriginal ? uploadedImage.url : resultImage}
               alt={showingOriginal ? "Original space" : "Tiny home visualization"}
               className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
-              onClick={zoomModeActive ? handleImageClick : openLightbox}
+              onClick={!zoomModeActive ? openLightbox : undefined}
+              onMouseDown={zoomModeActive ? handleSelectionStart : undefined}
+              onMouseMove={zoomModeActive ? handleSelectionMove : undefined}
+              onMouseUp={zoomModeActive ? handleSelectionEnd : undefined}
+              onMouseLeave={zoomModeActive ? handleSelectionLeave : undefined}
               style={{
                 cursor: zoomModeActive ? 'crosshair' : 'pointer',
-                border: zoomModeActive ? '3px solid #FF6B35' : 'none'
+                border: zoomModeActive ? '3px solid #FF6B35' : 'none',
+                userSelect: 'none'
               }}
             />
+            {zoomModeActive && selectionRect && (
+              <div
+                className="selection-rectangle"
+                style={{
+                  position: 'absolute',
+                  left: selectionRect.x,
+                  top: selectionRect.y,
+                  width: selectionRect.width,
+                  height: selectionRect.height,
+                  border: '2px dashed #FF6B35',
+                  backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                  pointerEvents: 'none',
+                  zIndex: 10
+                }}
+              />
+            )}
           ) : (
             <img
               src={uploadedImage.url}
@@ -628,7 +708,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
         {resultImage && (
           <div className="post-gen-section close-up-section">
             <h3>🔍 Image Controls</h3>
-            <p className="control-info">Enhance or zoom into your generated image</p>
+            <p className="control-info">Enhance your image or drag to select an area to zoom into</p>
 
             {!zoomModeActive ? (
               <div className="zoom-controls">
@@ -651,13 +731,13 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
               <div className="zoom-instructions">
                 <div className="zoom-active-indicator">
                   <span className="zoom-crosshair">✛</span>
-                  <p><strong>Zoom Mode Active!</strong></p>
-                  <p>Click anywhere on the image above to zoom into that area</p>
+                  <p><strong>Selection Mode Active!</strong></p>
+                  <p>Drag on the image above to select a rectangular area to zoom into</p>
                   <button
                     className="cancel-zoom-btn"
-                    onClick={() => setZoomModeActive(false)}
+                    onClick={handleCancelZoomMode}
                   >
-                    Cancel Zoom Mode
+                    Cancel Selection Mode
                   </button>
                 </div>
               </div>
