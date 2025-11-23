@@ -274,6 +274,31 @@ export const poolModels: PoolModel[] = [
       'Durable materials'
     ],
     productUrl: 'https://unit2go.co.nz'
+  },
+  {
+    id: 'round',
+    name: 'Round Pool',
+    dimensions: {
+      length: 6.0,   // meters - diameter of round pool
+      width: 6.0,    // meters - diameter (same as length for round)
+      depth: 1.5     // meters - consistent depth throughout
+    },
+    price: 52000,
+    imageUrl: '/pool-models/Round_Vertical1.jpg',
+    description: 'Classic round pool design offering space-efficient circular swimming with elegant symmetry and timeless appeal',
+    features: [
+      'Classic round design',
+      'Space-efficient circular layout',
+      'Elegant symmetrical shape',
+      'Timeless aesthetic appeal',
+      'Perfect for smaller spaces',
+      'Professional construction',
+      'Energy-efficient filtration',
+      'LED lighting options',
+      'Premium finishes',
+      'Durable materials'
+    ],
+    productUrl: 'https://unit2go.co.nz'
   }
 ]
 
