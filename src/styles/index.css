@@ -1035,14 +1035,15 @@ body {
 /* Visualizer */
 .visualizer {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 30px;
+  grid-template-columns: minmax(0, 1.75fr) minmax(280px, 0.85fr);
+  gap: 24px;
+  align-items: flex-start;
 }
 
 .visualization-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
 }
 
 .visualization-container {
@@ -1104,6 +1105,38 @@ body {
   padding: 0 20px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+}
+
+.dashboard-card h3 {
+  font-size: 1.15rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.inline-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 10px;
+}
+
 .error-overlay {
   position: absolute;
   top: 50%;
@@ -1142,21 +1175,21 @@ body {
 
 /* Prompt Display Panel */
 .prompt-panel {
-  margin: 1.5rem auto;
-  max-width: 1200px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  margin: 0;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 
 .prompt-panel-toggle {
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--bg-tertiary);
-  border: none;
-  border-bottom: 1px solid var(--border-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1172,7 +1205,7 @@ body {
 }
 
 .prompt-content {
-  padding: 1rem;
+  padding: 1rem 0.25rem 0;
 }
 
 .model-settings {
@@ -1258,12 +1291,11 @@ body {
 
 /* Quick Actions Section */
 .quick-actions-section {
-  background: var(--bg-card);
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  margin-top: 15px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0;
 }
 
 .quick-actions-section h3 {
@@ -1315,12 +1347,11 @@ body {
 
 /* Conversational Editing Section - Under Preview */
 .conversational-edit-section {
-  background: var(--bg-card);
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-color);
-  margin-top: 20px;
+  background: transparent;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  margin: 0;
 }
 
 .conversational-edit-section h3 {
@@ -1376,22 +1407,24 @@ body {
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+  position: sticky;
+  top: 20px;
 }
 
 .control-panel {
   background: var(--bg-card);
-  padding: 25px;
+  padding: 20px;
   border-radius: 12px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
 }
 
 .control-panel h3 {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   color: var(--primary-color);
-  margin-bottom: 20px;
-  font-weight: 700;
+  margin-bottom: 14px;
+  font-weight: 600;
 }
 
 .regenerate-section {
@@ -1786,6 +1819,8 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    position: static;
+    top: auto;
   }
 }
 
@@ -1830,6 +1865,14 @@ body {
 
   .controls {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-card {
+    padding: 16px;
   }
 
   .position-controls {
@@ -2816,11 +2859,12 @@ body {
 
 /* Post-Generation Controls */
 .post-gen-section {
-  background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: 12px;
-  padding: 25px;
-  margin: 20px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
 .post-gen-section h3 {
@@ -2927,12 +2971,10 @@ body {
 }
 
 /* Zoom Controls */
-.close-up-section {
+.dashboard-card.close-up-section {
   background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
-  border: 3px solid #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
-  position: relative;
-  z-index: 1;
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  box-shadow: 0 6px 18px rgba(33, 150, 243, 0.15);
 }
 
 .close-up-section h3 {

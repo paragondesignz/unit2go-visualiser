@@ -9,6 +9,17 @@ interface VisualizerProps {
   selectedResolution?: ImageResolution
 }
 
+const ASPECT_RATIO_OPTIONS = [
+  { value: '1:1', label: '1:1 Square' },
+  { value: '4:3', label: '4:3 Standard' },
+  { value: '3:4', label: '3:4 Portrait' },
+  { value: '16:9', label: '16:9 Widescreen' },
+  { value: '9:16', label: '9:16 Mobile' },
+  { value: '21:9', label: '21:9 Ultra-wide' },
+  { value: '2:3', label: '2:3 Photo' },
+  { value: '3:2', label: '3:2 Camera' }
+]
+
 function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -423,60 +434,11 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
   }
 
 
-  const handleBeautifyImage = async () => {
-    if (!resultImage || processing) return
-
-    setProcessing(true)
-    setError(null)
-
-    try {
-      const beautifyPrompt = `Transform this image into a stunning, magazine-quality photograph using professional photography techniques while preserving the EXACT same camera angle, perspective, and composition:
-
-🎨 VISUAL COMPOSITION ENHANCEMENTS:
-- Apply subtle rule of thirds framing for improved visual balance
-- Create enhanced visual flow and leading lines that naturally draw the eye
-- Balance all elements harmoniously with refined artistic spacing and positioning
-- Add subtle depth enhancement through layered foreground, middle ground, and background elements
-
-📸 PROFESSIONAL PHOTOGRAPHY EFFECTS:
-- Apply beautiful shallow depth of field where appropriate (soft bokeh backgrounds for enhanced focus)
-- Enhance with warm, golden hour lighting quality and soft directional illumination
-- Create subtle lens flare and natural light filtering for magical atmosphere
-- Add professional color grading with rich, saturated tones and perfect contrast
-
-✨ ARTISTIC ENHANCEMENTS:
-- Enhance all textures to be tactile and inviting (water ripples, plant details, material finishes, surface textures)
-- Create enhanced atmospheric mood with subtle mist, dappled light, or warm ambiance
-- Add natural photographic elements like floating particles, gentle steam, or organic atmospheric details
-- Apply cinematic color palette with complementary tones and professional saturation
-
-🌟 LUXURY APPEAL & POLISH:
-- Make all surfaces appear premium with subtle reflections and enhanced material depth
-- Add sophisticated lighting that highlights quality, craftsmanship, and architectural details
-- Create an aspirational, lifestyle photography aesthetic that feels luxurious and inviting
-- Ensure every detail appears polished, refined, and worthy of premium marketing materials
-
-CRITICAL PRESERVATION: Maintain the EXACT same camera position, angle, perspective, and composition. Do not crop, zoom, or change the viewpoint. Only enhance the photographic quality and visual appeal of the existing scene.
-
-The result should be breathtakingly beautiful, enticing, and worthy of premium architectural marketing materials.`
-
-      const beautifiedImage = await conversationalEdit(resultImage, beautifyPrompt, undefined, nanoBananaOptions)
-
-      addToHistory(beautifiedImage)
-      setShowingOriginal(false)
-    } catch (err) {
-      setError('Failed to enhance image. Please try again.')
-      console.error(err)
-    } finally {
-      setProcessing(false)
-    }
-  }
-
   const handleSelectionStart = (event: React.MouseEvent<HTMLImageElement>) => {
     if (!zoomModeActive || !resultImage || processing) return
 
     event.preventDefault()
-    const rect = event.currentTarget.getBoundingClientRect()
+      const rect = event.currentTarget.getBoundingClientRect()
     const x = event.clientX - rect.left
     const y = event.clientY - rect.top
 
@@ -517,7 +479,7 @@ The result should be breathtakingly beautiful, enticing, and worthy of premium a
         if (selectionAspectRatio > imageAspectRatio) {
           // Selection is too wide - reduce width
           width = height * imageAspectRatio
-        } else {
+      } else {
           // Selection is too tall - reduce height
           height = width / imageAspectRatio
         }
@@ -736,7 +698,7 @@ The output should show only the content within this bounding box, cropped with p
                   Video generation takes 5-10 minutes. Please wait...
                 </p>
               ) : (
-                <p className="processing-tip">{tips[tipIndex]}</p>
+              <p className="processing-tip">{tips[tipIndex]}</p>
               )}
             </div>
           )}
@@ -759,14 +721,14 @@ The output should show only the content within this bounding box, cropped with p
             </video>
           ) : resultImage ? (
             <>
-              <img
-                src={showingOriginal ? uploadedImage.url : resultImage}
-                alt={showingOriginal ? "Original space" : "Tiny home visualization"}
-                className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
+            <img
+              src={showingOriginal ? uploadedImage.url : resultImage}
+              alt={showingOriginal ? "Original space" : "Tiny home visualization"}
+              className={`result-image clickable ${zoomModeActive ? 'zoom-mode' : ''}`}
                 onClick={!zoomModeActive ? openLightbox : undefined}
                 onMouseDown={zoomModeActive ? handleSelectionStart : undefined}
-                style={{
-                  cursor: zoomModeActive ? 'crosshair' : 'pointer',
+              style={{
+                cursor: zoomModeActive ? 'crosshair' : 'pointer',
                   border: zoomModeActive ? '3px solid #FF6B35' : 'none',
                   userSelect: 'none'
                 }}
@@ -823,222 +785,95 @@ The output should show only the content within this bounding box, cropped with p
         )}
 
 
-        {/* Image Enhancement Controls - Moved under preview image */}
         {resultImage && (
-          <div className="post-gen-section close-up-section">
-            <h3>🔍 Image & Video Controls</h3>
-            <p className="control-info">Enhance your image, create a cinematic video with Veo 3.1, or drag to select an area to zoom into (maintains proportions)</p>
+          <div className="dashboard-grid">
+            <section className="dashboard-card close-up-section">
+              <h3>🔍 Image & Video Controls</h3>
+              <p className="control-info">Enhance your image, create a cinematic video with Veo 3.1, or drag to select an area to zoom into (maintains proportions)</p>
 
-            {!zoomModeActive && !selectionRect ? (
-              <div className="zoom-controls">
-                <button
-                  className="zoom-btn primary-zoom"
-                  onClick={handleBeautifyImage}
-                  disabled={processing}
-                >
-                  ✨ Beautiful Photography
-                </button>
-                <button
-                  className="zoom-btn primary-zoom"
-                  onClick={handleActivateZoomMode}
-                  disabled={processing}
-                >
-                  🔍 Zoom In
-                </button>
-                {!generatedVideo ? (
+              {!zoomModeActive && !selectionRect ? (
+                <div className="zoom-controls">
+            <button
+                    className="zoom-btn primary-zoom"
+                    onClick={handleActivateZoomMode}
+                    disabled={processing}
+                  >
+                    🔍 Zoom In
+                  </button>
+                  {!generatedVideo ? (
+                    <button
+                      className="zoom-btn primary-zoom"
+                      onClick={handleGenerateVideo}
+                      disabled={processing || isGeneratingVideo}
+                    >
+                      {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
+            </button>
+                  ) : (
+                    <>
+                      <button
+                        className="download-button"
+                        onClick={() => {
+                          const link = document.createElement('a')
+                          link.href = generatedVideo
+                          link.download = `unit2go-video-${Date.now()}.mp4`
+                          link.click()
+                        }}
+                        style={{ marginRight: '10px' }}
+                      >
+                        📥 Download Video
+                      </button>
+                      <button
+                        className="zoom-btn secondary-zoom"
+                        onClick={() => setGeneratedVideo(null)}
+                      >
+                        ✖️ Remove Video
+                      </button>
+                    </>
+                  )}
+                  {videoGenerationProgress && (
+                    <div className="inline-status">
+                      {videoGenerationProgress}
+                        </div>
+                      )}
+                        </div>
+              ) : selectionRect ? (
+                <div className="zoom-controls">
                   <button
                     className="zoom-btn primary-zoom"
-                    onClick={handleGenerateVideo}
-                    disabled={processing || isGeneratingVideo}
+                    onClick={handleZoomToSelection}
+                    disabled={processing}
                   >
-                    {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
+                    🎯 Zoom to Selection
                   </button>
-                ) : (
-                  <>
-                    <button
-                      className="download-button"
-                      onClick={() => {
-                        const link = document.createElement('a')
-                        link.href = generatedVideo
-                        link.download = `unit2go-video-${Date.now()}.mp4`
-                        link.click()
-                      }}
-                      style={{ marginRight: '10px' }}
-                    >
-                      📥 Download Video
-                    </button>
-                    <button
-                      className="zoom-btn secondary-zoom"
-                      onClick={() => setGeneratedVideo(null)}
-                    >
-                      ✖️ Remove Video
-                    </button>
-                  </>
-                )}
-                {videoGenerationProgress && (
-                  <div style={{ marginTop: '10px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
-                    {videoGenerationProgress}
-                  </div>
-                )}
-              </div>
-            ) : selectionRect ? (
-              <div className="zoom-controls">
-                <button
-                  className="zoom-btn primary-zoom"
-                  onClick={handleZoomToSelection}
-                  disabled={processing}
-                >
-                  🎯 Zoom to Selection
-                </button>
-                <button
-                  className="zoom-btn secondary-zoom"
-                  onClick={handleCancelZoomMode}
-                  disabled={processing}
-                >
-                  ✖️ Cancel Selection
-                </button>
-              </div>
-            ) : (
-              <div className="zoom-instructions">
-                <div className="zoom-active-indicator">
-                  <span className="zoom-crosshair">✛</span>
-                  <p><strong>Selection Mode Active!</strong></p>
-                  <p>Drag on the image above to select a rectangular area to zoom into</p>
                   <button
-                    className="cancel-zoom-btn"
+                    className="zoom-btn secondary-zoom"
                     onClick={handleCancelZoomMode}
+                    disabled={processing}
                   >
-                    Cancel Selection Mode
+                    ✖️ Cancel Selection
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Prompt Display Panel */}
-        {resultImage && currentPrompt && (
-          <div className="prompt-panel">
-            <button
-              className="prompt-panel-toggle"
-              onClick={() => setShowPromptPanel(!showPromptPanel)}
-            >
-              <span>{showPromptPanel ? 'Hide' : 'Show'} Prompt Used</span>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                style={{ transform: showPromptPanel ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </button>
-            {showPromptPanel && (
-              <div className="prompt-content">
-                {currentModelSettings && (
-                  <div className="model-settings">
-                    <h4>Model Settings</h4>
-                    <div className="settings-grid">
-                      {currentModelSettings.model && (
-                        <div className="setting-item">
-                          <span className="setting-label">Model:</span>
-                          <span className="setting-value">{currentModelSettings.model}</span>
                         </div>
-                      )}
-                      {currentModelSettings.temperature !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Temperature:</span>
-                          <span className="setting-value">{currentModelSettings.temperature}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.topP !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Top P:</span>
-                          <span className="setting-value">{currentModelSettings.topP}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.aspectRatio && (
-                        <div className="setting-item">
-                          <span className="setting-label">Aspect Ratio:</span>
-                          <span className="setting-value">{currentModelSettings.aspectRatio}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.imageSize && (
-                        <div className="setting-item">
-                          <span className="setting-label">Resolution:</span>
-                          <span className="setting-value">{currentModelSettings.imageSize}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.googleSearchUsed !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Google Search:</span>
-                          <span className="setting-value">{currentModelSettings.googleSearchUsed ? 'Enabled' : 'Disabled'}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.guidanceScale !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Guidance Scale:</span>
-                          <span className="setting-value">{currentModelSettings.guidanceScale}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.numInferenceSteps !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Inference Steps:</span>
-                          <span className="setting-value">{currentModelSettings.numInferenceSteps}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.strength !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Strength:</span>
-                          <span className="setting-value">{currentModelSettings.strength}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.referenceStrength !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">Reference Strength:</span>
-                          <span className="setting-value">{currentModelSettings.referenceStrength}</span>
-                        </div>
-                      )}
-                      {currentModelSettings.controlnetConditioningScale !== undefined && (
-                        <div className="setting-item">
-                          <span className="setting-label">ControlNet Scale:</span>
-                          <span className="setting-value">{currentModelSettings.controlnetConditioningScale}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                <div className="prompt-section">
-                  <h4>Prompt</h4>
-                  <pre className="prompt-text">{currentPrompt}</pre>
-                </div>
+              ) : (
+                <div className="zoom-instructions">
+                  <div className="zoom-active-indicator">
+                    <span className="zoom-crosshair">✛</span>
+                    <p><strong>Selection Mode Active!</strong></p>
+                    <p>Drag on the image above to select a rectangular area to zoom into</p>
                 <button
-                  className="copy-prompt-button"
-                  onClick={() => {
-                    const textToCopy = currentModelSettings 
-                      ? `Model Settings:\n${JSON.stringify(currentModelSettings, null, 2)}\n\nPrompt:\n${currentPrompt}`
-                      : currentPrompt || ''
-                    navigator.clipboard.writeText(textToCopy)
-                    alert('Prompt and settings copied to clipboard!')
-                  }}
-                >
-                  Copy Prompt & Settings
+                      className="cancel-zoom-btn"
+                      onClick={handleCancelZoomMode}
+                    >
+                      Cancel Selection Mode
                 </button>
               </div>
-            )}
           </div>
         )}
+            </section>
 
-        {/* Product-Appropriate Quick Action Buttons */}
-        {resultImage && (
-          <div className="quick-actions-section">
+            <section className="dashboard-card quick-actions-section">
             <h3>Quick Enhancements</h3>
             <div className="quick-actions-grid">
               {isPoolModel(selectedModel) ? (
-                // Pool-specific enhancements
                 <>
                   <button
                     className="quick-action-button"
@@ -1077,7 +912,6 @@ The output should show only the content within this bounding box, cropped with p
                   </button>
                 </>
               ) : (
-                // Tiny home-specific enhancements
                 <>
                   <button
                     className="quick-action-button"
@@ -1110,78 +944,26 @@ The output should show only the content within this bounding box, cropped with p
                 </>
               )}
             </div>
-          </div>
-        )}
+            </section>
 
-        {/* Post-Generation Controls */}
-        {resultImage && (
-          <>
-            {/* Aspect Ratio Change */}
-            <div className="post-gen-section">
+            <section className="dashboard-card post-gen-section">
               <h3>Change Aspect Ratio</h3>
               <p className="control-info">Expand the frame to different aspect ratios using Gemini's native aspect ratio support</p>
               <div className="aspect-ratio-grid">
+                {ASPECT_RATIO_OPTIONS.map(({ value, label }) => (
                 <button
+                    key={value}
                   className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('1:1')}
+                    onClick={() => handleAspectRatioChange(value)}
                   disabled={processing}
                 >
-                  1:1 Square
+                    {label}
                 </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('4:3')}
-                  disabled={processing}
-                >
-                  4:3 Standard
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('3:4')}
-                  disabled={processing}
-                >
-                  3:4 Portrait
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('16:9')}
-                  disabled={processing}
-                >
-                  16:9 Widescreen
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('9:16')}
-                  disabled={processing}
-                >
-                  9:16 Mobile
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('21:9')}
-                  disabled={processing}
-                >
-                  21:9 Ultra-wide
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('2:3')}
-                  disabled={processing}
-                >
-                  2:3 Photo
-                </button>
-                <button
-                  className="aspect-ratio-btn"
-                  onClick={() => handleAspectRatioChange('3:2')}
-                  disabled={processing}
-                >
-                  3:2 Camera
-                </button>
+                ))}
               </div>
-            </div>
+            </section>
 
-            {/* Resolution Upscaling */}
-            <div className="post-gen-section">
+            <section className="dashboard-card post-gen-section">
               <h3>Upscale Resolution</h3>
               <div className="upscale-buttons">
                 <button
@@ -1199,56 +981,145 @@ The output should show only the content within this bounding box, cropped with p
                   Upscale to 4K
                 </button>
               </div>
-            </div>
+            </section>
 
-            {/* Camera Controls */}
-            <div className="post-gen-section">
+            <section className="dashboard-card post-gen-section">
               <h3>Camera Perspective</h3>
               <div className="camera-controls-grid">
-                <button
-                  className="camera-btn"
-                  onClick={() => handleCameraChange('aerial')}
-                  disabled={processing}
-                >
+                <button className="camera-btn" onClick={() => handleCameraChange('aerial')} disabled={processing}>
                   Aerial View
                 </button>
-                <button
-                  className="camera-btn"
-                  onClick={() => handleCameraChange('ground')}
-                  disabled={processing}
-                >
+                <button className="camera-btn" onClick={() => handleCameraChange('ground')} disabled={processing}>
                   Ground Level
                 </button>
-                <button
-                  className="camera-btn"
-                  onClick={() => handleCameraChange('elevated')}
-                  disabled={processing}
-                >
+                <button className="camera-btn" onClick={() => handleCameraChange('elevated')} disabled={processing}>
                   Elevated Angle
                 </button>
-                <button
-                  className="camera-btn"
-                  onClick={() => handleCameraChange('side')}
-                  disabled={processing}
-                >
+                <button className="camera-btn" onClick={() => handleCameraChange('side')} disabled={processing}>
                   Side View
                 </button>
-                <button
-                  className="camera-btn"
-                  onClick={() => handleCameraChange('worms-eye')}
-                  disabled={processing}
-                >
+                <button className="camera-btn" onClick={() => handleCameraChange('worms-eye')} disabled={processing}>
                   Worm's Eye View
                 </button>
               </div>
-            </div>
+            </section>
 
-          </>
+            {currentPrompt && (
+              <section className="dashboard-card prompt-panel">
+                  <button
+                  className="prompt-panel-toggle"
+                  onClick={() => setShowPromptPanel(!showPromptPanel)}
+                >
+                  <span>{showPromptPanel ? 'Hide' : 'Show'} Prompt Used</span>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    style={{ transform: showPromptPanel ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+                  >
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                  </button>
+                {showPromptPanel && (
+                  <div className="prompt-content">
+                    {currentModelSettings && (
+                      <div className="model-settings">
+                        <h4>Model Settings</h4>
+                        <div className="settings-grid">
+                          {currentModelSettings.model && (
+                            <div className="setting-item">
+                              <span className="setting-label">Model:</span>
+                              <span className="setting-value">{currentModelSettings.model}</span>
+                </div>
+                          )}
+                          {currentModelSettings.temperature !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Temperature:</span>
+                              <span className="setting-value">{currentModelSettings.temperature}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.topP !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Top P:</span>
+                              <span className="setting-value">{currentModelSettings.topP}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.aspectRatio && (
+                            <div className="setting-item">
+                              <span className="setting-label">Aspect Ratio:</span>
+                              <span className="setting-value">{currentModelSettings.aspectRatio}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.imageSize && (
+                            <div className="setting-item">
+                              <span className="setting-label">Resolution:</span>
+                              <span className="setting-value">{currentModelSettings.imageSize}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.googleSearchUsed !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Google Search:</span>
+                              <span className="setting-value">{currentModelSettings.googleSearchUsed ? 'Enabled' : 'Disabled'}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.guidanceScale !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Guidance Scale:</span>
+                              <span className="setting-value">{currentModelSettings.guidanceScale}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.numInferenceSteps !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Inference Steps:</span>
+                              <span className="setting-value">{currentModelSettings.numInferenceSteps}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.strength !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Strength:</span>
+                              <span className="setting-value">{currentModelSettings.strength}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.referenceStrength !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">Reference Strength:</span>
+                              <span className="setting-value">{currentModelSettings.referenceStrength}</span>
+                            </div>
+                          )}
+                          {currentModelSettings.controlnetConditioningScale !== undefined && (
+                            <div className="setting-item">
+                              <span className="setting-label">ControlNet Scale:</span>
+                              <span className="setting-value">{currentModelSettings.controlnetConditioningScale}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    <div className="prompt-section">
+                      <h4>Prompt</h4>
+                      <pre className="prompt-text">{currentPrompt}</pre>
+                    </div>
+                    <button
+                      className="copy-prompt-button"
+                      onClick={() => {
+                        const textToCopy = currentModelSettings 
+                          ? `Model Settings:\n${JSON.stringify(currentModelSettings, null, 2)}\n\nPrompt:\n${currentPrompt}`
+                          : currentPrompt || ''
+                        navigator.clipboard.writeText(textToCopy)
+                        alert('Prompt and settings copied to clipboard!')
+                      }}
+                    >
+                      Copy Prompt & Settings
+                    </button>
+                </div>
+              )}
+              </section>
         )}
 
-        {/* Conversational Editing - moved under preview */}
-        {resultImage && (
-          <div className="conversational-edit-section">
+            <section className="dashboard-card conversational-edit-section">
             <h3>Custom Editing</h3>
             <p className="control-info">
               Use natural language to make custom changes beyond the Quick Enhancements above. Describe any modification you'd like to see.
@@ -1275,7 +1146,6 @@ The output should show only the content within this bounding box, cropped with p
               <strong>Try these custom edits:</strong>
               <ul>
                 {isPoolModel(selectedModel) ? (
-                  // Pool-specific examples
                   <>
                     <li>"add pool lighting for evening ambiance"</li>
                     <li>"change the pool coping to natural stone"</li>
@@ -1284,7 +1154,6 @@ The output should show only the content within this bounding box, cropped with p
                     <li>"add a privacy fence around the pool area"</li>
                   </>
                 ) : (
-                  // Tiny home-specific examples
                   <>
                     <li>"make the sky more dramatic with clouds"</li>
                     <li>"add a gravel driveway leading to the tiny home"</li>
@@ -1295,6 +1164,7 @@ The output should show only the content within this bounding box, cropped with p
                 )}
               </ul>
             </div>
+            </section>
           </div>
         )}
       </div>
@@ -1468,47 +1338,47 @@ The output should show only the content within this bounding box, cropped with p
 
             <div className="lightbox-controls">
               <div className="lightbox-zoom-controls">
+              <button
+                className="zoom-button"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 4}
+                aria-label="Zoom in"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="11" y1="8" x2="11" y2="14" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+              <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+              <button
+                className="zoom-button"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 1}
+                aria-label="Zoom out"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="M21 21l-4.35-4.35" />
+                  <line x1="8" y1="11" x2="14" y2="11" />
+                </svg>
+              </button>
+              {zoomLevel > 1 && (
                 <button
-                  className="zoom-button"
-                  onClick={handleZoomIn}
-                  disabled={zoomLevel >= 4}
-                  aria-label="Zoom in"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="M21 21l-4.35-4.35" />
-                    <line x1="11" y1="8" x2="11" y2="14" />
-                    <line x1="8" y1="11" x2="14" y2="11" />
-                  </svg>
-                </button>
-                <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
-                <button
-                  className="zoom-button"
-                  onClick={handleZoomOut}
-                  disabled={zoomLevel <= 1}
-                  aria-label="Zoom out"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="M21 21l-4.35-4.35" />
-                    <line x1="8" y1="11" x2="14" y2="11" />
-                  </svg>
-                </button>
-                {zoomLevel > 1 && (
-                  <button
                     className="zoom-reset"
-                    onClick={handleZoomReset}
-                    aria-label="Reset zoom"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                      <path d="M21 3v5h-5" />
-                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                      <path d="M3 21v-5h5" />
-                    </svg>
+                  onClick={handleZoomReset}
+                  aria-label="Reset zoom"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
                     <span>Reset</span>
-                  </button>
-                )}
+                </button>
+              )}
               </div>
               <div className="pan-hint" aria-hidden="true">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
