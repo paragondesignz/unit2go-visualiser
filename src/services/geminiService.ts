@@ -67,7 +67,7 @@ export async function processWithGemini(
         modelSettings: {
           model: 'gemini-3-pro-image-preview',
           temperature: nanoBananaOptions?.temperature || 1.0,
-          imageSize: nanoBananaOptions?.imageSize || '2K'
+          imageSize: nanoBananaOptions?.imageSize || '1K'
         },
         position: currentPosition || { x: 50, y: 50, scale: 1, rotation: 0 }
       }
@@ -131,10 +131,10 @@ async function generateConversationalLightingEdit(
 
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural results
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
-      imageSize: nanoBananaOptions?.imageSize || '2K',
+      imageSize: nanoBananaOptions?.imageSize || '1K',
     },
     ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
@@ -570,7 +570,7 @@ FINAL VERIFICATION: Confirm that the tiny home's architectural features match Im
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and natural placement
     topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex architectural analysis
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
       imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
@@ -849,7 +849,7 @@ If any answer is incorrect, the generation has FAILED and must be corrected.`
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning capabilities
     topP: nanoBananaOptions?.topP || 0.95, // Balanced performance for complex scene analysis
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
       imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
@@ -1129,10 +1129,10 @@ export async function processWithWireframeGuide(
 
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0, // Optimal for Gemini 3 Pro reasoning and accurate positioning
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
-      imageSize: nanoBananaOptions?.imageSize || '2K',
+      imageSize: nanoBananaOptions?.imageSize || '1K',
     },
     ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
@@ -1244,10 +1244,10 @@ Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATIO
     ...(customConfig?.topK && { topK: customConfig.topK }),
     ...(nanoBananaOptions?.topP && !customConfig?.topP && { topP: nanoBananaOptions.topP }),
     ...(nanoBananaOptions?.topK && !customConfig?.topK && { topK: nanoBananaOptions.topK }),
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: aspectRatio,
-      imageSize: nanoBananaOptions?.imageSize || '2K',
+      imageSize: nanoBananaOptions?.imageSize || '1K',
     },
     ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
   }
@@ -1377,7 +1377,7 @@ Render this as a professional interior photograph with natural lighting and real
   const config = {
     temperature: nanoBananaOptions?.temperature || 1.0,
     topP: nanoBananaOptions?.topP || 0.95,
-    responseModalities: ['Image'] as string[],
+    responseModalities: ['TEXT', 'IMAGE'] as string[],
     imageConfig: {
       aspectRatio: '16:9', // Standard interior photography aspect ratio
       imageSize: nanoBananaOptions?.imageSize || defaultImageSize,

@@ -76,7 +76,7 @@ export interface VisualizationResult {
   position: Position
 }
 
-export type ImageModelProvider = 'gemini' | 'flux'
+export type ImageModelProvider = 'gemini'
 
 export interface DepthMapData {
   imageUrl: string
@@ -94,15 +94,6 @@ export type VisualizationStyle =
 
 export type ImageResolution = '1K' | '2K' | '4K'
 
-export interface FLUXGenerationOptions {
-  propertyImage: File
-  tinyHomeImageUrl: string
-  depthMap?: DepthMapData
-  clickPosition?: { x: number; y: number }
-  lightingPrompt?: string
-  style?: VisualizationStyle
-  controlnetStrength?: number
-}
 
 export interface NanoBananaProOptions {
   imageSize?: ImageResolution
