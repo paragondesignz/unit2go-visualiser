@@ -58,7 +58,7 @@ function InteriorGeneratorPage() {
 
     try {
       const result = await generateInteriorView(selectedModel, interiorRequest, {
-        imageSize: '2K',
+        imageSize: '1K',
         accuracyMode: 'maximum',
         useThinkingProcess: true
       })

@@ -1372,18 +1372,6 @@ body {
   background: var(--bg-tertiary);
 }
 
-.zoom-button {
-  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
-  border: 2px solid #2196F3;
-  color: #1565C0;
-}
-
-.zoom-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2196F3, #1976D2);
-  color: white;
-  border-color: #1565C0;
-  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
-}
 
 @media (max-width: 768px) {
   .quick-actions-grid {
@@ -1853,6 +1841,51 @@ body {
   background: #38a169;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.video-generate-button {
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.video-generate-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5b21b6, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.video-generate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.video-status {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 10px;
+  padding: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+}
+
+.video-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Responsive Design */

@@ -12,7 +12,7 @@ function VisualizerPage() {
   const [currentStep, setCurrentStep] = useState<'upload' | 'select' | 'visualize'>('upload')
   const [modelType, setModelType] = useState<ModelType>('tiny-home')
   const [selectedModel, setSelectedModel] = useState<VisualizationModel>(tinyHomeModels[0])
-  const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('4K')
+  const [selectedResolution, setSelectedResolution] = useState<ImageResolution>('1K')
 
   const handleImageUpload = async (image: UploadedImage) => {
     setUploadedImage(image)

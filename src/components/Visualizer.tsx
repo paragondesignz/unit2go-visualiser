@@ -20,7 +20,7 @@ const ASPECT_RATIO_OPTIONS = [
   { value: '3:2', label: '3:2 Camera' }
 ]
 
-function Visualizer({ uploadedImage, selectedModel, selectedResolution = '2K' }: VisualizerProps) {
+function Visualizer({ uploadedImage, selectedModel, selectedResolution = '1K' }: VisualizerProps) {
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState<Position>({
@@ -546,71 +546,6 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
   }
 
   // Reset selection when zoom mode is deactivated
-  const handleCancelZoomMode = () => {
-    setZoomModeActive(false)
-    setSelectionRect(null)
-  }
-
-  const handleZoomToSelection = async () => {
-    if (!selectionRect || !resultImage || processing) {
-      // Clean up selection state even if we're not processing
-      setSelectionRect(null)
-      return
-    }
-
-    // Require minimum selection size (20x20 pixels)
-    if (selectionRect.width < 20 || selectionRect.height < 20) {
-      setSelectionRect(null)
-      return
-    }
-    setZoomModeActive(false)
-    setProcessing(true)
-    setError(null)
-
-    try {
-      // Get the image element to calculate percentages
-      const imageElement = document.querySelector('.result-image') as HTMLImageElement
-      if (!imageElement) {
-        throw new Error('Image element not found')
-      }
-
-      const imageRect = imageElement.getBoundingClientRect()
-
-      // Convert to normalized coordinates [0, 1000] as per Gemini documentation
-      const leftNormalized = Math.round((selectionRect.x / imageRect.width) * 1000)
-      const topNormalized = Math.round((selectionRect.y / imageRect.height) * 1000)
-      const rightNormalized = Math.round(((selectionRect.x + selectionRect.width) / imageRect.width) * 1000)
-      const bottomNormalized = Math.round(((selectionRect.y + selectionRect.height) / imageRect.height) * 1000)
-
-      const zoomPrompt = `CROP AND ZOOM into this image to focus on the rectangular area selected by the user.
-
-PRECISE REGION SPECIFICATION (using Gemini's normalized coordinate system [0-1000]):
-- Bounding box: [${topNormalized}, ${leftNormalized}, ${bottomNormalized}, ${rightNormalized}] (ymin, xmin, ymax, xmax)
-- Top edge: ${topNormalized}/1000 from top
-- Left edge: ${leftNormalized}/1000 from left
-- Bottom edge: ${bottomNormalized}/1000 from top
-- Right edge: ${rightNormalized}/1000 from left
-
-Crop to show ONLY this precisely defined rectangular region while maintaining the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into this exact area using the normalized coordinates provided. Keep all lighting, colors, and details exactly as they appear in the original image.
-
-The output should show only the content within this bounding box, cropped with precision to match the user's selection exactly.`
-
-      const zoomedImage = await conversationalEdit(resultImage, zoomPrompt, undefined, nanoBananaOptions)
-
-      addToHistory(zoomedImage)
-      setShowingOriginal(false)
-    } catch (err) {
-      setError('Failed to zoom into selected area. Please try again.')
-      console.error(err)
-    } finally {
-      setProcessing(false)
-      setSelectionRect(null)
-    }
-  }
-
-  const handleActivateZoomMode = () => {
-    setZoomModeActive(true)
-  }
 
   const handleGenerateVideo = async () => {
     if (!resultImage || processing) return
@@ -812,88 +747,6 @@ The output should show only the content within this bounding box, cropped with p
 
         {resultImage && (
           <div className="dashboard-grid">
-            <section className="dashboard-card close-up-section double-span">
-              <h3>🔍 Image & Video Controls</h3>
-              <p className="control-info">Enhance your image, create a cinematic video with Veo 3.1, or drag to select an area to zoom into (maintains proportions)</p>
-
-              {!zoomModeActive && !selectionRect ? (
-                <div className="zoom-controls">
-            <button
-                    className="zoom-btn primary-zoom"
-                    onClick={handleActivateZoomMode}
-                    disabled={processing}
-                  >
-                    🔍 Zoom In
-                  </button>
-                  {!generatedVideo ? (
-                    <button
-                      className="zoom-btn primary-zoom"
-                      onClick={handleGenerateVideo}
-                      disabled={processing || isGeneratingVideo}
-                    >
-                      {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
-            </button>
-                  ) : (
-                    <>
-                      <button
-                        className="download-button"
-                        onClick={() => {
-                          const link = document.createElement('a')
-                          link.href = generatedVideo
-                          link.download = `unit2go-video-${Date.now()}.mp4`
-                          link.click()
-                        }}
-                        style={{ marginRight: '10px' }}
-                      >
-                        📥 Download Video
-                      </button>
-                      <button
-                        className="zoom-btn secondary-zoom"
-                        onClick={() => setGeneratedVideo(null)}
-                      >
-                        ✖️ Remove Video
-                      </button>
-                    </>
-                  )}
-                  {videoGenerationProgress && (
-                    <div className="inline-status">
-                      {videoGenerationProgress}
-                        </div>
-                      )}
-                        </div>
-              ) : selectionRect ? (
-                <div className="zoom-controls">
-                  <button
-                    className="zoom-btn primary-zoom"
-                    onClick={handleZoomToSelection}
-                    disabled={processing}
-                  >
-                    🎯 Zoom to Selection
-                  </button>
-                  <button
-                    className="zoom-btn secondary-zoom"
-                    onClick={handleCancelZoomMode}
-                    disabled={processing}
-                  >
-                    ✖️ Cancel Selection
-                  </button>
-                        </div>
-              ) : (
-                <div className="zoom-instructions">
-                  <div className="zoom-active-indicator">
-                    <span className="zoom-crosshair">✛</span>
-                    <p><strong>Selection Mode Active!</strong></p>
-                    <p>Drag on the image above to select a rectangular area to zoom into</p>
-                <button
-                      className="cancel-zoom-btn"
-                      onClick={handleCancelZoomMode}
-                    >
-                      Cancel Selection Mode
-                </button>
-              </div>
-          </div>
-        )}
-            </section>
 
             <section className="dashboard-card quick-actions-section double-span">
             <h3>Quick Enhancements</h3>
@@ -936,21 +789,21 @@ The output should show only the content within this bounding box, cropped with p
                     Complete Pool Area
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('pool-area')}
                     disabled={processing}
                   >
                     🔍 Zoom Pool Area
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('landscaping')}
                     disabled={processing}
                   >
                     🔍 Zoom Landscaping
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('entrance')}
                     disabled={processing}
                   >
@@ -988,21 +841,21 @@ The output should show only the content within this bounding box, cropped with p
                     Add Access & Parking
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('pool-area')}
                     disabled={processing}
                   >
                     🔍 Zoom Tiny Home
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('landscaping')}
                     disabled={processing}
                   >
                     🔍 Zoom Landscaping
                   </button>
                   <button
-                    className="quick-action-button zoom-button"
+                    className="quick-action-button"
                     onClick={() => handleZoomEdit('entrance')}
                     disabled={processing}
                   >
@@ -1390,6 +1243,50 @@ The output should show only the content within this bounding box, cropped with p
             Download Image
           </button>
         </div>
+
+        {resultImage && (
+          <div className="control-panel">
+            <h3>🎬 Video Creation</h3>
+            <p className="control-info">Create a cinematic video with Veo 3.1</p>
+
+            {!generatedVideo ? (
+              <button
+                className="video-generate-button"
+                onClick={handleGenerateVideo}
+                disabled={processing || isGeneratingVideo}
+              >
+                {isGeneratingVideo ? '🎬 Generating...' : '🎬 Create Video'}
+              </button>
+            ) : (
+              <div className="video-controls">
+                <button
+                  className="download-button"
+                  onClick={() => {
+                    const link = document.createElement('a')
+                    link.href = generatedVideo
+                    link.download = `unit2go-video-${Date.now()}.mp4`
+                    link.click()
+                  }}
+                  style={{ marginBottom: '10px' }}
+                >
+                  📥 Download Video
+                </button>
+                <button
+                  className="secondary-button"
+                  onClick={() => setGeneratedVideo(null)}
+                >
+                  ✖️ Remove Video
+                </button>
+              </div>
+            )}
+
+            {videoGenerationProgress && (
+              <div className="video-status">
+                {videoGenerationProgress}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Lightbox Modal */}
