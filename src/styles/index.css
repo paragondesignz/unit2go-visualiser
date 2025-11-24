@@ -1107,20 +1107,53 @@ body {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 28px;
 }
 
 .dashboard-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 20px;
+  padding: 22px;
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 14px;
   min-height: 100%;
+}
+
+.dashboard-card.double-span {
+  grid-column: span 1;
+}
+
+.dashboard-card.full-span {
+  grid-column: span 1;
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-card.double-span,
+  .dashboard-card.full-span {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-card.double-span {
+    grid-column: span 2;
+  }
+
+  .dashboard-card.full-span {
+    grid-column: 1 / -1;
+  }
 }
 
 .dashboard-card h3 {
@@ -1337,6 +1370,19 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
   background: var(--bg-tertiary);
+}
+
+.zoom-button {
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  border: 2px solid #2196F3;
+  color: #1565C0;
+}
+
+.zoom-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+  border-color: #1565C0;
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
 }
 
 @media (max-width: 768px) {

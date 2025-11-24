@@ -322,6 +322,31 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
     }
   }
 
+  const handleZoomEdit = async (zoomArea: 'pool-area' | 'landscaping' | 'entrance') => {
+    if (!resultImage || processing) return
+
+    setProcessing(true)
+    setError(null)
+
+    try {
+      const modelType = isPoolModel(selectedModel) ? 'pool' : 'tiny home'
+      const zoomPrompts = {
+        'pool-area': `CROP AND ZOOM into this image to focus on the ${modelType} area. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the ${modelType} section of the current image. Show the ${modelType} and its immediate surroundings in higher detail by cropping tighter on this area of the existing view.`,
+        'landscaping': `CROP AND ZOOM into this image to focus on the landscaping and garden areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the landscaping section of the current image. Show plants, trees, and decorative elements in higher detail by cropping tighter on the garden areas of the existing view.`,
+        'entrance': `CROP AND ZOOM into this image to focus on the entrance or access areas. Maintain the EXACT same camera angle, perspective, and viewpoint. Do not change the camera position at all - simply crop/zoom into the entrance section of the current image. Show pathways, steps, and approach areas in higher detail by cropping tighter on this area of the existing view.`
+      }
+
+      const zoomedImage = await conversationalEdit(resultImage, zoomPrompts[zoomArea], undefined, nanoBananaOptions)
+      addToHistory(zoomedImage)
+      setShowingOriginal(false)
+    } catch (err) {
+      setError(`Failed to zoom into ${zoomArea.replace('-', ' ')}. Please try again.`)
+      console.error(err)
+    } finally {
+      setProcessing(false)
+    }
+  }
+
   const handleDownload = async () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
@@ -787,7 +812,7 @@ The output should show only the content within this bounding box, cropped with p
 
         {resultImage && (
           <div className="dashboard-grid">
-            <section className="dashboard-card close-up-section">
+            <section className="dashboard-card close-up-section double-span">
               <h3>🔍 Image & Video Controls</h3>
               <p className="control-info">Enhance your image, create a cinematic video with Veo 3.1, or drag to select an area to zoom into (maintains proportions)</p>
 
@@ -870,7 +895,7 @@ The output should show only the content within this bounding box, cropped with p
         )}
             </section>
 
-            <section className="dashboard-card quick-actions-section">
+            <section className="dashboard-card quick-actions-section double-span">
             <h3>Quick Enhancements</h3>
             <div className="quick-actions-grid">
               {isPoolModel(selectedModel) ? (
@@ -910,6 +935,27 @@ The output should show only the content within this bounding box, cropped with p
                   >
                     Complete Pool Area
                   </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('pool-area')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Pool Area
+                  </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('landscaping')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Landscaping
+                  </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('entrance')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Entrance
+                  </button>
                 </>
               ) : (
                 <>
@@ -941,12 +987,33 @@ The output should show only the content within this bounding box, cropped with p
                   >
                     Add Access & Parking
                   </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('pool-area')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Tiny Home
+                  </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('landscaping')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Landscaping
+                  </button>
+                  <button
+                    className="quick-action-button zoom-button"
+                    onClick={() => handleZoomEdit('entrance')}
+                    disabled={processing}
+                  >
+                    🔍 Zoom Entrance
+                  </button>
                 </>
               )}
             </div>
             </section>
 
-            <section className="dashboard-card post-gen-section">
+            <section className="dashboard-card post-gen-section double-span">
               <h3>Change Aspect Ratio</h3>
               <p className="control-info">Expand the frame to different aspect ratios using Gemini's native aspect ratio support</p>
               <div className="aspect-ratio-grid">
@@ -1005,7 +1072,7 @@ The output should show only the content within this bounding box, cropped with p
             </section>
 
             {currentPrompt && (
-              <section className="dashboard-card prompt-panel">
+              <section className="dashboard-card prompt-panel full-span">
                   <button
                   className="prompt-panel-toggle"
                   onClick={() => setShowPromptPanel(!showPromptPanel)}
@@ -1119,7 +1186,7 @@ The output should show only the content within this bounding box, cropped with p
               </section>
         )}
 
-            <section className="dashboard-card conversational-edit-section">
+            <section className="dashboard-card conversational-edit-section full-span">
             <h3>Custom Editing</h3>
             <p className="control-info">
               Use natural language to make custom changes beyond the Quick Enhancements above. Describe any modification you'd like to see.
