@@ -748,8 +748,9 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
         {resultImage && (
           <div className="dashboard-grid">
 
-            <section className="dashboard-card quick-actions-section double-span">
-            <h3>Quick Enhancements</h3>
+            <section className="dashboard-card primary-card quick-actions-section double-span">
+            <h3>✨ Quick Enhancements</h3>
+            <p className="card-description">Add instant improvements to your visualization with one-click enhancements and zoom features.</p>
             <div className="quick-actions-grid">
               {isPoolModel(selectedModel) ? (
                 <>
@@ -867,8 +868,8 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
             </section>
 
             <section className="dashboard-card post-gen-section double-span">
-              <h3>Change Aspect Ratio</h3>
-              <p className="control-info">Expand the frame to different aspect ratios using Gemini's native aspect ratio support</p>
+              <h3>📐 Change Aspect Ratio</h3>
+              <p className="card-description">Expand the frame to different aspect ratios using Gemini's native aspect ratio support</p>
               <div className="aspect-ratio-grid">
                 {ASPECT_RATIO_OPTIONS.map(({ value, label }) => (
                 <button
@@ -884,7 +885,8 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
             </section>
 
             <section className="dashboard-card post-gen-section">
-              <h3>Upscale Resolution</h3>
+              <h3>⚡ Upscale Resolution</h3>
+              <p className="card-description">Enhance your image quality with AI upscaling technology</p>
               <div className="upscale-buttons">
                 <button
                   className="upscale-btn"
@@ -904,7 +906,8 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
             </section>
 
             <section className="dashboard-card post-gen-section">
-              <h3>Camera Perspective</h3>
+              <h3>📷 Camera Perspective</h3>
+              <p className="card-description">Change the viewing angle and perspective of your visualization</p>
               <div className="camera-controls-grid">
                 <button className="camera-btn" onClick={() => handleCameraChange('aerial')} disabled={processing}>
                   Aerial View
@@ -1040,8 +1043,8 @@ ${prompt}. CRITICAL: Keep the ${modelType} in exactly the same position, size, a
         )}
 
             <section className="dashboard-card conversational-edit-section full-span">
-            <h3>Custom Editing</h3>
-            <p className="control-info">
+            <h3>🎨 Custom Editing</h3>
+            <p className="card-description">
               Use natural language to make custom changes beyond the Quick Enhancements above. Describe any modification you'd like to see.
             </p>
             <div className="edit-input-group">

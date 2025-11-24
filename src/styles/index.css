@@ -1108,59 +1108,70 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 28px;
+  gap: 20px;
+  max-width: 100%;
 }
 
 .dashboard-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 22px;
-  box-shadow: var(--shadow-md);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-height: 100%;
+  gap: 16px;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
-.dashboard-card.double-span {
-  grid-column: span 1;
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.dashboard-card.full-span {
-  grid-column: span 1;
+.dashboard-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
 }
 
-@media (min-width: 768px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboard-card.double-span,
-  .dashboard-card.full-span {
-    grid-column: 1 / -1;
-  }
+.dashboard-card:hover::before {
+  opacity: 1;
 }
 
-@media (min-width: 1200px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.dashboard-card.primary-card {
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(255, 107, 53, 0.02) 100%);
+  border: 1px solid rgba(255, 107, 53, 0.1);
+}
 
-  .dashboard-card.double-span {
-    grid-column: span 2;
-  }
-
-  .dashboard-card.full-span {
-    grid-column: 1 / -1;
-  }
+.dashboard-card.primary-card::before {
+  background: linear-gradient(90deg, var(--primary-color), #ff8a65);
+  opacity: 1;
 }
 
 .dashboard-card h3 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   margin: 0;
   color: var(--text-primary);
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-card .card-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
 }
 
 .inline-status {
@@ -1342,28 +1353,49 @@ body {
 .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .quick-action-button {
-  padding: 14px 20px;
+  padding: 12px 16px;
   background: var(--bg-secondary);
   color: var(--text-primary);
-  border: 2px solid var(--border-color);
-  border-radius: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s ease;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.quick-action-button:hover::before {
+  left: 100%;
 }
 
 .quick-action-button:hover:not(:disabled) {
   background: var(--primary-color);
   color: white;
   border-color: var(--primary-color);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .quick-action-button:disabled {
@@ -1372,10 +1404,37 @@ body {
   background: var(--bg-tertiary);
 }
 
+.quick-action-button:disabled::before {
+  display: none;
+}
+
 
 @media (max-width: 768px) {
   .quick-actions-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-card {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .dashboard-card h3 {
+    font-size: 1rem;
+  }
+
+  .dashboard-card .card-description {
+    font-size: 0.85rem;
+  }
+
+  .camera-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .upscale-buttons {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }
 
@@ -2957,30 +3016,63 @@ body {
 /* Aspect Ratio Controls */
 .aspect-ratio-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 12px;
-  margin-bottom: 15px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .aspect-ratio-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
 }
 
 .aspect-ratio-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px 10px;
+  justify-content: center;
+  padding: 10px 8px;
   background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   color: var(--text-primary);
   cursor: pointer;
-  transition: var(--transition);
-  font-size: 0.9rem;
-  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.aspect-ratio-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.05));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.aspect-ratio-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .aspect-ratio-btn:hover:not(:disabled) {
-  border-color: var(--primary-light);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.aspect-ratio-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
 }
 
 .aspect-ratio-btn:disabled {
@@ -2992,56 +3084,108 @@ body {
 .upscale-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px;
 }
 
 .upscale-btn {
-  padding: 15px 20px;
-  background: var(--primary-color);
+  padding: 14px 18px;
+  background: linear-gradient(135deg, var(--primary-color), #ff8a65);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.upscale-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.upscale-btn:hover:not(:disabled)::before {
+  left: 100%;
 }
 
 .upscale-btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #ff8a65, var(--primary-color));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
 }
 
 .upscale-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+}
+
+.upscale-btn:disabled::before {
+  display: none;
 }
 
 /* Camera Controls */
 .camera-controls-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 10px;
 }
 
 .camera-btn {
-  padding: 15px 10px;
+  padding: 12px 16px;
   background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
   color: var(--text-primary);
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s ease;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
+  min-height: 44px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 107, 53, 0.05));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.camera-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .camera-btn:hover:not(:disabled) {
-  border-color: var(--primary-light);
-  background: var(--primary-light);
+  border-color: var(--primary-color);
+  background: var(--primary-color);
   color: white;
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+}
+
+.camera-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
 }
 
 .camera-btn:disabled {
