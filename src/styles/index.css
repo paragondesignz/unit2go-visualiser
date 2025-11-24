@@ -1108,22 +1108,26 @@ body {
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 16px;
   max-width: 100%;
+  padding: 0;
+  margin: 0;
 }
 
 .dashboard-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dashboard-card::before {
@@ -1353,7 +1357,9 @@ body {
 .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
 }
 
 .quick-action-button {
@@ -1410,13 +1416,19 @@ body {
 
 
 @media (max-width: 768px) {
+  .dashboard-grid {
+    gap: 12px;
+    padding: 0;
+  }
+
   .quick-actions-grid {
     grid-template-columns: 1fr;
   }
 
   .dashboard-card {
-    padding: 16px;
+    padding: 14px;
     gap: 12px;
+    border-radius: 10px;
   }
 
   .dashboard-card h3 {
@@ -1425,6 +1437,7 @@ body {
 
   .dashboard-card .card-description {
     font-size: 0.85rem;
+    line-height: 1.3;
   }
 
   .camera-controls-grid {
@@ -1436,22 +1449,36 @@ body {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+
+  .conversational-edit-section {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .conversational-edit-section h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
 }
 
 /* Conversational Editing Section - Under Preview */
 .conversational-edit-section {
-  background: transparent;
-  padding: 0;
-  border: none;
-  box-shadow: none;
+  background: var(--bg-card);
+  padding: 18px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
   margin: 0;
 }
 
 .conversational-edit-section h3 {
-  font-size: 1.3rem;
-  color: var(--primary-color);
-  margin-bottom: 15px;
-  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin: 0 0 14px 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .conversational-edit-section .control-info {
