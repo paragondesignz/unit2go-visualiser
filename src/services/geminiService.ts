@@ -138,7 +138,7 @@ async function generateConversationalLightingEdit(
     },
     ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
   }
 
   const model = 'gemini-3-pro-image-preview'
@@ -563,8 +563,7 @@ FINAL VERIFICATION: Confirm that the tiny home's architectural features match Im
   // Enhanced configuration for maximum tiny home accuracy
   const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
   const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
-  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
-                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  // Note: Google Search disabled for image generation due to API conflicts
   const useThinking = nanoBananaOptions?.useThinkingProcess !== false // Default enabled for architectural accuracy
 
   const config = {
@@ -577,7 +576,7 @@ FINAL VERIFICATION: Confirm that the tiny home's architectural features match Im
     },
     // Enhanced accuracy settings
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
     ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : (accuracyLevel === 'maximum' ? 1500 : 1000) }),
   }
 
@@ -841,8 +840,7 @@ If any answer is incorrect, the generation has FAILED and must be corrected.`
   // Enhanced configuration for maximum accuracy
   const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
   const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
-  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
-                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  // Note: Google Search disabled for image generation due to API conflicts
   const useThinking = nanoBananaOptions?.useThinkingProcess ||
                      (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
@@ -856,7 +854,7 @@ If any answer is incorrect, the generation has FAILED and must be corrected.`
     },
     // Enhanced accuracy settings
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
     ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
   }
 
@@ -1136,7 +1134,7 @@ export async function processWithWireframeGuide(
     },
     ...(nanoBananaOptions?.topP && { topP: nanoBananaOptions.topP }),
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
   }
 
   const modelName = 'gemini-3-pro-image-preview'
@@ -1249,7 +1247,7 @@ Make this specific change to the photograph: ${editPrompt}. CRITICAL PRESERVATIO
       aspectRatio: aspectRatio,
       imageSize: nanoBananaOptions?.imageSize || '1K',
     },
-    ...(nanoBananaOptions?.enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
   }
 
   const model = 'gemini-3-pro-image-preview'
@@ -1369,8 +1367,7 @@ Render this as a professional interior photograph with natural lighting and real
   // Enhanced configuration for interior photography
   const accuracyLevel = nanoBananaOptions?.accuracyMode || 'standard'
   const defaultImageSize = accuracyLevel === 'ultra' ? '4K' : (accuracyLevel === 'maximum' ? '2K' : '1K')
-  const enableGoogleSearch = nanoBananaOptions?.enableGoogleSearch ||
-                            (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
+  // Note: Google Search disabled for image generation due to API conflicts
   const useThinking = nanoBananaOptions?.useThinkingProcess ||
                      (accuracyLevel === 'ultra' || accuracyLevel === 'maximum')
 
@@ -1383,7 +1380,7 @@ Render this as a professional interior photograph with natural lighting and real
       imageSize: nanoBananaOptions?.imageSize || defaultImageSize,
     },
     ...(nanoBananaOptions?.topK && { topK: nanoBananaOptions.topK }),
-    ...(enableGoogleSearch && { tools: [{ googleSearch: {} }] }),
+    // Note: Google Search disabled for image generation due to API conflicts
     ...(useThinking && { thinkingBudget: accuracyLevel === 'ultra' ? 2000 : 1000 }),
   }
 
